@@ -317,21 +317,21 @@ static bool readfile(char *Path)
 	if (input.fail()) return false;
 	if (Score.easytime > MAXTIME) return false;
 	input.ignore(MAXIGNORE, '\n');
-	input.getline(Score.easyname, SCORENAME_COUNT, '\n');
+	input.getline(Score.easyname, SCORENAMELEN, '\n');
 
 	input.ignore(MAXIGNORE, '=');
 	input >> Score.normaltime;
 	if (input.fail()) return false;
 	if (Score.normaltime > MAXTIME) return false;
 	input.ignore(MAXIGNORE, '\n');
-	input.getline(Score.normalname, SCORENAME_COUNT, '\n');
+	input.getline(Score.normalname, SCORENAMELEN, '\n');
 
 	input.ignore(MAXIGNORE, '=');
 	input >> Score.hardtime;
 	if (input.fail()) return false;
 	if (Score.hardtime > MAXTIME) return false;
 	input.ignore(MAXIGNORE, '\n');
-	input.getline(Score.hardname, SCORENAME_COUNT, '\n');
+	input.getline(Score.hardname, SCORENAMELEN, '\n');
 
 	input.close();
 	return true;
