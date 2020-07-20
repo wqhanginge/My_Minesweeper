@@ -24,6 +24,9 @@
     <ClCompile Include="minesweeper_support.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="minesweeper_ui.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minesweeper_defines.h">
@@ -38,11 +41,9 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Minesweeper_Resource.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
+    <ClInclude Include="minesweeper_ui.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Click.bmp">
@@ -51,92 +52,16 @@
     <Image Include="Fail.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="num0.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="num1.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="num2.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="num3.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="num4.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="num5.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="num6.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="num7.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="num8.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="num9.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="numminus.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="ResetButton.bmp">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="Success.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="unit.bmp">
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Minesweeper_Resource.rc">
       <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unit1.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unit2.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unit3.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unit4.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unit5.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unit6.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unit7.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unit8.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unitbomb.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unitflag.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unitmark.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unitmarkdown.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unitmine.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unitnull.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="unitwrong.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
