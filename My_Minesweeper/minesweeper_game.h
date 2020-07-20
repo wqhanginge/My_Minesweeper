@@ -21,9 +21,9 @@ struct GameScore {
 	word easytime;
 	word normaltime;
 	word hardtime;
-	char easyname[SCORENAME_COUNT];
-	char normalname[SCORENAME_COUNT];
-	char hardname[SCORENAME_COUNT];
+	char easyname[SCORENAMELEN];
+	char normalname[SCORENAMELEN];
+	char hardname[SCORENAMELEN];
 };
 
 /*
