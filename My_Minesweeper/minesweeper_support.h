@@ -40,14 +40,14 @@ int lparamtoindex(_In_ LPARAM lparam);
 
 //transform between positive integer and c_string
 //return -1 if error
-int str2int(_In_ char *str, _In_ dword size, _Out_ dword &x);
-template <dword size> inline int str2int(_In_ char(&str)[size], _Out_ dword &x)
-{ return str2int(str, size, x); }
+int str2dword(_In_ char *str, _In_ dword size, _Out_ dword &x);
+template <dword size> inline int str2dword(_In_ char(&str)[size], _Out_ dword &x)
+{ return str2dword(str, size, x); }
 
 //return length of transformed c_string
-int int2str(_Out_ char *str, _In_ dword size, _In_ dword x);
-template <dword size> inline int int2str(_Out_ char(&str)[size], _In_ dword x)
-{ return int2str(str, size, x); }
+int dword2str(_Out_ char *str, _In_ dword size, _In_ dword x);
+template <dword size> inline int dword2str(_Out_ char(&str)[size], _In_ dword x)
+{ return dword2str(str, size, x); }
 
 /* manage MapUnit in MapArea */
 //paint GameMap, use 'left' and 'top' as position zero of the whole map

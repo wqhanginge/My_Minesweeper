@@ -100,11 +100,11 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
 		mines = Game.mines;
 
 		//init edit control show
-		int2str(str, width);
+		dword2str(str, width);
 		SetWindowText(heditw, str);
-		int2str(str, height);
+		dword2str(str, height);
 		SetWindowText(hedith, str);
-		int2str(str, mines);
+		dword2str(str, mines);
 		SetWindowText(heditm, str);
 		break;
 	case WM_DESTROY:
@@ -116,11 +116,11 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
 		case IDOK:
 			//get what int edit control when click OK
 			GetWindowText(heditw, str, MAPEDITLEN);
-			str2int(str, width);
+			str2dword(str, width);
 			GetWindowText(hedith, str, MAPEDITLEN);
-			str2int(str, height);
+			str2dword(str, height);
 			GetWindowText(heditm, str, MAPEDITLEN);
-			str2int(str, mines);
+			str2dword(str, mines);
 			EndDialog(hcustom, 0);
 			break;
 		case IDCANCEL:
@@ -195,6 +195,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	RECT wndrect, cltrect;
 	//use for GameMap updating
 	int index;
+	//remember if last was double mouse button down
+	static bool lastdoublemb;
 
 	switch (msg) {
 	case WM_CREATE:
@@ -231,6 +233,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		wndrect.right = wndrect.left + CLIENTWIDTH + edgew;
 		wndrect.bottom = wndrect.top + CLIENTHEIGHT + edgeh;
 		MoveWindow(hwnd, wndrect.left, wndrect.top, wndrect.right - wndrect.left, wndrect.bottom - wndrect.top, FALSE);
+
+		//init double mouse button state
+		lastdoublemb = false;
 		break;
 	case WM_DESTROY:
 		//release bitmaps
@@ -277,6 +282,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	case WM_GAMERESET:
 		KillTimer(hwnd, GAMETIMERID);
 		cleanmap();
+		lastdoublemb = false;
 		PostMessage(hresetb, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hbm_resetb);
 		InvalidateRect(hwnd, NULL, FALSE);
 		break;
@@ -321,6 +327,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	case WM_GAMEMODECHG:
 		KillTimer(hwnd, GAMETIMERID);
 		setgamemode((byte)wparam, GETCHGWIDTH(lparam), GETCHGHEIGHT(lparam), GETCHGMINES(lparam));
+		lastdoublemb = false;
 		//change window size for new game map size, no need to reset
 		GetWindowRect(hwnd, &wndrect);
 		wndrect.right = CLIENTWIDTH + edgew + wndrect.left;
@@ -341,11 +348,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		if (!lparamispos(lparam)) break;
 		index = lparamtoindex(lparam);
 		if (wparam & MK_RBUTTON) {	//double buttons down
+			lastdoublemb = true;
 			Neighbor indexes;
 			getneighbors(indexes, index);
 			showclickdown(hdc, MAPUNITSLEFT, MAPUNITSTOP, indexes);
 		}
 		else {	//single button
+			lastdoublemb = false;
 			showclickdown(hdc, MAPUNITSLEFT, MAPUNITSTOP, index);
 		}
 		break;
@@ -359,6 +368,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		if (!lparamispos(lparam)) break;
 		index = lparamtoindex(lparam);
 		if (wparam & MK_RBUTTON) {	//double buttons
+			lastdoublemb = true;
 			int ret = digneighbors(index);
 			if (ret == -1) {
 				PostMessage(hwnd, WM_GAMEFAIL, 0, 0);
@@ -369,8 +379,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			else
 				paintmap(hdc, MAPUNITSLEFT, MAPUNITSTOP);
 		}
-		else {	//single button
-			if (Game.state == INITIAL) {	//first click
+		else if (!lastdoublemb) {	//single button and last was not double button
+			lastdoublemb = false;
+			if (Game.state == INITIAL && GETUNITSTATE(Game.map[index]) != UNITFLAG) {	//first click
 				PostMessage(hwnd, WM_GAMESTART, 0, index);
 			}
 			else {	//not first click
@@ -386,6 +397,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 					paintmap(hdc, MAPUNITSLEFT, MAPUNITSTOP);
 			}
 		}
+		else {	//single button and last was double button
+			lastdoublemb = false;
+			paintmap(hdc, MAPUNITSLEFT, MAPUNITSTOP);
+		}
 		break;
 	case WM_RBUTTONDOWN:
 		//won't work after game finishing
@@ -395,11 +410,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		if (!lparamispos(lparam)) break;
 		index = lparamtoindex(lparam);
 		if (wparam & MK_LBUTTON) {	//double buttons
+			lastdoublemb = true;
+			PostMessage(hresetb, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hbm_click);
 			Neighbor indexes;
 			getneighbors(indexes, index);
 			showclickdown(hdc, MAPUNITSLEFT, MAPUNITSTOP, indexes);
 		}
 		else {	//single button, flag a unit or mark a unit
+			lastdoublemb = false;
 			if (GETUNITSTATE(Game.map[index]) == UNITCOVER) {
 				Game.map[index] = SETUNITSTATE(UNITFLAG, Game.map[index]);
 				drawmapunit(hdc, MAPUNITSLEFT + indextorleft(index), MAPUNITSTOP + indextortop(index), index);
@@ -435,6 +453,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		if (!lparamispos(lparam)) break;
 		index = lparamtoindex(lparam);
 		if (wparam & MK_LBUTTON) {	//double buttons
+			lastdoublemb = true;
 			int ret = digneighbors(index);
 			if (ret == -1) {
 				PostMessage(hwnd, WM_GAMEFAIL, 0, 0);
@@ -445,6 +464,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			else
 				paintmap(hdc, MAPUNITSLEFT, MAPUNITSTOP);
 		}
+		else	//single button
+			lastdoublemb = false;
 		break;
 	case WM_MOUSEMOVE:
 		//won't work after game finishing

@@ -18,7 +18,7 @@ int lparamtoindex(LPARAM lparam) {
 	return rpostoindex(p.x - MAPUNITSLEFT, p.y - MAPUNITSTOP);
 }
 
-int str2int(char *str, dword len, dword &x) {
+int str2dword(char *str, dword len, dword &x) {
 	x = 0;
 	for (dword i = 0; i < len && str[i] != '\0'; i++) {
 		if (str[i] < '0' || str[i] > '9') return -1;
@@ -27,10 +27,10 @@ int str2int(char *str, dword len, dword &x) {
 	return 0;
 }
 
-int int2str(char *str, dword len, dword x) {
+int dword2str(char *str, dword len, dword x) {
 	int ret;
 	if (len < 2) return 0;
-	ret = (x >= 10) ? int2str(str, len, x / 10) : 0;
+	ret = (x >= 10) ? dword2str(str, len, x / 10) : 0;
 	if ((dword)ret < len - 1) {
 		str[ret] = x % 10 + '0';
 		ret++;
@@ -174,7 +174,7 @@ int maketimestr(char * buffer, int size, dword time, const char * timeunit/*=DEF
 	int ret;
 	if (size < 2) return 0;
 	//transform time value into c_string
-	ret = int2str(buffer, size, time);
+	ret = dword2str(buffer, size, time);
 	if (ret == size - 1) return ret;
 	//append time unit c_string
 	strncat_s(buffer, size, timeunit, size - ret - 1);
