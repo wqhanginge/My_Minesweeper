@@ -4,10 +4,49 @@ typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned dword;
 
-/*
- * following defines for game logic
+/* following defines for GameInfo struct, see details in gamecore.h
  */
 
+//Game Modes
+#define JUNIOR	0
+#define MIDDLE	1
+#define SENIOR	2
+#define CUSTOM	3
+#define CRUSH	4
+#define ISSTANDARD(Mode)	((byte)(Mode) < CUSTOM)
+#define ISCRUSH(Mode)		((byte)(Mode) >= CRUSH)
+
+#define JUNIOR_WIDTH	9
+#define JUNIOR_HEIGHT	9
+#define JUNIOR_SIZE		(JUNIOR_WIDTH * JUNIOR_HEIGHT)
+#define JUNIOR_MINES	10
+
+#define MIDDLE_WIDTH	16
+#define MIDDLE_HEIGHT	16
+#define MIDDLE_SIZE		(MIDDLE_WIDTH * MIDDLE_HEIGHT)
+#define MIDDLE_MINES	40
+
+#define SENIOR_WIDTH	30
+#define SENIOR_HEIGHT	16
+#define SENIOR_SIZE		(SENIOR_WIDTH * SENIOR_HEIGHT)
+#define SENIOR_MINES	99
+
+#define MAXWIDTH	30
+#define MAXHEIGHT	24
+#define MINWIDTH	9
+#define MINHEIGHT	9
+#define MAXMINERATE	0.9
+#define MINMINES	10
+//end Game Modes
+
+//Game States
+#define INITIAL		0
+#define PROGRESS	1
+#define SUCCESS		2
+#define FAIL		3
+//end Game States
+
+//Game Map
 /*  7 6 5 4 3 2 1 0
  * +-+-+-+-+-+-+-+-+
  * |M|  S  | mines |
@@ -18,85 +57,31 @@ typedef unsigned dword;
  * mines:	mines of neighbors
  */
 
-#define UNITMINE	0x80
-#define UNITCOVER	0x00
-#define UNITFLAG	0x10
-#define UNITMARK	0x20
-#define UNITUNCOV	0x30
-#define UNITBOMB	0x40
-#define UNITWRONG	0x50
-#define GETUNITMINES(unit)		((byte)((unit) & 0x0F))
-#define SETUNITMINES(x, unit)	((byte)((byte)((x) & 0x0F) | (byte)((unit) & 0xF0)))
-#define GETUNITSTATE(unit)		((byte)((unit) & 0x70))
-#define SETUNITSTATE(S, unit)	((byte)((byte)(S) | (byte)((unit) & 0x8F)))
-#define UNITISMINE(unit)		((unit) & 0x80)
+#define MU_MINE		0x80
+#define MUS_COVER	0x00
+#define MUS_FLAG	0x10
+#define MUS_MARK	0x20
+#define MUS_UNCOV	0x30
+#define MUS_BOMB	0x40
+#define MUS_WRONG	0x50
+#define GETMUMINES(unit)		((byte)((unit) & 0x0F))
+#define MAKEMUMINES(m, unit)	((byte)((byte)((m) & 0x0F) | (byte)((unit) & 0xF0)))
+#define GETMUSTATE(unit)		((byte)((unit) & 0x70))
+#define MAKEMUSTATE(S, unit)	((byte)((byte)(S) | (byte)((unit) & 0x8F)))
+#define MUISMINE(unit)			((unit) & 0x80)
+//end Game Map
 
-//game modes
-#define EASY	0
-#define NORMAL	1
-#define HARD	2
-#define CUSTOM	3
-#define CRUSH	4
 
-#define EASY_WIDTH		9
-#define EASY_HEIGHT		9
-#define EASY_SIZE		(EASY_WIDTH * EASY_HEIGHT)
-#define EASY_MINES		10
-#define NORMAL_WIDTH	16
-#define NORMAL_HEIGHT	16
-#define NORMAL_SIZE		(NORMAL_WIDTH * NORMAL_HEIGHT)
-#define NORMAL_MINES	40
-#define HARD_WIDTH		30
-#define HARD_HEIGHT		16
-#define HARD_SIZE		(HARD_WIDTH * HARD_HEIGHT)
-#define HARD_MINES		99
+/* following defines for GameScore struct, see details in gamecore.h
+*/
 
-//game states
-#define INITIAL		0
-#define PROGRESS	1
-#define SUCCESS		2
-#define FAIL		3
-
-//game map custom controls
-#define MAXWIDTH	30
-#define MAXHEIGHT	24
-#define MINWIDTH	9
-#define MINHEIGHT	9
-#define MAXMINERATE	0.9
-#define MINMINES	10
-#define MAPEDITLEN	8
-
-//game scores info
 #define SCORENAMELEN	20
-#define DEFSCORENAME	"Player"
-#define DEFFILENAMEA	"\\AppData\\LocalLow\\MyMinesweeper.ini"
-#define DEFFILENAMEW	L"\\AppData\\LocalLow\\MyMinesweeper.ini"
-#define DEFFILEPATHEVA	"USERPROFILE"
-#define DEFFILEPATHEVW	L"USERPROFILE"
-#define MAXPATHBUF		100
-#define MAXIGNORE		1000
-#define SCOREEDITLEN	SCORENAMELEN
+#define DEFSCORENAMEEN	"anonymous"
 
 #define MAXTIME			999
-#define DEFTIMEUNITA	" Sec"
-#define DEFTIMEUNITW	L" Sec"
-#define TIMESTRBUF		10
 
-#ifdef UNICODE
-#define DEFFILENAME		DEFFILENAMEW
-#define DEFFILEPATHEV	DEFFILEPATHEVW
-#define DEFTIMEUNIT		DEFTIMEUNITW
-#else
-#define DEFFILENAME		DEFFILENAMEA
-#define DEFFILEPATHEV	DEFFILEPATHEVA
-#define DEFTIMEUNIT		DEFTIMEUNITA
-#endif
 
-#define GAMETIMERID		1
-#define GAMETIMERELAPSE	1000
-
-/*
- * following defines for game ui
+/* following defines for user interface
  */
 
 /*         Main Client Area
@@ -144,12 +129,12 @@ typedef unsigned dword;
  */
 
 #define MAPUNITSIZE		24
-#define MAPUNITSWIDTHE	(MAPUNITSIZE * EASY_WIDTH)
-#define MAPUNITSWIDTHN	(MAPUNITSIZE * NORMAL_WIDTH)
-#define MAPUNITSWIDTHH	(MAPUNITSIZE * HARD_WIDTH)
-#define MAPUNITSHEIGHTE	(MAPUNITSIZE * EASY_HEIGHT)
-#define MAPUNITSHEIGHTN	(MAPUNITSIZE * NORMAL_HEIGHT)
-#define MAPUNITSHEIGHTH	(MAPUNITSIZE * HARD_HEIGHT)
+#define MAPUNITSWIDTHJ	(MAPUNITSIZE * JUNIOR_WIDTH)
+#define MAPUNITSWIDTHM	(MAPUNITSIZE * MIDDLE_WIDTH)
+#define MAPUNITSWIDTHS	(MAPUNITSIZE * SENIOR_WIDTH)
+#define MAPUNITSHEIGHTJ	(MAPUNITSIZE * JUNIOR_HEIGHT)
+#define MAPUNITSHEIGHTM	(MAPUNITSIZE * MIDDLE_HEIGHT)
+#define MAPUNITSHEIGHTS	(MAPUNITSIZE * SENIOR_HEIGHT)
 
 #define AREAEDGE		6
 #define THICKEDGE		2
@@ -162,9 +147,9 @@ typedef unsigned dword;
 #define COLOR_DEFSHADOW	RGB(128,128,128)
 
 //Info
-#define INFOWIDTHE	(PARTEDGE + MAPUNITSWIDTHE + PARTEDGE)
-#define INFOWIDTHN	(PARTEDGE + MAPUNITSWIDTHN + PARTEDGE)
-#define INFOWIDTHH	(PARTEDGE + MAPUNITSWIDTHH + PARTEDGE)
+#define INFOWIDTHJ	(PARTEDGE + MAPUNITSWIDTHJ + PARTEDGE)
+#define INFOWIDTHM	(PARTEDGE + MAPUNITSWIDTHM + PARTEDGE)
+#define INFOWIDTHS	(PARTEDGE + MAPUNITSWIDTHS + PARTEDGE)
 #define INFOHEIGHT	(PARTEDGE + 36 + PARTEDGE)
 #define INFOLEFT	AREAEDGE
 #define INFOTOP		AREAEDGE
@@ -200,13 +185,13 @@ typedef unsigned dword;
 
 #define TIMEWIDTH	MINEWIDTH
 #define TIMEHEIGHT	MINEHEIGHT
-#define TIMELEFTE	(INFOLEFT + INFOWIDTHE - RIGHTDIST - TIMEWIDTH)
-#define TIMELEFTN	(INFOLEFT + INFOWIDTHN - RIGHTDIST - TIMEWIDTH)
-#define TIMELEFTH	(INFOLEFT + INFOWIDTHH - RIGHTDIST - TIMEWIDTH)
+#define TIMELEFTJ	(INFOLEFT + INFOWIDTHJ - RIGHTDIST - TIMEWIDTH)
+#define TIMELEFTM	(INFOLEFT + INFOWIDTHM - RIGHTDIST - TIMEWIDTH)
+#define TIMELEFTS	(INFOLEFT + INFOWIDTHS - RIGHTDIST - TIMEWIDTH)
 #define TIMETOP		MINETOP
-#define ITNSLEFTE	(TIMELEFTE + INSEDGE)
-#define ITNSLEFTN	(TIMELEFTN + INSEDGE)
-#define ITNSLEFTH	(TIMELEFTH + INSEDGE)
+#define ITNSLEFTJ	(TIMELEFTJ + INSEDGE)
+#define ITNSLEFTM	(TIMELEFTM + INSEDGE)
+#define ITNSLEFTS	(TIMELEFTS + INSEDGE)
 #define ITNSTOP		(TIMETOP + INSEDGE)
 
 #define COLOR_TIME	COLOR_MINE
@@ -214,19 +199,19 @@ typedef unsigned dword;
 #define COLOR_TIMES	COLOR_MINES
 
 #define RESETBSIZE	32
-#define RESETBLEFTE	(INFOLEFT + (INFOWIDTHE - RESETBSIZE) / 2)
-#define RESETBLEFTN	(INFOLEFT + (INFOWIDTHN - RESETBSIZE) / 2)
-#define RESETBLEFTH	(INFOLEFT + (INFOWIDTHH - RESETBSIZE) / 2)
+#define RESETBLEFTJ	(INFOLEFT + (INFOWIDTHJ - RESETBSIZE) / 2)
+#define RESETBLEFTM	(INFOLEFT + (INFOWIDTHM - RESETBSIZE) / 2)
+#define RESETBLEFTS	(INFOLEFT + (INFOWIDTHS - RESETBSIZE) / 2)
 #define RESETBTOP	(INFOTOP + PARTEDGE + 2)
 //end Mine part, Time part and Reset Button
 
 //MapArea
-#define MAPAREAWIDTHE	INFOWIDTHE
-#define MAPAREAWIDTHN	INFOWIDTHN
-#define MAPAREAWIDTHH	INFOWIDTHH
-#define MAPAREAHEIGHTE	(PARTEDGE + MAPUNITSHEIGHTE + PARTEDGE)
-#define MAPAREAHEIGHTN	(PARTEDGE + MAPUNITSHEIGHTN + PARTEDGE)
-#define MAPAREAHEIGHTH	(PARTEDGE + MAPUNITSHEIGHTH + PARTEDGE)
+#define MAPAREAWIDTHJ	INFOWIDTHJ
+#define MAPAREAWIDTHM	INFOWIDTHM
+#define MAPAREAWIDTHS	INFOWIDTHS
+#define MAPAREAHEIGHTJ	(PARTEDGE + MAPUNITSHEIGHTJ + PARTEDGE)
+#define MAPAREAHEIGHTM	(PARTEDGE + MAPUNITSHEIGHTM + PARTEDGE)
+#define MAPAREAHEIGHTS	(PARTEDGE + MAPUNITSHEIGHTS + PARTEDGE)
 #define MAPAREALEFT		AREAEDGE
 #define MAPAREATOP		(AREAEDGE + INFOHEIGHT + AREAEDGE)
 
@@ -261,12 +246,12 @@ typedef unsigned dword;
 //end MapArea
 
 //Client Area
-#define CLIENTWIDTHE	(AREAEDGE + INFOWIDTHE + AREAEDGE)
-#define CLIENTWIDTHN	(AREAEDGE + INFOWIDTHN + AREAEDGE)
-#define CLIENTWIDTHH	(AREAEDGE + INFOWIDTHH + AREAEDGE)
-#define CLIENTHEIGHTE	(AREAEDGE + INFOHEIGHT + AREAEDGE + MAPAREAHEIGHTE + AREAEDGE)
-#define CLIENTHEIGHTN	(AREAEDGE + INFOHEIGHT + AREAEDGE + MAPAREAHEIGHTN + AREAEDGE)
-#define CLIENTHEIGHTH	(AREAEDGE + INFOHEIGHT + AREAEDGE + MAPAREAHEIGHTH + AREAEDGE)
+#define CLIENTWIDTHJ	(AREAEDGE + INFOWIDTHJ + AREAEDGE)
+#define CLIENTWIDTHM	(AREAEDGE + INFOWIDTHM + AREAEDGE)
+#define CLIENTWIDTHS	(AREAEDGE + INFOWIDTHS + AREAEDGE)
+#define CLIENTHEIGHTJ	(AREAEDGE + INFOHEIGHT + AREAEDGE + MAPAREAHEIGHTJ + AREAEDGE)
+#define CLIENTHEIGHTM	(AREAEDGE + INFOHEIGHT + AREAEDGE + MAPAREAHEIGHTM + AREAEDGE)
+#define CLIENTHEIGHTS	(AREAEDGE + INFOHEIGHT + AREAEDGE + MAPAREAHEIGHTS + AREAEDGE)
 #define CLIENTLEFT		0
 #define CLIENTTOP		0
 
@@ -274,3 +259,34 @@ typedef unsigned dword;
 #define COLOR_CLIENTL	RGB(255,255,255)
 #define COLOR_CLIENTS	RGB(128,128,128)
 //end Client Area
+
+//Custom Dialog
+#define CUSTOMEDITLEN	8
+//end Custom Dialog
+
+//GetName Dialog
+#define NAMEEDITLEN	SCORENAMELEN
+//end GetName Dialog
+
+//Record Dialog
+#define TIMESTRLEN		10
+#define DEFTIMEUNITEN	" Sec"
+//end Record Dialog
+
+
+/* following defines for file io
+ */
+
+#define DEFFILENAME		"MyMinesweeper.ini"
+#define DEFFILEPATHEV	"LOCALAPPDATA"
+#define INITAPPNAME		"Init"
+#define SCOREAPPNAME	"Record"
+
+
+/* following defines for miscellaneous
+ */
+
+#define GAMETIMERID		1
+#define GAMETIMERELAPSE	1000
+#define DEFWNDLEFT		128
+#define DEFWNDTOP		128

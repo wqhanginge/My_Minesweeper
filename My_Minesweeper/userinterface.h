@@ -3,9 +3,9 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <Windows.h>
+#include "defines.h"
+#include "gamecore.h"
 #include "resource.h"
-#include "minesweeper_defines.h"
-#include "minesweeper_game.h"
 
 extern HINSTANCE hInst;
 extern HWND hWnd;
@@ -182,7 +182,7 @@ void drawinfonum(
 	_In_ COLORREF bright = COLOR_INFONUMSBT
 );
 
-/* these functions are private
+/* these functions are private 
  * they are invisible outside
  */
 /*
@@ -203,7 +203,7 @@ static void draw7sdg(_In_ HDC h7sddc, _In_ int left, _In_ int top);
 static bool _xor(const bool A, const bool B);
 */
 
- //w:MAPUNITZISE, h:MAPUNITSIZE
+//w:MAPUNITZISE, h:MAPUNITSIZE
 void drawmucoverbg(
 	_In_ HDC hdestdc,
 	_In_ int left,

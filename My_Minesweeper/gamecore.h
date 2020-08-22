@@ -1,6 +1,7 @@
 #pragma once
 
-#include "minesweeper_defines.h"
+#include "defines.h"
+#include <tchar.h>
 
 struct GameInfo {
 	byte mode;			//accessed by setgamemode()
@@ -18,12 +19,12 @@ struct GameInfo {
 };
 
 struct GameScore {
-	word easytime;
-	word normaltime;
-	word hardtime;
-	char easyname[SCORENAMELEN];
-	char normalname[SCORENAMELEN];
-	char hardname[SCORENAMELEN];
+	word juniortime;
+	word middletime;
+	word seniortime;
+	TCHAR juniorname[SCORENAMELEN];
+	TCHAR middlename[SCORENAMELEN];
+	TCHAR seniorname[SCORENAMELEN];
 };
 
 /*
@@ -34,8 +35,10 @@ typedef int Neighbor[9];
 extern GameInfo Game;
 extern GameScore Score;
 
+//transform GameMap index-type into xy-type
 int indextox(int index);
 int indextoy(int index);
+//transform GameMap xy-type into index-type
 int xytoindex(int x, int y);
 
 //require a 9 members array with input in first member
@@ -47,7 +50,7 @@ void getneighbors(Neighbor &neighbor, int index);
 void setgamemode(byte mode, byte width = 0, byte height = 0, word mines = 0);
 
 //reset a map to a blank map
-void cleanmap();
+void resetgame();
 
 //create a new map
 void createmap(int x, int y);
@@ -82,11 +85,8 @@ void uncovallmines();
 void updatetime();
 
 //reset all scores
-void cleanscore();
+void resetrecord();
 
-//read options from file, or init with EASY Mode
-void initgame(char *Path);
-static bool readfile(char *Path);
-
-//save scores and options in file
-void savegame(char *Path);
+//get best score info
+dword getrecordtime();
+TCHAR *getrecordname();

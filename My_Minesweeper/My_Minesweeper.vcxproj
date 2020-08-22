@@ -30,27 +30,27 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -139,17 +139,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="minesweeper_game.cpp" />
-    <ClCompile Include="minesweeper_main.cpp" />
-    <ClCompile Include="minesweeper_support.cpp" />
-    <ClCompile Include="minesweeper_ui.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="minesweeper_defines.h" />
-    <ClInclude Include="minesweeper_game.h" />
-    <ClInclude Include="minesweeper_support.h" />
-    <ClInclude Include="minesweeper_ui.h" />
+    <ClInclude Include="defines.h" />
+    <ClInclude Include="gamecore.h" />
+    <ClInclude Include="interface.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="userinterface.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Click.bmp" />
@@ -158,7 +152,13 @@
     <Image Include="Success.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Minesweeper_Resource.rc" />
+    <ClCompile Include="gamecore.cpp" />
+    <ClCompile Include="interface.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="userinterface.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
