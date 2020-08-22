@@ -15,33 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="minesweeper_game.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minesweeper_main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minesweeper_support.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minesweeper_ui.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="minesweeper_defines.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="minesweeper_game.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="minesweeper_support.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="minesweeper_ui.h">
+    <ClInclude Include="defines.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="gamecore.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="interface.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="userinterface.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -60,7 +46,21 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Minesweeper_Resource.rc">
+    <ClCompile Include="gamecore.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="interface.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="userinterface.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
   </ItemGroup>

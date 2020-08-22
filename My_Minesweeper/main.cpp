@@ -1,42 +1,72 @@
-#include "minesweeper_support.h"
+#define WIN32_LEAN_AND_MEAN
+
+#include <Windows.h>
+#include "defines.h"
+#include "gamecore.h"
+#include "userinterface.h"
+#include "interface.h"
+#include "resource.h"
+#include <tchar.h>
+
+#define WM_GAMERESET	(WM_APP + 0)		//sent when game needs reset
+#define WM_GAMESUCCESS	(WM_APP + 1)		//sent when game is succeed
+#define WM_GAMEFAIL		(WM_APP + 2)		//sent when game is failed
+#define WM_GAMESTART	(WM_APP + 3)		//sent when game needs start, use lparam as start position
+//sent when game mode needs change,
+//use wparam as new GameMode,
+//use lparam as new width, height and mines
+#define WM_GAMEMODECHG	(WM_APP + 4)
+#define MAKECHGLPARAM(w, h, m)	((LPARAM)((((dword)(w) & 0xFF) | (((dword)(h) & 0xFF) << 8)) | (((dword)(m) & 0xFFFF) << 16)))
+#define GETCHGWIDTH(l)			((byte)((dword)(l) & 0xFF))
+#define GETCHGHEIGHT(l)			((byte)(((dword)(l) >> 8) & 0xFF))
+#define GETCHGMINES(l)			((word)(((dword)(l) >> 16) & 0xFFFF))
+
+#define ID_RESETB	50000
+
+HINSTANCE hInst;
+HWND hWnd;
+HMENU hMenu;
+
+HBITMAP hbm_resetb, hbm_click, hbm_fail, hbm_success;
+
 
 INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam) {
-	static HWND het, hnt, hht, hen, hnn, hhn;
-	char timebuffer[TIMESTRBUF];
+	static HWND hjt, hmt, hst, hjn, hmn, hsn;
+	TCHAR timebuffer[TIMESTRLEN];
 
 	switch (msg) {
 	case WM_INITDIALOG:
 		//get static handels
-		het = FindWindowEx(hrecord, NULL, TEXT("STATIC"), NULL);
-		hnt = FindWindowEx(hrecord, het, TEXT("STATIC"), NULL);
-		hht = FindWindowEx(hrecord, hnt, TEXT("STATIC"), NULL);
-		hen = FindWindowEx(hrecord, hht, TEXT("STATIC"), NULL);
-		hnn = FindWindowEx(hrecord, hen, TEXT("STATIC"), NULL);
-		hhn = FindWindowEx(hrecord, hnn, TEXT("STATIC"), NULL);
+		hjt = FindWindowEx(hrecord, NULL, TEXT("STATIC"), NULL);
+		hmt = FindWindowEx(hrecord, hjt, TEXT("STATIC"), NULL);
+		hst = FindWindowEx(hrecord, hmt, TEXT("STATIC"), NULL);
+		hjn = FindWindowEx(hrecord, hst, TEXT("STATIC"), NULL);
+		hmn = FindWindowEx(hrecord, hjn, TEXT("STATIC"), NULL);
+		hsn = FindWindowEx(hrecord, hmn, TEXT("STATIC"), NULL);
 
 		//init static control show
-		maketimestr(timebuffer, Score.easytime);
-		SetWindowText(het, timebuffer);
-		maketimestr(timebuffer, Score.normaltime);
-		SetWindowText(hnt, timebuffer);
-		maketimestr(timebuffer, Score.hardtime);
-		SetWindowText(hht, timebuffer);
-		SetWindowText(hen, Score.easyname);
-		SetWindowText(hnn, Score.normalname);
-		SetWindowText(hhn, Score.hardname);
+		maketimestr(timebuffer, Score.juniortime);
+		SetWindowText(hjt, timebuffer);
+		maketimestr(timebuffer, Score.middletime);
+		SetWindowText(hmt, timebuffer);
+		maketimestr(timebuffer, Score.seniortime);
+		SetWindowText(hst, timebuffer);
+		SetWindowText(hjn, Score.juniorname);
+		SetWindowText(hmn, Score.middlename);
+		SetWindowText(hsn, Score.seniorname);
 		break;
 	case WM_COMMAND:
 		switch (LOWORD(wparam)) {
 		case IDRESET:
 			//reset the record
-			cleanscore();
+			resetrecord();
 			maketimestr(timebuffer, MAXTIME);
-			SetWindowText(het, timebuffer);
-			SetWindowText(hnt, timebuffer);
-			SetWindowText(hht, timebuffer);
-			SetWindowText(hen, DEFSCORENAME);
-			SetWindowText(hnn, DEFSCORENAME);
-			SetWindowText(hhn, DEFSCORENAME);
+			SetWindowText(hjt, timebuffer);
+			SetWindowText(hmt, timebuffer);
+			SetWindowText(hst, timebuffer);
+			SetWindowText(hjn, TEXT(DEFSCORENAMEEN));
+			SetWindowText(hmn, TEXT(DEFSCORENAMEEN));
+			SetWindowText(hsn, TEXT(DEFSCORENAMEEN));
 			break;
 		case IDOK:
 			EndDialog(hrecord, 0);
@@ -58,14 +88,14 @@ INT_PTR CALLBACK GetNameProc(HWND hgetname, UINT msg, WPARAM wparam, LPARAM lpar
 	case WM_INITDIALOG:
 		//get edit control handle and init default show
 		heditname = FindWindowEx(hgetname, NULL, TEXT("EDIT"), NULL);
-		SetWindowText(heditname, bestname());
-		SendMessage(heditname, EM_LIMITTEXT, SCOREEDITLEN - 1, 0);
+		SetWindowText(heditname, getrecordname());
+		SendMessage(heditname, EM_LIMITTEXT, NAMEEDITLEN - 1, 0);
 		SendMessage(heditname, EM_SETSEL, 0, -1);
 		SetFocus(heditname);
 		break;
 	case WM_DESTROY:
 		//get what writen in the edit control when exit dialog
-		GetWindowText(heditname, bestname(), SCOREEDITLEN);
+		GetWindowText(heditname, getrecordname(), NAMEEDITLEN);
 		break;
 	case WM_COMMAND:
 		switch (LOWORD(wparam)) {
@@ -84,7 +114,7 @@ INT_PTR CALLBACK GetNameProc(HWND hgetname, UINT msg, WPARAM wparam, LPARAM lpar
 
 INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam) {
 	static HWND heditw, hedith, heditm;
-	char str[MAPEDITLEN];
+	TCHAR str[CUSTOMEDITLEN];
 	static dword width, height, mines;
 
 	switch (msg) {
@@ -115,11 +145,11 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
 		switch (LOWORD(wparam)) {
 		case IDOK:
 			//get what int edit control when click OK
-			GetWindowText(heditw, str, MAPEDITLEN);
+			GetWindowText(heditw, str, CUSTOMEDITLEN);
 			str2dword(str, width);
-			GetWindowText(hedith, str, MAPEDITLEN);
+			GetWindowText(hedith, str, CUSTOMEDITLEN);
 			str2dword(str, height);
-			GetWindowText(heditm, str, MAPEDITLEN);
+			GetWindowText(heditm, str, CUSTOMEDITLEN);
 			str2dword(str, mines);
 			EndDialog(hcustom, 0);
 			break;
@@ -143,18 +173,18 @@ void MenuProc(WPARAM wparam) {
 	case ID_GAME_START:
 		PostMessage(hWnd, WM_GAMERESET, 0, 0);
 		break;
-	case ID_GAME_EASY:
+	case ID_GAME_JUNIOR:
 		//change game mode
-		changechecked(EASY);
-		PostMessage(hWnd, WM_GAMEMODECHG, EASY, 0);
+		changechecked(JUNIOR);
+		PostMessage(hWnd, WM_GAMEMODECHG, JUNIOR, 0);
 		break;
-	case ID_GAME_NORMAL:
-		changechecked(NORMAL);
-		PostMessage(hWnd, WM_GAMEMODECHG, NORMAL, 0);
+	case ID_GAME_MIDDLE:
+		changechecked(MIDDLE);
+		PostMessage(hWnd, WM_GAMEMODECHG, MIDDLE, 0);
 		break;
-	case ID_GAME_HARD:
-		changechecked(HARD);
-		PostMessage(hWnd, WM_GAMEMODECHG, HARD, 0);
+	case ID_GAME_SENIOR:
+		changechecked(SENIOR);
+		PostMessage(hWnd, WM_GAMEMODECHG, SENIOR, 0);
 		break;
 	case ID_GAME_CUSTOM:
 		changechecked(CUSTOM);
@@ -189,7 +219,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	PAINTSTRUCT ps;
 	HBITMAP hbmbuffer;
 	//use for file access
-	static char buffer[MAX_PATH];
+	static TCHAR buffer[MAX_PATH];
+	POINT wndpos;
 	//use for changing window size
 	static int edgew, edgeh;
 	RECT wndrect, cltrect;
@@ -206,9 +237,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		hdc = GetDC(hwnd);
 
 		//init game from file
-		GetEnvironmentVariable(DEFFILEPATHEV, buffer, MAXPATHBUF);
-		strcat_s(buffer, DEFFILENAME);
-		initgame(buffer);
+		GetEnvironmentVariable(TEXT(DEFFILEPATHEV), buffer, MAX_PATH);
+		_tcscat_s(buffer, TEXT("\\"));
+		_tcscat_s(buffer, TEXT(DEFFILENAME));
+		initgame(buffer, wndpos);
 
 		//init menu info
 		changechecked(Game.mode);
@@ -230,8 +262,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		GetClientRect(hwnd, &cltrect);
 		edgew = (wndrect.right - wndrect.left) - cltrect.right;
 		edgeh = (wndrect.bottom - wndrect.top) - cltrect.bottom;
-		wndrect.right = wndrect.left + CLIENTWIDTH + edgew;
-		wndrect.bottom = wndrect.top + CLIENTHEIGHT + edgeh;
+		wndrect = { wndpos.x,wndpos.y,wndpos.x + CLIENTWIDTH + edgew,wndpos.y + CLIENTHEIGHT + edgeh };
 		MoveWindow(hwnd, wndrect.left, wndrect.top, wndrect.right - wndrect.left, wndrect.bottom - wndrect.top, FALSE);
 
 		//init double mouse button state
@@ -243,7 +274,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		//release device contex
 		ReleaseDC(hwnd, hdc);
 		//save game info
-		savegame(buffer);
+		GetWindowRect(hwnd, &wndrect);
+		wndpos = { wndrect.left,wndrect.top };
+		savegame(buffer, wndpos);
 
 		PostQuitMessage(0);
 		break;
@@ -281,7 +314,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		break;
 	case WM_GAMERESET:
 		KillTimer(hwnd, GAMETIMERID);
-		cleanmap();
+		resetgame();
 		lastdoublemb = false;
 		PostMessage(hresetb, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hbm_resetb);
 		InvalidateRect(hwnd, NULL, FALSE);
@@ -316,12 +349,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		uncovallmines();
 		paintmap(hdc, MAPUNITSLEFT, MAPUNITSTOP);
 		//if break record
-		if (Game.mode == EASY || Game.mode == NORMAL || Game.mode == HARD) {
-			if (Game.time < besttime()) {
-				updatetime();
-				DialogBox(hInst, MAKEINTRESOURCE(IDD_GETNAME), hWnd, GetNameProc);
-				DialogBox(hInst, MAKEINTRESOURCE(IDD_RECORD), hWnd, RecordProc);
-			}
+		if (ISSTANDARD(Game.mode) && Game.time < getrecordtime()) {
+			updatetime();
+			DialogBox(hInst, MAKEINTRESOURCE(IDD_GETNAME), hwnd, GetNameProc);
+			DialogBox(hInst, MAKEINTRESOURCE(IDD_RECORD), hwnd, RecordProc);
 		}
 		break;
 	case WM_GAMEMODECHG:
@@ -342,6 +373,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		//won't work after game finishing
 		if (Game.state == FAIL || Game.state == SUCCESS) break;
 
+		SetCapture(hwnd);
 		PostMessage(hresetb, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hbm_click);
 
 		//break when not in the map area
@@ -359,6 +391,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		}
 		break;
 	case WM_LBUTTONUP:
+		ReleaseCapture();
 		//won't work after game finishing
 		if (Game.state == FAIL || Game.state == SUCCESS) break;
 
@@ -381,7 +414,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		}
 		else if (!lastdoublemb) {	//single button and last was not double button
 			lastdoublemb = false;
-			if (Game.state == INITIAL && GETUNITSTATE(Game.map[index]) != UNITFLAG) {	//first click
+			if (Game.state == INITIAL && GETMUSTATE(Game.map[index]) != MUS_FLAG) {	//first click
 				PostMessage(hwnd, WM_GAMESTART, 0, index);
 			}
 			else {	//not first click
@@ -418,32 +451,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		}
 		else {	//single button, flag a unit or mark a unit
 			lastdoublemb = false;
-			if (GETUNITSTATE(Game.map[index]) == UNITCOVER) {
-				Game.map[index] = SETUNITSTATE(UNITFLAG, Game.map[index]);
+			if (GETMUSTATE(Game.map[index]) == MUS_COVER) {
+				Game.map[index] = MAKEMUSTATE(MUS_FLAG, Game.map[index]);
 				drawmapunit(hdc, MAPUNITSLEFT + indextorleft(index), MAPUNITSTOP + indextortop(index), index);
 				Game.minesleft--;
 				drawinfonums(hdc, IMNSLEFT, IMNSTOP, Game.minesleft);
 			}
-			else if (GETUNITSTATE(Game.map[index]) == UNITFLAG && Game.mark) {
-				Game.map[index] = SETUNITSTATE(UNITMARK, Game.map[index]);
+			else if (GETMUSTATE(Game.map[index]) == MUS_FLAG && Game.mark) {
+				Game.map[index] = MAKEMUSTATE(MUS_MARK, Game.map[index]);
 				drawmapunit(hdc, MAPUNITSLEFT + indextorleft(index), MAPUNITSTOP + indextortop(index), index);
 				Game.minesleft++;
 				drawinfonums(hdc, IMNSLEFT, IMNSTOP, Game.minesleft);
 			}
-			else if (GETUNITSTATE(Game.map[index]) == UNITFLAG && !Game.mark)
+			else if (GETMUSTATE(Game.map[index]) == MUS_FLAG && !Game.mark)
 			{
-				Game.map[index] = SETUNITSTATE(UNITCOVER, Game.map[index]);
+				Game.map[index] = MAKEMUSTATE(MUS_COVER, Game.map[index]);
 				drawmapunit(hdc, MAPUNITSLEFT + indextorleft(index), MAPUNITSTOP + indextortop(index), index);
 				Game.minesleft++;
 				drawinfonums(hdc, IMNSLEFT, IMNSTOP, Game.minesleft);
 			}
-			else if (GETUNITSTATE(Game.map[index]) == UNITMARK) {
-				Game.map[index] = SETUNITSTATE(UNITCOVER, Game.map[index]);
+			else if (GETMUSTATE(Game.map[index]) == MUS_MARK) {
+				Game.map[index] = MAKEMUSTATE(MUS_COVER, Game.map[index]);
 				drawmapunit(hdc, MAPUNITSLEFT + indextorleft(index), MAPUNITSTOP + indextortop(index), index);
 			}
 		}
 		break;
 	case WM_RBUTTONUP:
+		ReleaseCapture();
 		//won't work after game finishing
 		if (Game.state == FAIL || Game.state == SUCCESS) break;
 
@@ -503,14 +537,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	return 0;
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow) {
 	WNDCLASSEX wndc = { sizeof(WNDCLASSEX) };
 	wndc.cbClsExtra = 0;
 	wndc.cbWndExtra = 0;
 	wndc.hInstance = hInstance;
 	wndc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wndc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wndc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+	wndc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
+	wndc.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
 	wndc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wndc.lpfnWndProc = WndProc;
 	wndc.lpszClassName = TEXT("My_Minesweeper");
