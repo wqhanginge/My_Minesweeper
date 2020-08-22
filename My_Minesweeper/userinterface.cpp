@@ -1,4 +1,4 @@
-#include "minesweeper_ui.h"
+#include "userinterface.h"
 
 
 /* this array stores infonum backgroud
@@ -25,7 +25,7 @@ const bool InfoNumBG[INFONUM_WIDTH][INFONUM_HEIGHT] =
 
 void loadbitmaps()
 {
-	hbm_resetb = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_RESETBUTTON));
+	hbm_resetb = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_RESETB));
 	hbm_click = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_CLICK));
 	hbm_success = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_SUCCESS));
 	hbm_fail = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_FAIL));
@@ -42,9 +42,9 @@ void freebitmaps()
 int mapunitswidth()
 {
 	switch (Game.mode) {
-	case EASY:		return MAPUNITSWIDTHE;
-	case NORMAL:	return MAPUNITSWIDTHN;
-	case HARD:		return MAPUNITSWIDTHH;
+	case JUNIOR:	return MAPUNITSWIDTHJ;
+	case MIDDLE:	return MAPUNITSWIDTHM;
+	case SENIOR:	return MAPUNITSWIDTHS;
 	case CUSTOM:	return (Game.width * MAPUNITSIZE);
 	default:		break;
 	}
@@ -54,9 +54,9 @@ int mapunitswidth()
 int mapunitsheight()
 {
 	switch (Game.mode) {
-	case EASY:		return MAPUNITSHEIGHTE;
-	case NORMAL:	return MAPUNITSHEIGHTN;
-	case HARD:		return MAPUNITSHEIGHTH;
+	case JUNIOR:	return MAPUNITSHEIGHTJ;
+	case MIDDLE:	return MAPUNITSHEIGHTM;
+	case SENIOR:	return MAPUNITSHEIGHTS;
 	case CUSTOM:	return (Game.height * MAPUNITSIZE);
 	default:		break;
 	}
@@ -66,9 +66,9 @@ int mapunitsheight()
 int infowidth()
 {
 	switch (Game.mode) {
-	case EASY:		return INFOWIDTHE;
-	case NORMAL:	return INFOWIDTHN;
-	case HARD:		return INFOWIDTHH;
+	case JUNIOR:	return INFOWIDTHJ;
+	case MIDDLE:	return INFOWIDTHM;
+	case SENIOR:	return INFOWIDTHS;
 	case CUSTOM:	return (PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE);
 	default:		break;
 	}
@@ -78,9 +78,9 @@ int infowidth()
 int timeleft()
 {
 	switch (Game.mode) {
-	case EASY:		return TIMELEFTE;
-	case NORMAL:	return TIMELEFTN;
-	case HARD:		return TIMELEFTH;
+	case JUNIOR:	return TIMELEFTJ;
+	case MIDDLE:	return TIMELEFTM;
+	case SENIOR:	return TIMELEFTS;
 	case CUSTOM:	return (INFOLEFT + (PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE) - RIGHTDIST - TIMEWIDTH);
 	default:		break;
 	}
@@ -90,9 +90,9 @@ int timeleft()
 int infotimenumsleft()
 {
 	switch (Game.mode) {
-	case EASY:		return ITNSLEFTE;
-	case NORMAL:	return ITNSLEFTN;
-	case HARD:		return ITNSLEFTH;
+	case JUNIOR:	return ITNSLEFTJ;
+	case MIDDLE:	return ITNSLEFTM;
+	case SENIOR:	return ITNSLEFTS;
 	case CUSTOM:	return ((INFOLEFT + (PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE) - RIGHTDIST - TIMEWIDTH) + INSEDGE);
 	default:		break;
 	}
@@ -102,9 +102,9 @@ int infotimenumsleft()
 int resetbleft()
 {
 	switch (Game.mode) {
-	case EASY:		return RESETBLEFTE;
-	case NORMAL:	return RESETBLEFTN;
-	case HARD:		return RESETBLEFTH;
+	case JUNIOR:	return RESETBLEFTJ;
+	case MIDDLE:	return RESETBLEFTM;
+	case SENIOR:	return RESETBLEFTS;
 	case CUSTOM:	return (INFOLEFT + ((PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE) - RESETBSIZE) / 2);
 	default:		break;
 	}
@@ -114,9 +114,9 @@ int resetbleft()
 int mapareawidth()
 {
 	switch (Game.mode) {
-	case EASY:		return MAPAREAWIDTHE;
-	case NORMAL:	return MAPAREAWIDTHN;
-	case HARD:		return MAPAREAWIDTHH;
+	case JUNIOR:	return MAPAREAWIDTHJ;
+	case MIDDLE:	return MAPAREAWIDTHM;
+	case SENIOR:	return MAPAREAWIDTHS;
 	case CUSTOM:	return (PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE);
 	default:		break;
 	}
@@ -126,9 +126,9 @@ int mapareawidth()
 int mapareaheight()
 {
 	switch (Game.mode) {
-	case EASY:		return MAPAREAHEIGHTE;
-	case NORMAL:	return MAPAREAHEIGHTN;
-	case HARD:		return MAPAREAHEIGHTH;
+	case JUNIOR:	return MAPAREAHEIGHTJ;
+	case MIDDLE:	return MAPAREAHEIGHTM;
+	case SENIOR:	return MAPAREAHEIGHTS;
 	case CUSTOM:	return (PARTEDGE + Game.height * MAPUNITSIZE + PARTEDGE);
 	default:		break;
 	}
@@ -138,9 +138,9 @@ int mapareaheight()
 int clientwidth()
 {
 	switch (Game.mode) {
-	case EASY:		return CLIENTWIDTHE;
-	case NORMAL:	return CLIENTWIDTHN;
-	case HARD:		return CLIENTWIDTHH;
+	case JUNIOR:	return CLIENTWIDTHJ;
+	case MIDDLE:	return CLIENTWIDTHM;
+	case SENIOR:	return CLIENTWIDTHS;
 	case CUSTOM:	return (AREAEDGE + (PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE) + AREAEDGE);
 	default:		break;
 	}
@@ -150,9 +150,9 @@ int clientwidth()
 int clientheight()
 {
 	switch (Game.mode) {
-	case EASY:		return CLIENTHEIGHTE;
-	case NORMAL:	return CLIENTHEIGHTN;
-	case HARD:		return CLIENTHEIGHTH;
+	case JUNIOR:	return CLIENTHEIGHTJ;
+	case MIDDLE:	return CLIENTHEIGHTM;
+	case SENIOR:	return CLIENTHEIGHTS;
 	case CUSTOM:	return (AREAEDGE + INFOHEIGHT + AREAEDGE + (PARTEDGE + Game.height * MAPUNITSIZE + PARTEDGE) + AREAEDGE);
 	default:		break;
 	}
@@ -256,7 +256,7 @@ static inline void draw7sdbg(
  * +---+
  *   d
  */
-//draw specific line on 7sd, must select pen before calling
+ //draw specific line on 7sd, must select pen before calling
 static inline void draw7sda(_In_ HDC h7sddc, _In_ int left, _In_ int top)
 {
 	MoveToEx(h7sddc, left + 2, top + 1, NULL);
@@ -837,24 +837,24 @@ void drawmapunit(HDC hdestdc, int left, int top, int x, int y)
 
 void drawmapunitNB(HDC hdestdc, int left, int top, int index)
 {
-	switch (GETUNITSTATE(Game.map[index])) {
-	case UNITCOVER:
+	switch (GETMUSTATE(Game.map[index])) {
+	case MUS_COVER:
 		drawmucoverbg(hdestdc, left, top);
 		break;
-	case UNITFLAG:
+	case MUS_FLAG:
 		drawmuflag(hdestdc, left, top);
 		break;
-	case UNITMARK:
+	case MUS_MARK:
 		drawmumark(hdestdc, left, top, false);
 		break;
-	case UNITUNCOV:
-		if (UNITISMINE(Game.map[index])) drawmumine(hdestdc, left, top, false);
-		else drawmunum(hdestdc, left, top, GETUNITMINES(Game.map[index]));
+	case MUS_UNCOV:
+		if (MUISMINE(Game.map[index])) drawmumine(hdestdc, left, top, false);
+		else drawmunum(hdestdc, left, top, GETMUMINES(Game.map[index]));
 		break;
-	case UNITBOMB:
+	case MUS_BOMB:
 		drawmumine(hdestdc, left, top, true);
 		break;
-	case UNITWRONG:
+	case MUS_WRONG:
 		drawmuwrong(hdestdc, left, top);
 		break;
 	default:
