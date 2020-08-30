@@ -128,12 +128,22 @@ void createmap(int x, int y)
 	dword k = 0, index, p;
 	Neighbor neipos;
 	srand((dword)time(nullptr));
+	//more mines the neighbor has, less probability the unit is a new mine
+	int probs[9] = { 1,2,2,2,3,3,5,7,11 };
+	int probone = 1 * 2 * 2 * 2 * 3 * 3 * 5 * 7 * 11;
 	while (k < Game.mines) {
 		index = rand() % Game.size;
 		for (p = 0; p < 9; p++) if (index == safepos[p]) break;
 		if (p >= 9 && !MUISMINE(Game.map[index])) {
-			Game.map[index] |= MU_MINE;
-			k++;
+			word mines = 0;
+			getneighbors(neipos, index);
+			for(word i = 1; i < 9; i++)
+				if (neipos[i] != -1 && MUISMINE(Game.map[neipos[i]])) mines++;
+			int prob = probs[mines];
+			if (rand() % probone * prob < probone) {	//P = 1 / probs[mines]
+				Game.map[index] |= MU_MINE;
+				k++;
+			}
 		}
 	}
 	
