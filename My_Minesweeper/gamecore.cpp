@@ -1,4 +1,5 @@
 #include "gamecore.h"
+#include "imlogistic.h"
 #include <ctime>
 #include <memory>
 using namespace std;
@@ -127,26 +128,37 @@ void createmap(int x, int y)
 	//generate mines, 9 units around where clicked won't have mines
 	dword k = 0, index, p;
 	Neighbor neipos;
-	srand((dword)time(nullptr));
-	//more mines the neighbor has, less probability the unit is a new mine
-	int probs[9] = { 1,2,2,2,3,3,5,7,11 };
-	int probone = 1 * 2 * 2 * 2 * 3 * 3 * 5 * 7 * 11;
+	slogistic((dword)time(nullptr));
 	while (k < Game.mines) {
-		index = rand() % Game.size;
+		index = imlogistic() % Game.size;
 		for (p = 0; p < 9; p++) if (index == safepos[p]) break;
+		//p = 9;	//test use
 		if (p >= 9 && !MUISMINE(Game.map[index])) {
-			word mines = 0;
+			//generate probability P, define L as probability 1, n as neighbors' count
+			//xi as suitable mines for each neighbor
+			//nPL = L/x1 + L/x2 + ... + L/xn
 			getneighbors(neipos, index);
-			for(word i = 1; i < 9; i++)
-				if (neipos[i] != -1 && MUISMINE(Game.map[neipos[i]])) mines++;
-			int prob = probs[mines];
-			if (rand() % probone * prob < probone) {	//P = 1 / probs[mines]
+			dword neicount = 0, prsum = 0;
+			for (word i = 1; i < 9; i++) {
+				if (neipos[i] != -1) {
+					neicount++;
+					dword ppr = GETMUMINES(Game.map[neipos[i]]);
+					if (ppr < 2) ppr += 1;	//0 <= ppr < 2
+					else if (ppr < 4) ppr += 2;	//2 <= ppr < 4
+					else ppr += 3;	//4 <= ppr
+					prsum += MINEPRONE / ppr;
+				}
+			}
+			if (imlogistic() % (MINEPRONE * neicount) < prsum) {
 				Game.map[index] |= MU_MINE;
+				//update mines
+				for (word i = 1; i < 9; i++)
+					if (neipos[i] != -1) Game.map[neipos[i]]++;
 				k++;
 			}
 		}
 	}
-	
+	/*
 	//write neighbor mines
 	for (word i = 0; i < Game.size; i++) {
 		if (MUISMINE(Game.map[i])) continue;
@@ -155,7 +167,7 @@ void createmap(int x, int y)
 		for (int j = 1; j < 9; j++)
 			if (neipos[j] != -1 && MUISMINE(Game.map[neipos[j]])) m++;
 		Game.map[i] = MAKEMUMINES(m, Game.map[i]);
-	}
+	}*/
 }
 
 void createmap(int index)
