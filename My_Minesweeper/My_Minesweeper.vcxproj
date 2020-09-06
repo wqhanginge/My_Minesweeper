@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClInclude Include="defines.h" />
     <ClInclude Include="gamecore.h" />
+    <ClInclude Include="imlogistic.h" />
     <ClInclude Include="interface.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="userinterface.h" />
@@ -153,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamecore.cpp" />
+    <ClCompile Include="imlogistic.cpp" />
     <ClCompile Include="interface.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="userinterface.cpp" />
