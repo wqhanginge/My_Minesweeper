@@ -173,7 +173,7 @@ void initgame(TCHAR * Path, POINT &lastwndpos)
 	Game.height = (byte)GetPrivateProfileInt(TEXT(INITAPPNAME), TEXT("height"), 0, Path);
 	Game.mines = (word)GetPrivateProfileInt(TEXT(INITAPPNAME), TEXT("mines"), 0, Path);
 	Game.mark = (bool)GetPrivateProfileInt(TEXT(INITAPPNAME), TEXT("mark"), 0, Path);
-	setgamemode(Game.mode);
+	setgamemode(Game.mode, Game.width, Game.height, Game.mines);
 	Score.juniortime = (word)GetPrivateProfileInt(TEXT(SCOREAPPNAME), TEXT("junior_time"), MAXTIME, Path);
 	GetPrivateProfileString(TEXT(SCOREAPPNAME), TEXT("junior_name"), TEXT(DEFSCORENAMEEN), Score.juniorname, SCORENAMELEN, Path);
 	Score.middletime = (word)GetPrivateProfileInt(TEXT(SCOREAPPNAME), TEXT("middle_time"), MAXTIME, Path);
