@@ -1,5 +1,5 @@
 #include "gamecore.h"
-#include "imlogistic.h"
+#include "lrand.h"
 #include <ctime>
 #include <memory>
 using namespace std;
@@ -128,9 +128,9 @@ void createmap(int x, int y)
 	//generate mines, 9 units around where clicked won't have mines
 	dword k = 0, index, p;
 	Neighbor neipos;
-	slogistic((dword)time(nullptr));
+	slrand((dword)time(nullptr));
 	while (k < Game.mines) {
-		index = imlogistic() % Game.size;
+		index = lrand() % Game.size;
 		for (p = 0; p < 9; p++) if (index == safepos[p]) break;
 		//p = 9;	//test use
 		if (p >= 9 && !MUISMINE(Game.map[index])) {
@@ -149,7 +149,7 @@ void createmap(int x, int y)
 					prsum += MINEPRONE / ppr;
 				}
 			}
-			if (imlogistic() % (MINEPRONE * neicount) < prsum) {
+			if (lrand() % (MINEPRONE * neicount) < prsum) {
 				Game.map[index] |= MU_MINE;
 				//update mines
 				for (word i = 1; i < 9; i++)

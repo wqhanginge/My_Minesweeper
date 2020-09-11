@@ -1,0 +1,17 @@
+#pragma once
+
+////////////////////////////////////////////////////////////////////////
+//
+//	this file provides a 32bits random number function
+//
+////////////////////////////////////////////////////////////////////////
+
+
+#define LRAND_MAX	0xFFFFFFFF
+#define LRAND_MODN	0x100000000
+#define LRAND_MODA	9
+#define LRAND_MODB	11
+
+unsigned lrand();
+
+void slrand(unsigned seed);

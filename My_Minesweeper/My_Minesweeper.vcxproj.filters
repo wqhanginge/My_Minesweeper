@@ -30,7 +30,7 @@
     <ClInclude Include="userinterface.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="imlogistic.h">
+    <ClInclude Include="lrand.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -61,7 +61,7 @@
     <ClCompile Include="userinterface.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="imlogistic.cpp">
+    <ClCompile Include="lrand.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
