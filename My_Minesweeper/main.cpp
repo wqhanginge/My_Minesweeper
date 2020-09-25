@@ -7,6 +7,8 @@
 #include "interface.h"
 #include "resource.h"
 #include <tchar.h>
+#include <ctime>
+#include "imlogistic.h"
 
 #define WM_GAMERESET	(WM_APP + 0)		//sent when game needs reset
 #define WM_GAMESUCCESS	(WM_APP + 1)		//sent when game is succeed
@@ -241,6 +243,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		_tcscat_s(buffer, TEXT("\\"));
 		_tcscat_s(buffer, TEXT(DEFFILENAME));
 		initgame(buffer, wndpos);
+		simlogistic((dword)time(nullptr));
 
 		//init menu info
 		changechecked(Game.mode);
