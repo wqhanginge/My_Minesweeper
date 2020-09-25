@@ -1,11 +1,10 @@
 #include "lrand.h"
-
-unsigned long long x = 0;
+unsigned x = 0;
 
 unsigned lrand()
 {
-	x = (LRAND_MODA * x + LRAND_MODB) % LRAND_MODN;
-	return (unsigned)x;
+	x = ((unsigned long long)x * LRAND_MODA + LRAND_MODB);
+	return x;
 }
 
 void slrand(unsigned seed)
