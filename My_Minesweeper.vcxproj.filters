@@ -15,53 +15,56 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="minesweeper_defines.h">
+    <ClInclude Include="src\defines.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="minesweeper_game.h">
+    <ClInclude Include="src\gamecore.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="minesweeper_support.h">
+    <ClInclude Include="src\interface.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="src\userinterface.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="minesweeper_ui.h">
+    <ClInclude Include="res\resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="minesweeper_game.cpp">
+    <ClCompile Include="src\gamecore.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="minesweeper_support.cpp">
+    <ClCompile Include="src\interface.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="minesweeper_main.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="minesweeper_ui.cpp">
+    <ClCompile Include="src\userinterface.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Minesweeper_Resource.rc">
+    <Image Include="res\Click.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Fail.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Icon.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ResetButton.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Success.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\Resource.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Click.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="Fail.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="ResetButton.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="Success.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
   </ItemGroup>
 </Project>
