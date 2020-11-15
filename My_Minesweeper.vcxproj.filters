@@ -30,7 +30,7 @@
     <ClInclude Include="res\resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\lrand.h">
+    <ClInclude Include="src\imlogistic.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -47,7 +47,7 @@
     <ClCompile Include="src\userinterface.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\lrand.cpp">
+    <ClCompile Include="src\imlogistic.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
