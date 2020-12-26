@@ -41,14 +41,15 @@
 #define ID_GAME_RECORD                  40009
 #define IDD_HELP                        40010
 #define ID_HELP                         40011
+#define ID_ABOUT                        40012
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        116
-#define _APS_NEXT_COMMAND_VALUE         40012
-#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_RESOURCE_VALUE        117
+#define _APS_NEXT_COMMAND_VALUE         40013
+#define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
