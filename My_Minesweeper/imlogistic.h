@@ -21,3 +21,6 @@ unsigned imlogistic();
 
 //set logistic seed
 void simlogistic(unsigned seed);
+
+//return a random number within [down, up)
+unsigned imlogistic(unsigned down, unsigned up);
