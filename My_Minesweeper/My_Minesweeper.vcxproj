@@ -149,6 +149,7 @@
   <ItemGroup>
     <Image Include="Click.bmp" />
     <Image Include="Fail.bmp" />
+    <Image Include="Icon.ico" />
     <Image Include="ResetButton.bmp" />
     <Image Include="Success.bmp" />
   </ItemGroup>
