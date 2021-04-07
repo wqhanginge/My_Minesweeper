@@ -35,6 +35,11 @@ void simlogistic(unsigned seed)
 	k2 = x2 = (~seed == 0) ? 1 : ~seed;
 }
 
+unsigned imlogistic(unsigned down, unsigned up)
+{
+	return (imlogistic() % (up - down) + down);
+}
+
 
 /* improve structure
  *        L            L

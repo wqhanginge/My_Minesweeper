@@ -13,6 +13,8 @@
 #include "userinterface.h"
 #include "resource.h"
 #include <tchar.h>
+#include <strsafe.h>
+#pragma comment(lib, "Version.lib")
 
 extern HINSTANCE hInst;
 extern HWND hWnd;
@@ -103,3 +105,7 @@ inline int maketimestr(
 //save file management
 void initgame(_In_ TCHAR *Path, _Out_ POINT &lastwndpos);
 void savegame(_In_ TCHAR *Path, _In_ POINT &wndpos);
+
+
+//get file version information
+void getversion(_Out_ TCHAR* version, _In_ int size_in_ch);

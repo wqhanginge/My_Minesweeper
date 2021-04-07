@@ -47,6 +47,9 @@
     <Image Include="Success.bmp">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="Icon.ico">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamecore.cpp">
