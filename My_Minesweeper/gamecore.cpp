@@ -125,19 +125,19 @@ void createmap(int x, int y)
 	Neighbor safepos;
 	getneighbors(safepos, x, y);
 
-	//generate mines, 9 units around where clicked won't have mines
+	//generate mines, 8 units around where clicked won't have mines
 	//use shuffle algorithm
-	memset(&Game.map[Game.size - Game.mines], MU_MINE, Game.mines);
+	memset(Game.map, MU_MINE, Game.mines);
 	dword neicount = 0;
-	for (int i = 0; i < 9; i++) neicount += (Game.map[safepos[i]] != -1);	//remember how many safe positions needed
-	for (dword k = Game.size - Game.mines; k < Game.size; k++) {	//shuffle algorithm
-		dword index = imlogistic(neicount, k + 1);
-		Game.map[k] = exchange(Game.map[index], Game.map[k]);
+	for (int i = 0; i < 9; i++) neicount += (safepos[i] != -1);	//remember how many safe positions needed
+	for (dword k = 0; k < Game.mines; k++) {	//shuffle algorithm
+		dword index = imlogistic(k, Game.size - neicount);
+		swap(Game.map[k], Game.map[index]);
 	}
 	for (int i = 0; i < 9; i++) {	//move safe place to where it is at
-		if (Game.map[safepos[i]] != -1) {
+		if (safepos[i] != -1) {
+			swap(Game.map[safepos[i]], Game.map[Game.size - neicount]);
 			neicount--;
-			Game.map[neicount] = exchange(Game.map[safepos[i]], Game.map[neicount]);
 		}
 	}
 

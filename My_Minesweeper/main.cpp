@@ -32,6 +32,38 @@ HMENU hMenu;
 HBITMAP hbm_resetb, hbm_click, hbm_fail, hbm_success;
 
 
+INT_PTR CALLBACK AboutProc(HWND habout, UINT msg, WPARAM wparam, LPARAM lparam) {
+	static HWND htext;
+	TCHAR aboutinfo[ABOUTINFOLEN];
+
+	switch (msg) {
+	case WM_INITDIALOG:
+		//get text handel
+		htext = FindWindowEx(habout, NULL, TEXT("STATIC"), NULL);
+
+		//show about information
+		_tcscpy_s(aboutinfo, ABOUTINFOLEN, TEXT(ABOUTTEXT));
+		getversion(&aboutinfo[_tcslen(aboutinfo)], ABOUTINFOLEN - _tcslen(aboutinfo));
+		SetWindowText(htext, aboutinfo);
+		break;
+	case WM_CLOSE:
+		EndDialog(habout, 0);
+		break;
+	case WM_COMMAND:
+		switch (LOWORD(wparam)) {
+		case IDOK:
+			EndDialog(habout, 0);
+			break;
+		default:
+			break;
+		}
+		break;
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
 INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam) {
 	static HWND hjt, hmt, hst, hjn, hmn, hsn;
 	TCHAR timebuffer[TIMESTRLEN];
@@ -56,6 +88,9 @@ INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam
 		SetWindowText(hjn, Score.juniorname);
 		SetWindowText(hmn, Score.middlename);
 		SetWindowText(hsn, Score.seniorname);
+		break;
+	case WM_CLOSE:
+		EndDialog(hrecord, 0);
 		break;
 	case WM_COMMAND:
 		switch (LOWORD(wparam)) {
@@ -139,6 +174,9 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
 		dword2str(str, mines);
 		SetWindowText(heditm, str);
 		break;
+	case WM_CLOSE:
+		EndDialog(hcustom, 0);
+		break;
 	case WM_DESTROY:
 		//set game mode when exit dialog
 		PostMessage(hWnd, WM_GAMEMODECHG, CUSTOM, MAKECHGLPARAM(width, height, mines));
@@ -206,10 +244,7 @@ void MenuProc(WPARAM wparam) {
 		break;
 	case ID_ABOUT:
 		//show about infomation
-		TCHAR aboutinfo[ABOUTINFOLEN];
-		_tcscpy_s(aboutinfo, ABOUTINFOLEN, TEXT(ABOUTTEXT));
-		getversion(&aboutinfo[_tcslen(aboutinfo)], ABOUTINFOLEN - _tcslen(aboutinfo));
-		MessageBox(hWnd, aboutinfo, TEXT("About"), MB_OK);
+		DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUT), hWnd, AboutProc);
 		break;
 	default:
 		break;
@@ -508,6 +543,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 			lastdoublemb = false;
 		break;
 	case WM_MOUSEMOVE:
+		SetFocus(hwnd);
 		//won't work after game finishing
 		if (Game.state == FAIL || Game.state == SUCCESS) break;
 
@@ -562,7 +598,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	hInst = hInstance;
 	hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU1));
 	hWnd = CreateWindowEx(0, wndc.lpszClassName, TEXT(APPNAME),
-		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
+		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		NULL,
