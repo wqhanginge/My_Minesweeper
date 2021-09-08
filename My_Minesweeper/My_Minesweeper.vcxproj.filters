@@ -15,24 +15,46 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="basicUI.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="defines.h">
+    <ClInclude Include="encapsulations.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="gamecore.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="interface.h">
+    <ClInclude Include="procfunctions.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="userinterface.h">
+    <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="imlogistic.h">
+    <ClInclude Include="stdincludes.h">
       <Filter>头文件</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="basicUI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="encapsulations.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="gamecore.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="procfunctions.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Click.bmp">
@@ -50,27 +72,5 @@
     <Image Include="Icon.ico">
       <Filter>资源文件</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="gamecore.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="interface.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="userinterface.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="imlogistic.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Resource.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
   </ItemGroup>
 </Project>
