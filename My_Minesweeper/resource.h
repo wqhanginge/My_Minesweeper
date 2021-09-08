@@ -2,7 +2,7 @@
 // Microsoft Visual C++ 生成的包含文件。
 // 供 Resource.rc 使用
 //
-#define IDB_RESETB                      101
+#define IDB_RESET                       101
 #define IDB_CLICK                       102
 #define IDB_SUCCESS                     103
 #define IDB_FAIL                        104
