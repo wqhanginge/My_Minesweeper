@@ -139,12 +139,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="defines.h" />
+    <ClInclude Include="basicUI.h" />
+    <ClInclude Include="encapsulations.h" />
     <ClInclude Include="gamecore.h" />
-    <ClInclude Include="imlogistic.h" />
-    <ClInclude Include="interface.h" />
+    <ClInclude Include="procfunctions.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="userinterface.h" />
+    <ClInclude Include="stdincludes.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="basicUI.cpp" />
+    <ClCompile Include="encapsulations.cpp" />
+    <ClCompile Include="gamecore.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="procfunctions.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Click.bmp" />
@@ -152,16 +162,6 @@
     <Image Include="Icon.ico" />
     <Image Include="ResetButton.bmp" />
     <Image Include="Success.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="gamecore.cpp" />
-    <ClCompile Include="imlogistic.cpp" />
-    <ClCompile Include="interface.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="userinterface.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

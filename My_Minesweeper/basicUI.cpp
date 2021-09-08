@@ -1,8 +1,8 @@
-#include "userinterface.h"
+#include "basicUI.h"
 
 
-/* this array stores infonum backgroud
- * 0 represent background color, 1 represent dark color
+/* this array stores InfoNum backgroud
+ * 0 represent background color, non-0 represent dark color
  */
 const bool InfoNumBG[INFONUM_WIDTH][INFONUM_HEIGHT] =
 {
@@ -23,145 +23,13 @@ const bool InfoNumBG[INFONUM_WIDTH][INFONUM_HEIGHT] =
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
 
-void loadbitmaps()
-{
-	hbm_resetb = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_RESETB));
-	hbm_click = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_CLICK));
-	hbm_success = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_SUCCESS));
-	hbm_fail = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_FAIL));
-}
-
-void freebitmaps()
-{
-	DeleteObject(hbm_resetb);
-	DeleteObject(hbm_click);
-	DeleteObject(hbm_success);
-	DeleteObject(hbm_fail);
-}
-
-int mapunitswidth()
-{
-	switch (Game.mode) {
-	case JUNIOR:	return MAPUNITSWIDTHJ;
-	case MIDDLE:	return MAPUNITSWIDTHM;
-	case SENIOR:	return MAPUNITSWIDTHS;
-	case CUSTOM:	return (Game.width * MAPUNITSIZE);
-	default:		break;
-	}
-	return -1;
-}
-
-int mapunitsheight()
-{
-	switch (Game.mode) {
-	case JUNIOR:	return MAPUNITSHEIGHTJ;
-	case MIDDLE:	return MAPUNITSHEIGHTM;
-	case SENIOR:	return MAPUNITSHEIGHTS;
-	case CUSTOM:	return (Game.height * MAPUNITSIZE);
-	default:		break;
-	}
-	return -1;
-}
-
-int infowidth()
-{
-	switch (Game.mode) {
-	case JUNIOR:	return INFOWIDTHJ;
-	case MIDDLE:	return INFOWIDTHM;
-	case SENIOR:	return INFOWIDTHS;
-	case CUSTOM:	return (PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE);
-	default:		break;
-	}
-	return -1;
-}
-
-int timeleft()
-{
-	switch (Game.mode) {
-	case JUNIOR:	return TIMELEFTJ;
-	case MIDDLE:	return TIMELEFTM;
-	case SENIOR:	return TIMELEFTS;
-	case CUSTOM:	return (INFOLEFT + (PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE) - RIGHTDIST - TIMEWIDTH);
-	default:		break;
-	}
-	return -1;
-}
-
-int infotimenumsleft()
-{
-	switch (Game.mode) {
-	case JUNIOR:	return ITNSLEFTJ;
-	case MIDDLE:	return ITNSLEFTM;
-	case SENIOR:	return ITNSLEFTS;
-	case CUSTOM:	return ((INFOLEFT + (PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE) - RIGHTDIST - TIMEWIDTH) + INSEDGE);
-	default:		break;
-	}
-	return -1;
-}
-
-int resetbleft()
-{
-	switch (Game.mode) {
-	case JUNIOR:	return RESETBLEFTJ;
-	case MIDDLE:	return RESETBLEFTM;
-	case SENIOR:	return RESETBLEFTS;
-	case CUSTOM:	return (INFOLEFT + ((PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE) - RESETBSIZE) / 2);
-	default:		break;
-	}
-	return -1;
-}
-
-int mapareawidth()
-{
-	switch (Game.mode) {
-	case JUNIOR:	return MAPAREAWIDTHJ;
-	case MIDDLE:	return MAPAREAWIDTHM;
-	case SENIOR:	return MAPAREAWIDTHS;
-	case CUSTOM:	return (PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE);
-	default:		break;
-	}
-	return -1;
-}
-
-int mapareaheight()
-{
-	switch (Game.mode) {
-	case JUNIOR:	return MAPAREAHEIGHTJ;
-	case MIDDLE:	return MAPAREAHEIGHTM;
-	case SENIOR:	return MAPAREAHEIGHTS;
-	case CUSTOM:	return (PARTEDGE + Game.height * MAPUNITSIZE + PARTEDGE);
-	default:		break;
-	}
-	return -1;
-}
-
-int clientwidth()
-{
-	switch (Game.mode) {
-	case JUNIOR:	return CLIENTWIDTHJ;
-	case MIDDLE:	return CLIENTWIDTHM;
-	case SENIOR:	return CLIENTWIDTHS;
-	case CUSTOM:	return (AREAEDGE + (PARTEDGE + Game.width * MAPUNITSIZE + PARTEDGE) + AREAEDGE);
-	default:		break;
-	}
-	return -1;
-}
-
-int clientheight()
-{
-	switch (Game.mode) {
-	case JUNIOR:	return CLIENTHEIGHTJ;
-	case MIDDLE:	return CLIENTHEIGHTM;
-	case SENIOR:	return CLIENTHEIGHTS;
-	case CUSTOM:	return (AREAEDGE + INFOHEIGHT + AREAEDGE + (PARTEDGE + Game.height * MAPUNITSIZE + PARTEDGE) + AREAEDGE);
-	default:		break;
-	}
-	return -1;
-}
 
 
 /* these static functions are used only in this file */
-//draw 2 pixel edge concave background, exchange 'light' and 'shadow' to draw a convex backgroung
+
+//draw 2 pixel edge concave background,
+//exchange 'light' and 'shadow' to draw a convex backgroung
+//no DC-Buffer
 static void drawthickedgebg(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -199,7 +67,55 @@ static void drawthickedgebg(
 	DeleteObject(hbshadow);
 }
 
-//draw 1 pixel edge concave background, exchange 'light' and 'shadow' to draw a convex background
+//draw 2 pixel edge concave background with 2 layers of color,
+//exchange colors to draw a convex backgroung
+//no DC-Buffer
+static void drawthickedgebg(
+	_In_ HDC hdestdc,
+	_In_ int left,
+	_In_ int top,
+	_In_ int width,
+	_In_ int height,
+	_In_ COLORREF inner,
+	_In_ COLORREF light,
+	_In_ COLORREF lightlow,
+	_In_ COLORREF shadow,
+	_In_ COLORREF shadowhigh
+)
+{
+	HBRUSH hbinner, hblight, hbll, hbshadow, hbsh;
+	hbinner = CreateSolidBrush(inner);
+	hblight = CreateSolidBrush(light);
+	hbll = CreateSolidBrush(lightlow);
+	hbshadow = CreateSolidBrush(shadow);
+	hbsh = CreateSolidBrush(shadowhigh);
+
+	RECT rect = { left,top,left + width - 1,top + height - 1 };
+	FillRect(hdestdc, &rect, hbshadow);
+	rect = { left + 1,top + 1,left + width,top + height };
+	FillRect(hdestdc, &rect, hblight);
+	rect = { left + 1,top + 1,left + width - 2,top + height - 2 };
+	FillRect(hdestdc, &rect, hbsh);
+	rect = { left + 2,top + 2,left + width - 1,top + height - 1 };
+	FillRect(hdestdc, &rect, hbll);
+	rect = { left + 2,top + 2,left + width - 2,top + height - 2 };
+	FillRect(hdestdc, &rect, hbinner);
+
+	SetPixel(hdestdc, left, rect.bottom + 1, inner);
+	SetPixel(hdestdc, left + 1, rect.bottom, inner);
+	SetPixel(hdestdc, rect.right, top + 1, inner);
+	SetPixel(hdestdc, rect.right + 1, top, inner);
+
+	DeleteObject(hbinner);
+	DeleteObject(hblight);
+	DeleteObject(hbll);
+	DeleteObject(hbshadow);
+	DeleteObject(hbsh);
+}
+
+//draw 1 pixel edge concave background,
+//exchange 'light' and 'shadow' to draw a convex background
+//no DC-Buffer
 static void drawthinedgebg(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -232,12 +148,13 @@ static void drawthinedgebg(
 }
 
 //draw 7sd background
+//no DC-Buffer
 static inline void draw7sdbg(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
-	_In_ COLORREF bg = COLOR_INFONUMSBG,
-	_In_ COLORREF dark = COLOR_INFONUMSDK
+	_In_ COLORREF bg = COLOR_INBG,
+	_In_ COLORREF dark = COLOR_INDK
 )
 {
 	for (int i = 0; i < INFONUM_WIDTH; i++) {
@@ -256,7 +173,8 @@ static inline void draw7sdbg(
  * +---+
  *   d
  */
- //draw specific line on 7sd, must select pen before calling
+//draw specific line on 7sd, must select pen before calling
+//no DC-Buffer
 static inline void draw7sda(_In_ HDC h7sddc, _In_ int left, _In_ int top)
 {
 	MoveToEx(h7sddc, left + 2, top + 1, NULL);
@@ -320,8 +238,14 @@ static inline void draw7sdg(_In_ HDC h7sddc, _In_ int left, _In_ int top)
 	MoveToEx(h7sddc, left + 3, top + 14, NULL);
 	LineTo(h7sddc, left + 12, top + 14);
 }
+//logical xor
+static inline bool _xor(const bool A, const bool B)
+{
+	return (!A && B || A && !B);
+}
 
 
+//no DC-Buffer
 //draw a mine icon
 static void drawmuitemmine(
 	_In_ HDC hdestdc,
@@ -363,22 +287,22 @@ static void drawmuitemmark(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
-	_In_ bool moved,
+	_In_ bool clicked,
 	_In_ COLORREF mark = COLOR_MUMARK
 )
 {
 	HBRUSH hbmark = CreateSolidBrush(mark);
-	RECT rect = { left + moved + 9,top + moved + 4,left + moved + 15,top + moved + 5 };
+	RECT rect = { left + clicked + 9,top + clicked + 4,left + clicked + 15,top + clicked + 5 };
 	FillRect(hdestdc, &rect, hbmark);
-	rect = { left + moved + 7,top + moved + 5,left + moved + 10,top + moved + 9 };
+	rect = { left + clicked + 7,top + clicked + 5,left + clicked + 10,top + clicked + 9 };
 	FillRect(hdestdc, &rect, hbmark);
-	rect = { left + moved + 14,top + moved + 5,left + moved + 17,top + moved + 10 };
+	rect = { left + clicked + 14,top + clicked + 5,left + clicked + 17,top + clicked + 10 };
 	FillRect(hdestdc, &rect, hbmark);
-	rect = { left + moved + 12,top + moved + 10,left + moved + 15,top + moved + 12 };
+	rect = { left + clicked + 12,top + clicked + 10,left + clicked + 15,top + clicked + 12 };
 	FillRect(hdestdc, &rect, hbmark);
-	rect = { left + moved + 10,top + moved + 12,left + moved + 14,top + moved + 15 };
+	rect = { left + clicked + 10,top + clicked + 12,left + clicked + 14,top + clicked + 15 };
 	FillRect(hdestdc, &rect, hbmark);
-	rect = { left + moved + 10,top + moved + 17,left + moved + 14,top + moved + 20 };
+	rect = { left + clicked + 10,top + clicked + 17,left + clicked + 14,top + clicked + 20 };
 	FillRect(hdestdc, &rect, hbmark);
 	DeleteObject(hbmark);
 }
@@ -618,88 +542,49 @@ static void drawmuitemnum8(
 	DeleteObject(hbrush);
 }
 
-//logical xor
-static inline bool _xor(const bool A, const bool B)
-{
-	return (!A && B || A && !B);
-}
 
+/* following functions can be called by external functions */
 
-int rpostoindex(int rleft, int rtop)
+void drawClientBg(HDC hdestdc, int left, int top, COLORREF def)
 {
-	return xytoindex(rlefttox(rleft), rtoptoy(rtop));
-}
-
-int rlefttox(int rleft)
-{
-	return (rleft / MAPUNITSIZE);
-}
-
-int rtoptoy(int rtop)
-{
-	return (rtop / MAPUNITSIZE);
-}
-
-int indextorleft(int index)
-{
-	return xtorleft(indextox(index));
-}
-
-int indextortop(int index)
-{
-	return ytortop(indextoy(index));
-}
-
-int xtorleft(int x)
-{
-	return (x * MAPUNITSIZE);
-}
-
-int ytortop(int y)
-{
-	return (y * MAPUNITSIZE);
-}
-
-void drawclientbg(HDC hdestdc, int left, int top, COLORREF def)
-{
-	RECT rect = { left,top,left + CLIENTWIDTH,top + CLIENTHEIGHT };
+	RECT rect = { left,top,left + CLIENT_WIDTH,top + CLIENT_HEIGHT };
 	HBRUSH hbrush = CreateSolidBrush(def);
 	FillRect(hdestdc, &rect, hbrush);
 	DeleteObject(hbrush);
 }
 
-void drawinfobg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF shadow)
+void drawInfoBg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF shadow)
 {
-	drawthickedgebg(hdestdc, left, top, INFOWIDTH, INFOHEIGHT, inner, light, shadow);
+	drawthickedgebg(hdestdc, left, top, INFO_WIDTH, INFO_HEIGHT, inner, light, shadow);
 }
 
-void drawmapareabg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF shadow)
+void drawMapAreaBg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF shadow)
 {
-	drawthickedgebg(hdestdc, left, top, MAPAREAWIDTH, MAPAREAHEIGHT, inner, light, shadow);
+	drawthickedgebg(hdestdc, left, top, MAPAREA_WIDTH, MAPAREA_HEIGHT, inner, light, shadow);
 }
 
-void drawminebg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF shadow)
+void drawMineBg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF shadow)
 {
-	drawthinedgebg(hdestdc, left, top, MINEWIDTH, MINEHEIGHT, inner, light, shadow);
+	drawthinedgebg(hdestdc, left, top, MINE_WIDTH, MINE_HEIGHT, inner, light, shadow);
 }
 
-void drawtimebg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF shadow)
+void drawTimeBg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF shadow)
 {
-	drawthinedgebg(hdestdc, left, top, TIMEWIDTH, TIMEHEIGHT, inner, light, shadow);
+	drawthinedgebg(hdestdc, left, top, TIME_WIDTH, TIME_HEIGHT, inner, light, shadow);
 }
 
-void drawinfonums(HDC hdestdc, int left, int top, int num, COLORREF bg, COLORREF dark, COLORREF bright)
+void drawIN(HDC hdestdc, int left, int top, int num, COLORREF bg, COLORREF dark, COLORREF bright)
 {
 	HDC hdcbuffer = CreateCompatibleDC(hdestdc);
-	HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, INSWIDTH, INSHEIGHT);
+	HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, IN_WIDTH, IN_HEIGHT);
 	SelectObject(hdcbuffer, hbmbuffer);
-	drawinfonumsNB(hdcbuffer, 0, 0, num, bg, dark, bright);
-	BitBlt(hdestdc, left, top, INSWIDTH, INSHEIGHT, hdcbuffer, 0, 0, SRCCOPY);
+	drawINNB(hdcbuffer, 0, 0, num, bg, dark, bright);
+	BitBlt(hdestdc, left, top, IN_WIDTH, IN_HEIGHT, hdcbuffer, 0, 0, SRCCOPY);
 	DeleteObject(hbmbuffer);
 	DeleteDC(hdcbuffer);
 }
 
-void drawinfonumsNB(HDC hdestdc, int left, int top, int num, COLORREF bg, COLORREF dark, COLORREF bright)
+void drawINNB(HDC hdestdc, int left, int top, int num, COLORREF bg, COLORREF dark, COLORREF bright)
 {
 	int a, b, c;
 	if (num > -100 && num < 0) {
@@ -716,12 +601,12 @@ void drawinfonumsNB(HDC hdestdc, int left, int top, int num, COLORREF bg, COLORR
 	else {
 		a = b = c = -1;
 	}
-	drawinfonum(hdestdc, left, top, a, bg, dark, bright);
-	drawinfonum(hdestdc, left + INFONUM_WIDTH, top, b, bg, dark, bright);
-	drawinfonum(hdestdc, left + INFONUM_WIDTH * 2, top, c, bg, dark, bright);
+	drawInfoNum(hdestdc, left, top, a, bg, dark, bright);
+	drawInfoNum(hdestdc, left + INFONUM_WIDTH, top, b, bg, dark, bright);
+	drawInfoNum(hdestdc, left + INFONUM_WIDTH * 2, top, c, bg, dark, bright);
 }
 
-void drawinfonum(HDC hdestdc, int left, int top, int num, COLORREF bg, COLORREF dark, COLORREF bright)
+void drawInfoNum(HDC hdestdc, int left, int top, int num, COLORREF bg, COLORREF dark, COLORREF bright)
 {
 	HPEN hpen = CreatePen(PS_SOLID, 1, bright);
 	SelectObject(hdestdc, hpen);
@@ -739,14 +624,46 @@ void drawinfonum(HDC hdestdc, int left, int top, int num, COLORREF bg, COLORREF 
 	DeleteObject(hpen);
 }
 
-void drawmucoverbg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF shadow)
+void drawResetButtonBg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF lightlow, COLORREF shadow, COLORREF shadowhigh)
 {
-	drawthickedgebg(hdestdc, left, top, MAPUNITSIZE, MAPUNITSIZE, inner, shadow, light);
+	drawthickedgebg(hdestdc, left, top, RB_SIZE, RB_SIZE, inner, shadow, shadowhigh, light, lightlow);
 }
 
-void drawmuuncovbg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF edge)
+void drawBmpOnResetButton(HDC hdestdc, int left, int top, HBITMAP hbm, bool clicked)
 {
-	RECT rect = { left + 1,top + 1,left + MAPUNITSIZE,top + MAPUNITSIZE };
+	if (hbm == NULL) return;
+	HDC hdcbitmap = CreateCompatibleDC(hdestdc);
+	SelectObject(hdcbitmap, hbm);
+	BitBlt(hdestdc, left + clicked, top + clicked, BMP_SIZE - clicked, BMP_SIZE - clicked, hdcbitmap, 0, 0, SRCCOPY);
+	DeleteDC(hdcbitmap);
+}
+
+void drawResetButton(HDC hdestdc, int left, int top, HBITMAP hbm, bool clicked, COLORREF inner, COLORREF light, COLORREF lightlow, COLORREF shadow, COLORREF shadowhigh)
+{
+	HDC hdcbuffer = CreateCompatibleDC(hdestdc);
+	HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, RB_SIZE, RB_SIZE);
+	SelectObject(hdcbuffer, hbmbuffer);
+	drawResetButtonNB(hdcbuffer, 0, 0, hbm, clicked, inner, light, lightlow, shadow, shadowhigh);
+	BitBlt(hdestdc, left, top, RB_SIZE, RB_SIZE, hdcbuffer, 0, 0, SRCCOPY);
+	DeleteObject(hbmbuffer);
+	DeleteDC(hdcbuffer);
+}
+
+void drawResetButtonNB(HDC hdestdc, int left, int top, HBITMAP hbm, bool clicked, COLORREF inner, COLORREF light, COLORREF lightlow, COLORREF shadow, COLORREF shadowhigh)
+{
+	if (clicked) drawResetButtonBg(hdestdc, left, top, inner, shadow, shadowhigh, light, lightlow);
+	else drawResetButtonBg(hdestdc, left, top, inner, light, lightlow, shadow, shadowhigh);
+	drawBmpOnResetButton(hdestdc, left + 2, top + 2, hbm, clicked);
+}
+
+void drawMUCoverBg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF light, COLORREF shadow)
+{
+	drawthickedgebg(hdestdc, left, top, MU_SIZE, MU_SIZE, inner, shadow, light);
+}
+
+void drawMUUncovBg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF edge)
+{
+	RECT rect = { left + 1,top + 1,left + MU_SIZE,top + MU_SIZE };
 	HPEN hpedge = CreatePen(PS_SOLID, 1, edge);
 	HBRUSH hbinner = CreateSolidBrush(inner);
 	SelectObject(hdestdc, hpedge);
@@ -759,111 +676,46 @@ void drawmuuncovbg(HDC hdestdc, int left, int top, COLORREF inner, COLORREF edge
 	DeleteObject(hbinner);
 }
 
-void drawmuflag(HDC hdestdc, int left, int top, COLORREF flag, COLORREF base, COLORREF bginner, COLORREF bglight, COLORREF bgshadow)
+void drawMUFlag(HDC hdestdc, int left, int top, COLORREF flag, COLORREF base, COLORREF bginner, COLORREF bglight, COLORREF bgshadow)
 {
-	drawmucoverbg(hdestdc, left, top, bginner, bglight, bgshadow);
+	drawMUCoverBg(hdestdc, left, top, bginner, bglight, bgshadow);
 	drawmuitemflag(hdestdc, left, top, flag, base);
 }
 
-void drawmumark(HDC hdestdc, int left, int top, bool down, COLORREF mark, COLORREF bginner, COLORREF bglight, COLORREF bgshadow, COLORREF bgdowninner, COLORREF bgdownedge)
+void drawMUMark(HDC hdestdc, int left, int top, bool clicked, COLORREF mark, COLORREF bginner, COLORREF bglight, COLORREF bgshadow, COLORREF bgclickedinner, COLORREF bgclickededge)
 {
-	if (down) drawmuuncovbg(hdestdc, left, top, bgdowninner, bgdownedge);
-	else drawmucoverbg(hdestdc, left, top, bginner, bglight, bgshadow);
-	drawmuitemmark(hdestdc, left, top, down, mark);
+	if (clicked) drawMUUncovBg(hdestdc, left, top, bgclickedinner, bgclickededge);
+	else drawMUCoverBg(hdestdc, left, top, bginner, bglight, bgshadow);
+	drawmuitemmark(hdestdc, left, top, clicked, mark);
 }
 
-void drawmumine(HDC hdestdc, int left, int top, bool bomb, COLORREF mine, COLORREF light, COLORREF bginner, COLORREF bgbombinner, COLORREF bgedge)
+void drawMUMine(HDC hdestdc, int left, int top, bool bomb, COLORREF mine, COLORREF light, COLORREF bginner, COLORREF bgbombinner, COLORREF bgedge)
 {
-	if (bomb) drawmuuncovbg(hdestdc, left, top, bgbombinner, bgedge);
-	else drawmuuncovbg(hdestdc, left, top, bginner, bgedge);
+	if (bomb) drawMUUncovBg(hdestdc, left, top, bgbombinner, bgedge);
+	else drawMUUncovBg(hdestdc, left, top, bginner, bgedge);
 	drawmuitemmine(hdestdc, left, top, mine, light);
 }
 
-void drawmuwrong(HDC hdestdc, int left, int top, COLORREF mine, COLORREF light, COLORREF cross, COLORREF bginner, COLORREF bgedge)
+void drawMUWrong(HDC hdestdc, int left, int top, COLORREF mine, COLORREF light, COLORREF cross, COLORREF bginner, COLORREF bgedge)
 {
-	drawmuuncovbg(hdestdc, left, top, bginner, bgedge);
+	drawMUUncovBg(hdestdc, left, top, bginner, bgedge);
 	drawmuitemmine(hdestdc, left, top, mine, light);
 	drawmuitemcross(hdestdc, left, top, cross);
 }
 
-void drawmunum(HDC hdestdc, int left, int top, int num, COLORREF number, COLORREF bginner, COLORREF bgedge)
+void drawMUNum(HDC hdestdc, int left, int top, int num, COLORREF numcolor, COLORREF bginner, COLORREF bgedge)
 {
-	drawmuuncovbg(hdestdc, left, top, bginner, bgedge);
-	if (number == COLOR_MUNUMDEF) {
-		switch (num) {
-		case 0:	break;
-		case 1:	drawmuitemnum1(hdestdc, left, top); break;
-		case 2:	drawmuitemnum2(hdestdc, left, top); break;
-		case 3:	drawmuitemnum3(hdestdc, left, top); break;
-		case 4:	drawmuitemnum4(hdestdc, left, top); break;
-		case 5:	drawmuitemnum5(hdestdc, left, top); break;
-		case 6:	drawmuitemnum6(hdestdc, left, top); break;
-		case 7:	drawmuitemnum7(hdestdc, left, top); break;
-		case 8:	drawmuitemnum8(hdestdc, left, top); break;
-		default:break;
-		}
+	drawMUUncovBg(hdestdc, left, top, bginner, bgedge);
+	switch (num) {
+	case 0:	break;
+	case 1:	drawmuitemnum1(hdestdc, left, top, ((numcolor == COLOR_MUNUMDEF) ? COLOR_MUNUM1 : numcolor)); break;
+	case 2:	drawmuitemnum2(hdestdc, left, top, ((numcolor == COLOR_MUNUMDEF) ? COLOR_MUNUM2 : numcolor)); break;
+	case 3:	drawmuitemnum3(hdestdc, left, top, ((numcolor == COLOR_MUNUMDEF) ? COLOR_MUNUM3 : numcolor)); break;
+	case 4:	drawmuitemnum4(hdestdc, left, top, ((numcolor == COLOR_MUNUMDEF) ? COLOR_MUNUM4 : numcolor)); break;
+	case 5:	drawmuitemnum5(hdestdc, left, top, ((numcolor == COLOR_MUNUMDEF) ? COLOR_MUNUM5 : numcolor)); break;
+	case 6:	drawmuitemnum6(hdestdc, left, top, ((numcolor == COLOR_MUNUMDEF) ? COLOR_MUNUM6 : numcolor)); break;
+	case 7:	drawmuitemnum7(hdestdc, left, top, ((numcolor == COLOR_MUNUMDEF) ? COLOR_MUNUM7 : numcolor)); break;
+	case 8:	drawmuitemnum8(hdestdc, left, top, ((numcolor == COLOR_MUNUMDEF) ? COLOR_MUNUM8 : numcolor)); break;
+	default:break;
 	}
-	else {
-		switch (num) {
-		case 0:	break;
-		case 1:	drawmuitemnum1(hdestdc, left, top, number); break;
-		case 2:	drawmuitemnum2(hdestdc, left, top, number); break;
-		case 3:	drawmuitemnum3(hdestdc, left, top, number); break;
-		case 4:	drawmuitemnum4(hdestdc, left, top, number); break;
-		case 5:	drawmuitemnum5(hdestdc, left, top, number); break;
-		case 6:	drawmuitemnum6(hdestdc, left, top, number); break;
-		case 7:	drawmuitemnum7(hdestdc, left, top, number); break;
-		case 8:	drawmuitemnum8(hdestdc, left, top, number); break;
-		default:break;
-		}
-	}
-}
-
-void drawmapunit(HDC hdestdc, int left, int top, int index)
-{
-	HDC hdcbuffer = CreateCompatibleDC(hdestdc);
-	HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MAPUNITSIZE, MAPUNITSIZE);
-	SelectObject(hdcbuffer, hbmbuffer);
-	drawmapunitNB(hdcbuffer, 0, 0, index);
-	BitBlt(hdestdc, left, top, MAPUNITSIZE, MAPUNITSIZE, hdcbuffer, 0, 0, SRCCOPY);
-	DeleteObject(hdcbuffer);
-	DeleteObject(hbmbuffer);
-}
-
-void drawmapunit(HDC hdestdc, int left, int top, int x, int y)
-{
-	drawmapunit(hdestdc, left, top, xytoindex(x, y));
-}
-
-void drawmapunitNB(HDC hdestdc, int left, int top, int index)
-{
-	switch (GETMUSTATE(Game.map[index])) {
-	case MUS_COVER:
-		drawmucoverbg(hdestdc, left, top);
-		break;
-	case MUS_FLAG:
-		drawmuflag(hdestdc, left, top);
-		break;
-	case MUS_MARK:
-		drawmumark(hdestdc, left, top, false);
-		break;
-	case MUS_UNCOV:
-		if (MUISMINE(Game.map[index])) drawmumine(hdestdc, left, top, false);
-		else drawmunum(hdestdc, left, top, GETMUMINES(Game.map[index]));
-		break;
-	case MUS_BOMB:
-		drawmumine(hdestdc, left, top, true);
-		break;
-	case MUS_WRONG:
-		drawmuwrong(hdestdc, left, top);
-		break;
-	default:
-		drawmucoverbg(hdestdc, left, top);
-		break;
-	}
-}
-
-void drawmapunitNB(HDC hdestdc, int left, int top, int x, int y)
-{
-	drawmapunitNB(hdestdc, left, top, xytoindex(x, y));
 }
