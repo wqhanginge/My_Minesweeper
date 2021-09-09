@@ -20,18 +20,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="res\resource.h" />
-    <ClInclude Include="src\defines.h" />
+    <ClInclude Include="src\basicUI.h" />
+    <ClInclude Include="src\encapsulations.h" />
     <ClInclude Include="src\gamecore.h" />
-    <ClInclude Include="src\imlogistic.h" />
-    <ClInclude Include="src\interface.h" />
-    <ClInclude Include="src\userinterface.h" />
+    <ClInclude Include="src\procfunctions.h" />
+    <ClInclude Include="src\stdincludes.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\basicUI.cpp" />
+    <ClCompile Include="src\encapsulations.cpp" />
     <ClCompile Include="src\gamecore.cpp" />
-    <ClCompile Include="src\imlogistic.cpp" />
-    <ClCompile Include="src\interface.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\userinterface.cpp" />
+    <ClCompile Include="src\procfunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\Click.bmp" />

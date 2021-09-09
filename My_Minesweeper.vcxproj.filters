@@ -15,22 +15,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\defines.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="src\gamecore.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\interface.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\userinterface.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="res\resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\imlogistic.h">
+    <ClInclude Include="src\basicUI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\encapsulations.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\procfunctions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stdincludes.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,16 +38,16 @@
     <ClCompile Include="src\gamecore.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\interface.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\userinterface.cpp">
+    <ClCompile Include="src\basicUI.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\imlogistic.cpp">
+    <ClCompile Include="src\encapsulations.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\procfunctions.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
