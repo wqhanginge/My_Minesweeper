@@ -15,6 +15,8 @@
 
 #define DEF_WND_LEFT	128
 #define DEF_WND_TOP		128
+#define DEF_WND_WIDTH	750
+#define DEF_WND_HEIGHT	700
 #define DEF_FILENAME	"MyMinesweeper.ini"
 #define DEF_FILEPATH_EV	"LOCALAPPDATA"
 #define CONTENT_STRLEN	5
@@ -133,6 +135,7 @@ void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, Neighbor& indexes)
 /* save file management */
 
 //load infomation from a save file
+//will return a POINT which contains left-top position of the window that last time was at
 //use default setting to init Game if error
 void initGame(TCHAR* Path, POINT& lastwndpos);
 
