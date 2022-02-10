@@ -35,19 +35,19 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\gamecore.cpp">
+    <ClCompile Include="src\basicUI.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\main.cpp">
+    <ClCompile Include="src\encapsulations.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\basicUI.cpp">
+    <ClCompile Include="src\gamecore.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\encapsulations.cpp">
+    <ClCompile Include="src\main.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\procfunctions.cpp">
+    <ClCompile Include="src\procfunctions.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

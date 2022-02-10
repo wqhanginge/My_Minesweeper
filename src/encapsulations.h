@@ -1,6 +1,24 @@
+/*****************************************************************************\
+ *  My Minesweepper -- a classic minesweeper game
+ *  Copyright (C) 2020-2022 Gee W.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+\*****************************************************************************/
+
 #pragma once
 
-/* 
+/* encapsulations.h
  * this file contains encapsulations of UI operations and IO functions
  * this file also contians some useful functions
  * NOTE:most functions do not have arg check process, use with care
@@ -17,9 +35,11 @@
 #define DEF_WND_TOP		128
 #define DEF_WND_WIDTH	750
 #define DEF_WND_HEIGHT	700
-#define DEF_FILENAME	"MyMinesweeper.ini"
-#define DEF_FILEPATH_EV	"LOCALAPPDATA"
+#define DEF_CONFNAME	"MyMinesweeper.ini"
+#define DEF_CONFPATH_EV	"LOCALAPPDATA"
 #define CONTENT_STRLEN	5
+
+//key words in config file
 #define INIT_ANAME		"Init"
 #define INIT_XPOS		"xpos"
 #define INIT_YPOS		"ypos"
@@ -36,11 +56,22 @@
 #define SCORE_MNAME		"middle_name"
 #define SCORE_SNAME		"senior_name"
 
+/* property related defines */
+
+//lang-codepage is 000004b0 (Language Neutral)
+#define PNQUERYSTR	"\\StringFileInfo\\000004b0\\ProductName"
+#define PVQUERYSTR	"\\StringFileInfo\\000004b0\\ProductVersion"
+#define LCQUERYSTR	"\\StringFileInfo\\000004b0\\LegalCopyright"
+#define RIGHTSTR	\
+"This program comes with ABSOLUTELY NO WARRANTY.\n\
+This is free software, and you are welcome to redistribute it under certain conditions.\n\n\
+See GNU General Public License v3.0 for details."
+
 
 
 //bitmap handle
 extern HBITMAP hbm_rb, hbm_click, hbm_fail, hbm_success;
-//a argument to remember current using bitmap
+//an argument to remember current using bitmap
 extern HBITMAP hbm_current;
 
 
@@ -95,12 +126,14 @@ void freeBitmaps();
 
 //draw a mapunit depends on MapUnit data with default color
 //draw a covered mapunit by default
-void paintMapUnit(HDC hdestdc, int muleft, int mutop, byte mapunit);
+//this function will clear Update bit after return
+void paintMapUnit(HDC hdestdc, int muleft, int mutop, int index);
 
 //draw a mapunit depends on MapUnitState with default color
 //draw a covered mapunit by default
 //this function will draw on DC directly without creating a DC-buffer
-void paintMapUnitNB(HDC hdestdc, int muleft, int mutop, byte mapunit);
+//this function will clear Update bit after return
+void paintMapUnitNB(HDC hdestdc, int muleft, int mutop, int index);
 
 //paint GameMap, the left-top is position 0
 //update map_units that have been changed and clear Update bit
@@ -124,11 +157,15 @@ void setRBBitmap(HBITMAP hbm);
 
 //show clicked state when a MapUnit is clicked
 //it will do nothing if the index is out of GameMap range
+//this function clear Update bits which are set before calling,
+//and set Update bit of MapUnit which is clicked
 void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, int index);
 
 //show clicked state when a group of MapUnits are clicked
 //it jumps MapUnit which index is out of GameMap range
-void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, Neighbor& indexes);
+//this function clear Update bits which are set before calling,
+//and set Update bit of MapUnits which are clicked
+void showClickedMapUnits(HDC hdestdc, int mapleft, int maptop, Neighbor* pindexes);
 
 
 
@@ -137,11 +174,11 @@ void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, Neighbor& indexes)
 //load infomation from a save file
 //will return a POINT which contains left-top position of the window that last time was at
 //use default setting to init Game if error
-void initGame(TCHAR* Path, POINT& lastwndpos);
+void initGame(TCHAR* Path, POINT* plastwndpos);
 
 //save Game infomation into a save file
-void saveGame(TCHAR* Path, POINT& wndpos);
+void saveGame(TCHAR* Path, POINT* pwndpos);
 
 
 /* get program version information */
-void getVersion(TCHAR* version, size_t size_in_ch);
+void getProperty(TCHAR* property, size_t size_in_ch);
