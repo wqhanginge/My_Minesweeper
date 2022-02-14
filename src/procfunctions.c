@@ -15,13 +15,27 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \*****************************************************************************/
+/*****************************************************************************\
+ * procfunctions.c
+ *****************************************************************************
+ * this file contains Win32 Window Proc Functions
+ * each function is aim to handle a particular Window Message or is a Child
+ * Window's Procedure Function
+ * 
+ * NOTE:most functions have no arg check, use with care
+\*****************************************************************************/
+
 
 #include "procfunctions.h"
 
-TCHAR save_path[MAX_PATH];
-bool last_dbclick;
-bool rb_capture;
+/* private global variables */
 
+TCHAR conf_path[MAX_PATH];	//conf file path
+bool last_dbclick;			//indicate if last mouse event was a double click
+bool rb_capture;			//indicate if ResetButton get the capture
+
+
+//change GameMode checked in Menu, do nothing if GameMode is illegal
 void setMenuChecked(byte GameMode)
 {
 	MENUITEMINFO mii = { sizeof(MENUITEMINFO) };
@@ -68,6 +82,7 @@ void setMenuChecked(byte GameMode)
 	}
 }
 
+//check Question Mark in Menu if Mark is true
 void setQMarkChecked(bool Mark)
 {
 	MENUITEMINFO mii = { sizeof(MENUITEMINFO) };
@@ -80,6 +95,7 @@ void setQMarkChecked(bool Mark)
 
 /* Proc Functions */
 
+//About Dialog, show program description on child modal window
 INT_PTR CALLBACK AboutProc(HWND habout, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	HWND htext;
@@ -106,10 +122,11 @@ INT_PTR CALLBACK AboutProc(HWND habout, UINT msg, WPARAM wparam, LPARAM lparam)
 	return TRUE;
 }
 
+//Record Dialog, show record on child modal window
 INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	static HWND hjt, hmt, hst, hjn, hmn, hsn;
-	TCHAR strbuffer[TIME_STRLEN];
+	TCHAR strbuffer[TIME_STRBUFFERLEN];
 
 	switch (msg) {
 	case WM_INITDIALOG:
@@ -121,12 +138,12 @@ INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam
 		hmn = FindWindowEx(hrecord, hjn, TEXT("STATIC"), NULL);
 		hsn = FindWindowEx(hrecord, hmn, TEXT("STATIC"), NULL);
 
-		//init static control show
-		_sntprintf_s(strbuffer, TIME_STRLEN, _TRUNCATE, TEXT("%d %s"), Score.junior_time, TEXT(DEF_TIMEUNIT_EN));
+		//init static control's content
+		_sntprintf_s(strbuffer, TIME_STRBUFFERLEN, _TRUNCATE, TEXT("%d %s"), Score.junior_time, TEXT(DEF_TIMEUNIT_EN));
 		SetWindowText(hjt, strbuffer);
-		_sntprintf_s(strbuffer, TIME_STRLEN, _TRUNCATE, TEXT("%d %s"), Score.middle_time, TEXT(DEF_TIMEUNIT_EN));
+		_sntprintf_s(strbuffer, TIME_STRBUFFERLEN, _TRUNCATE, TEXT("%d %s"), Score.middle_time, TEXT(DEF_TIMEUNIT_EN));
 		SetWindowText(hmt, strbuffer);
-		_sntprintf_s(strbuffer, TIME_STRLEN, _TRUNCATE, TEXT("%d %s"), Score.senior_time, TEXT(DEF_TIMEUNIT_EN));
+		_sntprintf_s(strbuffer, TIME_STRBUFFERLEN, _TRUNCATE, TEXT("%d %s"), Score.senior_time, TEXT(DEF_TIMEUNIT_EN));
 		SetWindowText(hst, strbuffer);
 		SetWindowText(hjn, Score.junior_name);
 		SetWindowText(hmn, Score.middle_name);
@@ -140,7 +157,7 @@ INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam
 		case IDRESET:
 			//reset the record
 			resetRecord();
-			_sntprintf_s(strbuffer, TIME_STRLEN, _TRUNCATE, TEXT("%d %s"), MAX_TIME, TEXT(DEF_TIMEUNIT_EN));
+			_sntprintf_s(strbuffer, TIME_STRBUFFERLEN, _TRUNCATE, TEXT("%d %s"), MAX_TIME, TEXT(DEF_TIMEUNIT_EN));
 			SetWindowText(hjt, strbuffer);
 			SetWindowText(hmt, strbuffer);
 			SetWindowText(hst, strbuffer);
@@ -161,6 +178,7 @@ INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam
 	return TRUE;
 }
 
+//GetName Dialog, provide an edit box to get Record Name after breaking Record
 INT_PTR CALLBACK GetNameProc(HWND hgetname, UINT msg, WPARAM wparam, LPARAM lparam) {
 	static HWND heditname;
 
@@ -186,6 +204,7 @@ INT_PTR CALLBACK GetNameProc(HWND hgetname, UINT msg, WPARAM wparam, LPARAM lpar
 	return TRUE;
 }
 
+//Custom Dialog, use to customize Game Map
 INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam) {
 	static HWND heditw, hedith, heditm;
 	TCHAR str[CUSTOM_EDIT_LEN];
@@ -221,7 +240,7 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
 	case WM_COMMAND:
 		switch (LOWORD(wparam)) {
 		case IDOK:
-			//get what int edit control when click OK
+			//get what in edit control when click OK
 			GetWindowText(heditw, str, CUSTOM_EDIT_LEN);
 			width = (dword)_ttoi(str);
 			GetWindowText(hedith, str, CUSTOM_EDIT_LEN);
@@ -302,10 +321,10 @@ LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	loadBitmaps(hInst);
 
 	//init game from file
-	GetEnvironmentVariable(TEXT(DEF_CONFPATH_EV), save_path, MAX_PATH);
-	_tcscat_s(save_path, MAX_PATH, TEXT("\\"));
-	_tcscat_s(save_path, MAX_PATH, TEXT(DEF_CONFNAME));
-	initGame(save_path, &wndpos);
+	GetEnvironmentVariable(TEXT(DEF_CONFPATHENV), conf_path, MAX_PATH);
+	_tcscat_s(conf_path, MAX_PATH, TEXT("\\"));
+	_tcscat_s(conf_path, MAX_PATH, TEXT(DEF_CONFNAME));
+	initGame(conf_path, &wndpos);
 	srand((dword)time(nullptr));
 
 	//init menu info
@@ -320,8 +339,9 @@ LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	wndrect = (RECT){ wndpos.x,wndpos.y,wndpos.x + CLIENT_WIDTH + edgew,wndpos.y + CLIENT_HEIGHT + edgeh };
 	MoveWindow(hwnd, wndrect.left, wndrect.top, wndrect.right - wndrect.left, wndrect.bottom - wndrect.top, FALSE);
 
-	//init double mouse button state
+	//init double click state and capture state
 	last_dbclick = false;
+	rb_capture = false;
 	return 0;
 }
 
@@ -335,7 +355,7 @@ LRESULT onDestroy(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	//save game info
 	GetWindowRect(hwnd, &wndrect);
 	wndpos = (POINT){ wndrect.left,wndrect.top };
-	saveGame(save_path, &wndpos);
+	saveGame(conf_path, &wndpos);
 
 	PostQuitMessage(0);
 	return 0;
@@ -346,19 +366,20 @@ LRESULT onPaint(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	//redraw the whole client area
 	PAINTSTRUCT ps;
 	HDC hpaintdc = BeginPaint(hwnd, &ps);
+
 	HDC hdcbuffer = CreateCompatibleDC(hpaintdc);
 	HBITMAP hbmbuffer = CreateCompatibleBitmap(hpaintdc, CLIENT_WIDTH, CLIENT_HEIGHT);
 	SelectObject(hdcbuffer, hbmbuffer);
 
-	drawClientBg(hdcbuffer, 0, 0);
-	drawInfoBg(hdcbuffer, INFO_LEFT, INFO_TOP);
-	drawMapAreaBg(hdcbuffer, MAPAREA_LEFT, MAPAREA_TOP);
-	drawMineBg(hdcbuffer, MINE_LEFT, MINE_TOP);
-	drawTimeBg(hdcbuffer, TIME_LEFT, TIME_TOP);
-	drawINNB(hdcbuffer, MN_LEFT, MN_TOP, Game.mine_remains);
-	drawINNB(hdcbuffer, TN_LEFT, TN_TOP, Game.time);
-	drawResetButtonNB(hdcbuffer, RB_LEFT, RB_TOP, hbm_current, false);
-	paintMapNB(hdcbuffer, MAP_LEFT, MAP_TOP, true);
+	drawDCClientBg(hdcbuffer, 0, 0);
+	drawDCInfoBg(hdcbuffer, INFO_LEFT, INFO_TOP);
+	drawDCMapAreaBg(hdcbuffer, MAPAREA_LEFT, MAPAREA_TOP);
+	drawDCNumBg(hdcbuffer, MINE_LEFT, MINE_TOP);
+	drawDCNumBg(hdcbuffer, TIME_LEFT, TIME_TOP);
+	drawDCINums(hdcbuffer, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains);
+	drawDCINums(hdcbuffer, TNUMS_LEFT, TNUMS_TOP, Game.time);
+	drawDCResetButton(hdcbuffer, RB_LEFT, RB_TOP, hbm_current, false);
+	drawDCMap(hdcbuffer, MAP_LEFT, MAP_TOP, true);
 
 	BitBlt(hpaintdc, 0, 0, CLIENT_WIDTH, CLIENT_HEIGHT, hdcbuffer, 0, 0, SRCCOPY);
 	DeleteObject(hbmbuffer);
@@ -388,10 +409,10 @@ LRESULT onGameReset(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onGameStart(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
-	int ret = gameStart(index2x((int)lparam), index2y((int)lparam));
-	paintMap(hdc, MAP_LEFT, MAP_TOP, false);
-	drawIN(hdc, MN_LEFT, MN_TOP, Game.mine_remains);
-	drawIN(hdc, TN_LEFT, TN_TOP, Game.time);
+	int ret = startGame(index2x((int)lparam), index2y((int)lparam));
+	paintMap(hdc, MAP_LEFT, MAP_TOP, true);
+	paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains);
+	paintINums(hdc, TNUMS_LEFT, TNUMS_TOP, Game.time);
 	switch (ret) {
 	case 1:
 		PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
@@ -413,7 +434,7 @@ LRESULT onGameFail(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
 	KillTimer(hwnd, GAME_TIMER_ID);
-	gameSet();
+	finishGame();
 	setRBBitmap(hbm_fail);
 	paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 	paintMap(hdc, MAP_LEFT, MAP_TOP, false);
@@ -425,10 +446,10 @@ LRESULT onGameSuccess(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
 	KillTimer(hwnd, GAME_TIMER_ID);
-	int ret = gameSet();
+	int ret = finishGame();
 	setRBBitmap(hbm_success);
 	paintResetButton(hdc, RB_LEFT, RB_TOP, false);
-	drawIN(hdc, MN_LEFT, MN_TOP, 0);
+	paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, 0);
 	paintMap(hdc, MAP_LEFT, MAP_TOP, false);
 
 	//if break record
@@ -449,14 +470,14 @@ LRESULT onGameModeChg(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	setGameMode((byte)wparam, GETCHGWIDTH(lparam), GETCHGHEIGHT(lparam), GETCHGMINES(lparam));
 	last_dbclick = false;
 
-	//change window size for new game map size, no need to reset
+	//change window size for new game map size, no need to reset Game again
+	//and invalidate all client area for repaint
 	GetWindowRect(hwnd, &wndrect);
 	GetClientRect(hwnd, &cltrect);
 	wndrect.right = CLIENT_WIDTH + ((wndrect.right - wndrect.left) - cltrect.right) + wndrect.left;
 	wndrect.bottom = CLIENT_HEIGHT + ((wndrect.bottom - wndrect.top) - cltrect.bottom) + wndrect.top;
-
-	//invalidate all client area for repaint
 	MoveWindow(hwnd, wndrect.left, wndrect.top, wndrect.right - wndrect.left, wndrect.bottom - wndrect.top, TRUE);
+
 	setRBBitmap(hbm_rb);
 	InvalidateRect(hwnd, NULL, FALSE);
 	return 0;
@@ -529,8 +550,7 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 					PostMessage(hwnd, WMAPP_GAMESTART, 0, index);
 				}
 				else {	//not first click
-					int ret = clickOne(index);
-					if (ret == 0) openBlanks(index);
+					int ret = leftClick(index);	//first click, then judge success
 					if (ret == -1) {
 						PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
 					}
@@ -554,7 +574,7 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
-	//won't work after game finished or the mouse not in the map area or ResetButton got capture
+	//won't work after game finished or the mouse is not in the map area or ResetButton got capture
 	if (!rb_capture && !ISGAMESET(Game.state) && lparamIsInMap(lparam)) {
 		int index = lparam2index(lparam);
 		if (wparam & MK_LBUTTON) {	//double buttons
@@ -568,9 +588,9 @@ LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 		else {	//single button, flag a unit or mark a unit
 			last_dbclick = false;
 			int ret = rightClick(index);
-			if (ret == 0) {
+			if (ret == 0) {	//if mapunit state is changed
 				paintMapUnit(hdc, MAP_LEFT + index2px(index), MAP_TOP + index2py(index), index);
-				drawIN(hdc, MN_LEFT, MN_TOP, Game.mine_remains);
+				paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains);
 			}
 		}
 	}
@@ -613,8 +633,9 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
-	if (rb_capture && (wparam & MK_LBUTTON))	//if ResetButton got capture
+	if (rb_capture && (wparam & MK_LBUTTON)) {	//if ResetButton got capture
 		paintResetButton(hdc, RB_LEFT, RB_TOP, lparamIsInRB(lparam));
+	}
 	else if (!ISGAMESET(Game.state)) {	//won't work after game finishing
 		if (!lparamIsInMap(lparam)) {	//if not in the map area
 			paintMap(hdc, MAP_LEFT, MAP_TOP, false);
@@ -645,7 +666,7 @@ LRESULT onTimer(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	if (Game.time <= MAX_TIME) {
 		HDC hdc = GetDC(hwnd);
 		stepGameTime();
-		drawIN(hdc, TN_LEFT, TN_TOP, Game.time);
+		paintINums(hdc, TNUMS_LEFT, TNUMS_TOP, Game.time);
 		ReleaseDC(hwnd, hdc);
 	}
 	return 0;

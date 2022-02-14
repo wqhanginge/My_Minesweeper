@@ -15,14 +15,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \*****************************************************************************/
-
-#pragma once
-
-/* encapsulations.h
+/*****************************************************************************\
+ * encapsulations.h
+ *****************************************************************************
  * this file contains encapsulations of UI operations and IO functions
  * this file also contians some useful functions
+ * 
+ * this file contains several HBITMAP global variables which can be accessed
+ * by external functions, they are used for drawing ResetButton,
+ * DO NOT rewrite them directly, but use predefined functions(IMPORTANT)
+ * 
  * NOTE:most functions do not have arg check process, use with care
- */
+\*****************************************************************************/
+
+
+#pragma once
 
 #include "stdincludes.h"
 #include "basicUI.h"
@@ -36,8 +43,8 @@
 #define DEF_WND_WIDTH	750
 #define DEF_WND_HEIGHT	700
 #define DEF_CONFNAME	"MyMinesweeper.ini"
-#define DEF_CONFPATH_EV	"LOCALAPPDATA"
-#define CONTENT_STRLEN	5
+#define DEF_CONFPATHENV	"LOCALAPPDATA"
+#define STRBUFFERLEN	5
 
 //key words in config file
 #define INIT_ANAME		"Init"
@@ -59,81 +66,64 @@
 /* property related defines */
 
 //lang-codepage is 000004b0 (Language Neutral)
-#define PNQUERYSTR	"\\StringFileInfo\\000004b0\\ProductName"
-#define PVQUERYSTR	"\\StringFileInfo\\000004b0\\ProductVersion"
-#define LCQUERYSTR	"\\StringFileInfo\\000004b0\\LegalCopyright"
-#define RIGHTSTR	\
+#define PNQUERYSTR		"\\StringFileInfo\\000004b0\\ProductName"
+#define PVQUERYSTR		"\\StringFileInfo\\000004b0\\ProductVersion"
+#define LCQUERYSTR		"\\StringFileInfo\\000004b0\\LegalCopyright"
+#define COPYRIGHTSTR	\
 "This program comes with ABSOLUTELY NO WARRANTY.\n\
 This is free software, and you are welcome to redistribute it under certain conditions.\n\n\
-See GNU General Public License v3.0 for details."
+Check <https://www.gnu.org/licenses/> and view GNU General Public License v3.0 for details."
 
 
 
-//bitmap handle
+//bitmap handle, point to bitmaps which will be drawn on ResetButton
+//DO NOT rewrite directly, use loadBitmaps() and freeBitmaps()
 extern HBITMAP hbm_rb, hbm_click, hbm_fail, hbm_success;
 //an argument to remember current using bitmap
+//use setRBBitmap() to change it
 extern HBITMAP hbm_current;
 
-
-
-/*        x
- *      ----->
- *       0   1   2   3
- *     +---+---+---+---+ --
- * y| 0| 0 | 1 | 2 | 3 |  h
- *  |  +---+---+---+---+ --
- *  v 1| 4 |...index...|
- *     +---+---+---+---+
- *     |<w>|
- * px and py means positon in pixel on window
- * x and y means position in unit on GameMap
- * px = x * w, py = y * h, ppos = (px, py)
- */
-
-//transform pixels on MapArea into GameMap index
-//use the first MapUnit left-top as position 0
-//take care of the input, they must be offset of MAP_LEFT and MAP_TOP
-int ppos2index(int px, int py);
-int px2x(int px);
-int py2y(int py);
-
-//transform a GameMap index into MapArea pixels
-//use the first MapUnit left-top as position zero
-//take care of the output, they are offset of MAP_LEFT or MAP_TOP
-int index2px(int index);
-int index2py(int index);
-int x2px(int x);
-int y2py(int y);
 
 //check if a mouse position is inside the ResetButton area
 bool lparamIsInRB(LPARAM lparam);
 
-//check if a mouse position is inside the MapUnits area
+//check if a mouse position is inside the Map area
 bool lparamIsInMap(LPARAM laparm);
 
 //change a mouse position to map index
+//the input should be the LPARAM of WM_MOUSEMOVE message or something similarly
+//i.e. it can use MAKEPOINTS() macro to unpack
 int lparam2index(LPARAM lparam);
 
 
 
 //manage bitmaps
+//'hbm_current' is set to 'hbm_rb' by default
 void loadBitmaps(HINSTANCE hinst);
 void freeBitmaps();
 
 
 
-/* manage MapUnit and ResetButton */
+/* UI functions */
+
+//paint specific numbers on Num Part with default color
+//if num is out of range, it draws '---'
+//-100 < num < 1000
+void paintINums(HDC hdestdc, int left, int top, int num);
+
+
+//paint ResetButton without changing its bitmap
+void paintResetButton(HDC hdestdc, int left, int top, bool clicked);
+
+//change bitmap on ResetButton
+//NOTE:you need to redraw ResetButton after calling this function
+void setRBBitmap(HBITMAP hbm);
+
 
 //draw a mapunit depends on MapUnit data with default color
 //draw a covered mapunit by default
 //this function will clear Update bit after return
 void paintMapUnit(HDC hdestdc, int muleft, int mutop, int index);
-
-//draw a mapunit depends on MapUnitState with default color
-//draw a covered mapunit by default
-//this function will draw on DC directly without creating a DC-buffer
-//this function will clear Update bit after return
-void paintMapUnitNB(HDC hdestdc, int muleft, int mutop, int index);
 
 //paint GameMap, the left-top is position 0
 //update map_units that have been changed and clear Update bit
@@ -141,43 +131,34 @@ void paintMapUnitNB(HDC hdestdc, int muleft, int mutop, int index);
 //it redraws the whole MapArea content
 void paintMap(HDC hdestdc, int mapleft, int maptop, bool force);
 
-//paint GameMap, the left-top is position 0
-//update map_units that have been changed and clear Update bit
-//update all map_units if force is set
-//it will paint directly on DC without creating a DC-Buffer
-void paintMapNB(HDC hdestdc, int mapleft, int maptop, bool force);
 
-//paint ResetButton without changing its bitmap
-void paintResetButton(HDC hdestdc, int rbleft, int rbtop, bool clicked);
-
-//change bitmap of ResetButton
-//NOTE:you need to redraw ResetButton after calling this function
-void setRBBitmap(HBITMAP hbm);
-
-
-//show clicked state when a MapUnit is clicked
+//show clicked state when a MapUnit is clicked down
 //it will do nothing if the index is out of GameMap range
 //this function clear Update bits which are set before calling,
 //and set Update bit of MapUnit which is clicked
+//NOTE: use the whole Map's left and top position istead of a MapUnit's
 void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, int index);
 
-//show clicked state when a group of MapUnits are clicked
-//it jumps MapUnit which index is out of GameMap range
+//show clicked state when a group of MapUnits are clicked down
+//it jumps MapUnit whose index is out of GameMap range
 //this function clear Update bits which are set before calling,
 //and set Update bit of MapUnits which are clicked
+//NOTE: use the whole Map's left and top position istead of a MapUnit's
 void showClickedMapUnits(HDC hdestdc, int mapleft, int maptop, Neighbor* pindexes);
 
 
 
-/* save file management */
+/* save/config file management */
 
-//load infomation from a save file
-//will return a POINT which contains left-top position of the window that last time was at
+//load infomation from a config file
+//return a POINT struct which contains left-top position where the window was
 //use default setting to init Game if error
 void initGame(TCHAR* Path, POINT* plastwndpos);
 
-//save Game infomation into a save file
+//save Game infomation into a config file
+//save the current window position as well
 void saveGame(TCHAR* Path, POINT* pwndpos);
+
 
 
 /* get program version information */
