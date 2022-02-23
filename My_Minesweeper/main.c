@@ -15,14 +15,24 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \*****************************************************************************/
+/*****************************************************************************\
+ * main.c
+ *****************************************************************************
+ * this file contains the program entry and main Window Procedure
+ * this file contains the global program and window handles which are defined
+ * 'extern' in stdincludes.h
+\*****************************************************************************/
+
 
 #include "stdincludes.h"
 #include "procfunctions.h"
 
 
-HINSTANCE hInst;
-HWND hWnd;
-HMENU hMenu;
+/* global handles */
+
+HINSTANCE hInst;	//program instance handle
+HWND hWnd;			//main window handle
+HMENU hMenu;		//main menu handle
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {

@@ -15,28 +15,46 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \*****************************************************************************/
+/*****************************************************************************\
+ * gamecore.c
+ *****************************************************************************
+ * this file contains the minesweeper core functions and Game data
+ * all basic operations of Game are defined in this file
+ * 
+ * this file contains TWO global variables described as 'extern', which are
+ * Game -- for game data, Score -- for record data
+ * you can READ infomation from Game/Score struct by directly accessing
+ * its member AND use defined functions to WRITE/CHANGE it (RECOMMENDED)
+\*****************************************************************************/
+
 
 #include "gamecore.h"
 
 
+//TWO global variables for game data storage
+//described as 'extern'
 GameInfo Game;
 GameScore Score;
 
+//transform GameMap index-type into xy-type
 int index2x(int index)
 {
 	return (index % Game.width);
 }
 
+//transform GameMap index-type into xy-type
 int index2y(int index)
 {
 	return (index / Game.width);
 }
 
+//transform GameMap xy-type into index-type
 int xy2index(int x, int y)
 {
 	return (y * Game.width) + x;
 }
 
+//get all neighbors' index which around given unit
 int getNeighbors(Neighbor* pneighbor, int x, int y)
 {
 	if (x < 0 || y < 0) return -1;
@@ -53,6 +71,7 @@ int getNeighbors(Neighbor* pneighbor, int x, int y)
 	return 0;
 }
 
+//set Game Mode by params
 void setGameMode(byte mode, byte width, byte height, word mines)
 {
 	switch (mode) {
@@ -113,23 +132,7 @@ void setGameMode(byte mode, byte width, byte height, word mines)
 	}
 }
 
-void setMark(bool enable)
-{
-	Game.mark = enable;
-}
-
-int setGameTime(word time)
-{
-	if (time > MAX_TIME) return -1;
-	Game.time = time;
-	return 0;
-}
-
-void stepGameTime()
-{
-	Game.time++;
-}
-
+//change Game State by param
 int setGameState(byte state)
 {
 	if (state >= UNKNOW) return -1;
@@ -137,6 +140,27 @@ int setGameState(byte state)
 	return 0;
 }
 
+//set Game Mark value by param
+void setMark(bool enable)
+{
+	Game.mark = enable;
+}
+
+//set Game Time with a specific time
+int setGameTime(word time)
+{
+	if (time > MAX_TIME) return -1;
+	Game.time = time;
+	return 0;
+}
+
+//step in time
+void stepGameTime()
+{
+	Game.time++;
+}
+
+//erase the GameMap and reset Game infomation
 void resetGame()
 {
 	Game.state = INIT;
@@ -146,6 +170,27 @@ void resetGame()
 	memset(Game.map, 0, sizeof(byte) * Game.size);
 }
 
+//start a new Game by click one position
+int startGame(int x, int y)
+{
+	if (x < 0 || y < 0 || xy2index(x, y) >= Game.size) return -2;
+
+	//create map and init game infomation
+	if (createGameMap(x, y) == -1) return -2;
+	Game.state = PROGRESS;
+	Game.mine_remains = Game.mines;
+	Game.uncov_units = 0;
+	Game.time = 0;
+
+	//click on the given unit
+	//because of the safe area, the first click will always be safe with 0 mines
+	if (leftClick(xy2index(x, y)) == -1) return -1;
+
+	//it is possible that you win the game at first click
+	return isGameSuccessful();
+}
+
+//create a new GameMap with a safe area at given position
 int createGameMap(int x, int y)
 {
 	if (Game.state != INIT) return -1;
@@ -155,17 +200,20 @@ int createGameMap(int x, int y)
 
 	//generate mines, 8 units around where clicked won't have mines
 	//use shuffle algorithm
-	memset(Game.map, MU_UPDATE, sizeof(byte) * Game.size);	//set Update bit
-	memset(Game.map, (MU_UPDATE | MUM_MINE), sizeof(byte) * Game.mines);	//generate mines
+	memset(Game.map, 0, sizeof(byte) * Game.size);	//clear the whole map
+	memset(Game.map, MUM_MINE, sizeof(byte) * Game.mines);	//generate mines
 	dword neicount = 0;
 	for (int i = 0; i < 9; i++) neicount += (safepos[i] != -1);	//remember how many safe positions needed
-	for (dword k = 0; k < Game.mines; k++) {	//shuffle algorithm, ignore tail
+	for (dword k = 0; k < Game.mines; k++) {	//shuffle algorithm, ignore reserved tail
 		dword index = rand() % (Game.size - neicount - k) + k;
 		byte temp = Game.map[index];
 		Game.map[index] = Game.map[k];
 		Game.map[k] = temp;
 	}
-	if (safepos[0] >= Game.size / 2) {	//there may be overlap between safe area and neighbor area, need handling
+
+	//there may be overlap between safe area and neighbor area, need handling
+	//if the safe area is at back-half of the whole map, move reserved tail to head
+	if (safepos[0] >= Game.size / 2) {
 		for (dword i = 0; i < neicount; i++) {
 			byte temp = Game.map[Game.size - 1 - i];
 			Game.map[Game.size - 1 - i] = Game.map[i];
@@ -173,7 +221,9 @@ int createGameMap(int x, int y)
 		}
 		neicount = Game.size;	//WARNING:the meaning of neicount has been changed
 	}
-	for (int i = 0; i < 9; i++) {	//move safe area to where it is
+
+	//move safe area to where it is
+	for (int i = 0; i < 9; i++) {
 		if (safepos[i] != -1) {
 			byte temp = Game.map[Game.size - neicount];
 			Game.map[Game.size - neicount] = Game.map[safepos[i]];
@@ -182,7 +232,7 @@ int createGameMap(int x, int y)
 		}
 	}
 
-	//write neighbor mines
+	//calculate mines around each unit
 	for (dword i = 0; i < Game.size; i++) {
 		if (MUISMINE(Game.map[i])) continue;
 		int m = 0;
@@ -195,6 +245,7 @@ int createGameMap(int x, int y)
 	return 0;
 }
 
+//click a unit in GameMap
 int clickOne(int index)
 {
 	if (Game.state != PROGRESS) return -2;
@@ -203,16 +254,17 @@ int clickOne(int index)
 
 	Game.uncov_units++;
 	SETMUUPDATE(Game.map[index]);
-	if (MUISMINE(Game.map[index])) {
+	if (MUISMINE(Game.map[index])) {	//bomb
 		SETMUSTATE(MUS_BOMB, Game.map[index]);
 		return -1;
 	}
-	else {
+	else {	//safe
 		SETMUSTATE(MUS_UNCOV, Game.map[index]);
 		return GETMUMINES(Game.map[index]);
 	}
 }
 
+//open all neighbors around a uncovered unit witch has mines-value 0
 int openBlanks(int index)
 {
 	if (Game.state != PROGRESS) return -1;
@@ -224,11 +276,25 @@ int openBlanks(int index)
 	getNeighbors(&pos, index2x(index), index2y(index));
 	for (int i = 1; i < 9; i++) {
 		int ret = clickOne(pos[i]);
-		if (ret == 0) openBlanks(pos[i]);
+		if (ret == 0) openBlanks(pos[i]);	//do in a recursive manner
 	}
 	return 0;
 }
 
+//click the given unit and open all blanks if it is blank
+//or open the given unit only if it is not blank
+int leftClick(int index)
+{
+	if (Game.state != PROGRESS) return -2;
+	if (index < 0 || index >= (int)Game.size) return -2;
+	if (GETMUSTATE(Game.map[index]) != MUS_COVER && GETMUSTATE(Game.map[index]) != MUS_MARK) return -2;
+
+	int ret = clickOne(index);
+	if (ret == 0) openBlanks(index);
+	return ret;
+}
+
+//open all neighbors around the uncovered unit
 int clickAround(int index)
 {
 	if (Game.state != PROGRESS) return -2;
@@ -255,11 +321,13 @@ int clickAround(int index)
 	return flags;
 }
 
+//change the MapUnitState and remained mines when right clicked on a unit
 int rightClick(int index)
 {
 	if (ISGAMESET(Game.state)) return -2;
 	if (index < 0 || index >= (int)Game.size) return -2;
 
+	//take effect only on covered units
 	byte new_mapunit_state;
 	switch (GETMUSTATE(Game.map[index])) {
 	case MUS_COVER:
@@ -282,7 +350,19 @@ int rightClick(int index)
 	return 0;
 }
 
-void uncovAllMines()
+//update Game Map and open all mines' positions when game finish
+int finishGame()
+{
+	Game.state = isGameSuccessful() ? SUCCESS : FAIL;
+	//show all mines' positions when game set
+	Game.mine_remains = 0;
+	showAllMines();
+	//if break record
+	return (Game.mode < CUSTOM && Game.state == SUCCESS && Game.time < getRecordTime(Game.mode));
+}
+
+//show all mines' positions after Game Set
+void showAllMines()
 {
 	if (Game.state == FAIL) {
 		for (word i = 0; i < Game.size; i++) {
@@ -306,39 +386,19 @@ void uncovAllMines()
 	}
 }
 
-int gameStart(int x, int y)
-{
-	if (x < 0 || y < 0 || xy2index(x, y) >= Game.size) return -2;
-	if (createGameMap(x, y) == -1) return -2;
-	Game.state = PROGRESS;
-	Game.mine_remains = Game.mines;
-	Game.time = 0;
-	Game.uncov_units = 0;
-	if (clickOne(xy2index(x, y)) == -1) return -1;
-	openBlanks(xy2index(x, y));
-	return isGameSuccessful();
-}
-
+//judge if the current Game is Successful
 bool isGameSuccessful()
 {
 	return (Game.mines == Game.size - Game.uncov_units);
 }
 
-int gameSet()
-{
-	Game.state = isGameSuccessful() ? SUCCESS : FAIL;
-	//show all mines' positions when game set
-	Game.mine_remains = 0;
-	uncovAllMines();
-	//if break record
-	return (Game.mode < CUSTOM && Game.state == SUCCESS && Game.time < getRecordTime(Game.mode));
-}
-
+//reset all scores
 void resetRecord()
 {
 	Score = (GameScore){ MAX_TIME,MAX_TIME,MAX_TIME,_T(DEF_SCORE_NAME_EN),_T(DEF_SCORE_NAME_EN),_T(DEF_SCORE_NAME_EN) };
 }
 
+//get best time under given Game Mode
 dword getRecordTime(byte gamemode)
 {
 	switch (gamemode) {
@@ -350,6 +410,7 @@ dword getRecordTime(byte gamemode)
 	return -1;
 }
 
+//get player name under given Game Mode
 TCHAR *getpRecordName(byte gamemode)
 {
 	switch (gamemode) {
@@ -361,6 +422,7 @@ TCHAR *getpRecordName(byte gamemode)
 	return nullptr;
 }
 
+//update best time under given Game Mode
 int setRecordTime(byte gamemode, word besttime)
 {
 	if (besttime > MAX_TIME) return -1;
