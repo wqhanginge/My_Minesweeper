@@ -43,7 +43,7 @@
 #include <tchar.h>
 #include <time.h>
 #include <stdbool.h>
-#include "resource.h"
+#include "../res/resource.h"
 #pragma comment(lib, "Version.lib")
 
 
