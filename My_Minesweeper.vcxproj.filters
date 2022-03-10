@@ -15,62 +15,62 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="basicUI.h">
+    <ClInclude Include="src\basicUI.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="encapsulations.h">
+    <ClInclude Include="src\encapsulations.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="gamecore.h">
+    <ClInclude Include="src\gamecore.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="procfunctions.h">
+    <ClInclude Include="src\procfunctions.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="src\stdincludes.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="stdincludes.h">
+    <ClInclude Include="res\resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="basicUI.c">
+    <ClCompile Include="src\basicUI.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="encapsulations.c">
+    <ClCompile Include="src\encapsulations.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="gamecore.c">
+    <ClCompile Include="src\gamecore.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="main.c">
+    <ClCompile Include="src\main.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="procfunctions.c">
+    <ClCompile Include="src\procfunctions.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Resource.rc">
+    <Image Include="res\Click.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Fail.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Icon.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ResetButton.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Success.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\Resource.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Click.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="Fail.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="ResetButton.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="Success.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="Icon.ico">
-      <Filter>资源文件</Filter>
-    </Image>
   </ItemGroup>
 </Project>
