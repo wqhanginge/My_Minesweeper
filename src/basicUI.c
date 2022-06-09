@@ -70,30 +70,27 @@ static void drawthickedgebg(
 	_In_ COLORREF shadow
 )
 {
-	HBRUSH hbinner, hblight, hbshadow;
-	hbinner = CreateSolidBrush(inner);
-	hblight = CreateSolidBrush(light);
-	hbshadow = CreateSolidBrush(shadow);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
 
-	RECT rect = { left,top,left + width - 2,top + height - 2 };
-	FillRect(hdestdc, &rect, hbshadow);
+	SetDCBrushColor(hdestdc, shadow);
+	rect = (RECT){ left,top,left + width - 2,top + height - 2 };
+	FillRect(hdestdc, &rect, hdcbrush);
+	SetDCBrushColor(hdestdc, light);
 	rect = (RECT){ left + 2,top + 2,left + width,top + height };
-	FillRect(hdestdc, &rect, hblight);
+	FillRect(hdestdc, &rect, hdcbrush);
+	SetDCBrushColor(hdestdc, inner);
 	rect = (RECT){ left + 2,top + 2,left + width - 2,top + height - 2 };
-	FillRect(hdestdc, &rect, hbinner);
+	FillRect(hdestdc, &rect, hdcbrush);
 
-	SetPixel(hdestdc, left, rect.bottom, shadow);
-	SetPixel(hdestdc, rect.right, top, shadow);
-	SetPixel(hdestdc, left + 1, rect.bottom + 1, light);
-	SetPixel(hdestdc, rect.right + 1, top + 1, light);
-	SetPixel(hdestdc, left, rect.bottom + 1, inner);
-	SetPixel(hdestdc, left + 1, rect.bottom, inner);
-	SetPixel(hdestdc, rect.right, top + 1, inner);
-	SetPixel(hdestdc, rect.right + 1, top, inner);
-
-	DeleteObject(hbinner);
-	DeleteObject(hblight);
-	DeleteObject(hbshadow);
+	SetPixel(hdestdc, left, top + height - 2, shadow);
+	SetPixel(hdestdc, left + width - 2, top, shadow);
+	SetPixel(hdestdc, left + 1, top + height - 1, light);
+	SetPixel(hdestdc, left + width - 1, top + 1, light);
+	SetPixel(hdestdc, left, top + height - 1, inner);
+	SetPixel(hdestdc, left + 1, top + height - 2, inner);
+	SetPixel(hdestdc, left + width - 2, top + 1, inner);
+	SetPixel(hdestdc, left + width - 1, top, inner);
 }
 
 //draw 2 pixel edge concave background with 2 layers of color,
@@ -107,39 +104,36 @@ static void drawdoubleedgebg(
 	_In_ int height,
 	_In_ COLORREF inner,
 	_In_ COLORREF light,
-	_In_ COLORREF lightlow,
+	_In_ COLORREF semilight,
 	_In_ COLORREF shadow,
-	_In_ COLORREF shadowhigh
+	_In_ COLORREF semishadow
 )
 {
-	HBRUSH hbinner, hblight, hbll, hbshadow, hbsh;
-	hbinner = CreateSolidBrush(inner);
-	hblight = CreateSolidBrush(light);
-	hbll = CreateSolidBrush(lightlow);
-	hbshadow = CreateSolidBrush(shadow);
-	hbsh = CreateSolidBrush(shadowhigh);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
 
-	RECT rect = { left,top,left + width - 1,top + height - 1 };
-	FillRect(hdestdc, &rect, hbshadow);
+	SetDCBrushColor(hdestdc, shadow);
+	rect = (RECT){ left,top,left + width - 1,top + height - 1 };
+	FillRect(hdestdc, &rect, hdcbrush);
+	SetDCBrushColor(hdestdc, light);
 	rect = (RECT){ left + 1,top + 1,left + width,top + height };
-	FillRect(hdestdc, &rect, hblight);
+	FillRect(hdestdc, &rect, hdcbrush);
+
+	SetDCBrushColor(hdestdc, semishadow);
 	rect = (RECT){ left + 1,top + 1,left + width - 2,top + height - 2 };
-	FillRect(hdestdc, &rect, hbsh);
+	FillRect(hdestdc, &rect, hdcbrush);
+	SetDCBrushColor(hdestdc, semilight);
 	rect = (RECT){ left + 2,top + 2,left + width - 1,top + height - 1 };
-	FillRect(hdestdc, &rect, hbll);
+	FillRect(hdestdc, &rect, hdcbrush);
+
+	SetDCBrushColor(hdestdc, inner);
 	rect = (RECT){ left + 2,top + 2,left + width - 2,top + height - 2 };
-	FillRect(hdestdc, &rect, hbinner);
+	FillRect(hdestdc, &rect, hdcbrush);
 
-	SetPixel(hdestdc, left, rect.bottom + 1, inner);
-	SetPixel(hdestdc, left + 1, rect.bottom, inner);
-	SetPixel(hdestdc, rect.right, top + 1, inner);
-	SetPixel(hdestdc, rect.right + 1, top, inner);
-
-	DeleteObject(hbinner);
-	DeleteObject(hblight);
-	DeleteObject(hbll);
-	DeleteObject(hbshadow);
-	DeleteObject(hbsh);
+	SetPixel(hdestdc, left, top + height - 1, inner);
+	SetPixel(hdestdc, left + 1, top + height - 2, inner);
+	SetPixel(hdestdc, left + width - 2, top + 1, inner);
+	SetPixel(hdestdc, left + width - 1, top, inner);
 }
 
 //draw 1 pixel edge concave background,
@@ -156,24 +150,21 @@ static void drawthinedgebg(
 	_In_ COLORREF shadow
 )
 {
-	HBRUSH hbinner, hblight, hbshadow;
-	hbinner = CreateSolidBrush(inner);
-	hblight = CreateSolidBrush(light);
-	hbshadow = CreateSolidBrush(shadow);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
 
-	RECT rect = { left,top,left + width - 1,top + height - 1 };
-	FillRect(hdestdc, &rect, hbshadow);
+	SetDCBrushColor(hdestdc, shadow);
+	rect = (RECT){ left,top,left + width - 1,top + height - 1 };
+	FillRect(hdestdc, &rect, hdcbrush);
+	SetDCBrushColor(hdestdc, light);
 	rect = (RECT){ left + 1,top + 1,left + width,top + height };
-	FillRect(hdestdc, &rect, hblight);
+	FillRect(hdestdc, &rect, hdcbrush);
+	SetDCBrushColor(hdestdc, inner);
 	rect = (RECT){ left + 1,top + 1,left + width - 1,top + height - 1 };
-	FillRect(hdestdc, &rect, hbinner);
+	FillRect(hdestdc, &rect, hdcbrush);
 
-	SetPixel(hdestdc, left, rect.bottom, inner);
-	SetPixel(hdestdc, rect.right, top, inner);
-
-	DeleteObject(hbinner);
-	DeleteObject(hblight);
-	DeleteObject(hbshadow);
+	SetPixel(hdestdc, left, top + height - 1, inner);
+	SetPixel(hdestdc, left + width - 1, top, inner);
 }
 
 //draw 1 pixel half edge 2D like background,
@@ -189,17 +180,14 @@ static void drawhalfedgebg(
 	_In_ COLORREF edge
 )
 {
-	HPEN hpedge = CreatePen(PS_SOLID, 1, edge);
-	HBRUSH hbinner = CreateSolidBrush(inner);
-	SelectObject(hdestdc, hpedge);
-	SelectObject(hdestdc, hbinner);
-
 	RECT rect = { left + 1,top + 1,left + width,top + height };
-	Rectangle(hdestdc, left, top, rect.right, rect.bottom);
-	FillRect(hdestdc, &rect, hbinner);
 
-	DeleteObject(hpedge);
-	DeleteObject(hbinner);
+	SelectObject(hdestdc, GetStockObject(DC_PEN));
+	SetDCBrushColor(hdestdc, inner);
+	SetDCPenColor(hdestdc, edge);
+
+	Rectangle(hdestdc, left, top, rect.right, rect.bottom);
+	FillRect(hdestdc, &rect, GetStockObject(DC_BRUSH));
 }
 
 
@@ -293,74 +281,72 @@ static inline void draw7sdg(_In_ HDC h7sddc, _In_ int left, _In_ int top)
 //draw a mine icon
 static void drawmuitemmine(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
-	HBRUSH hbmine, hblight;
-	hbmine = CreateSolidBrush(COLOR_MUMINE);
-	hblight = CreateSolidBrush(COLOR_MUMINEL);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
 
-	RECT rect = { left + 6,top + 9,left + 19,top + 16 };
-	FillRect(hdestdc, &rect, hbmine);
+	SetDCBrushColor(hdestdc, COLOR_MUMINE);
+	rect = (RECT){ left + 6,top + 9,left + 19,top + 16 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 7,top + 7,left + 18,top + 18 };
-	FillRect(hdestdc, &rect, hbmine);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 9,top + 6,left + 16,top + 19 };
-	FillRect(hdestdc, &rect, hbmine);
+	FillRect(hdestdc, &rect, hdcbrush);
 
 	rect = (RECT){ left + 3,top + 12,left + 22,top + 13 };
-	FillRect(hdestdc, &rect, hbmine);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 12,top + 3,left + 13,top + 22 };
-	FillRect(hdestdc, &rect, hbmine);
+	FillRect(hdestdc, &rect, hdcbrush);
 
+	SetDCBrushColor(hdestdc, COLOR_MUMINEL);
 	rect = (RECT){ left + 9,top + 9,left + 12,top + 12 };
-	FillRect(hdestdc, &rect, hblight);
+	FillRect(hdestdc, &rect, hdcbrush);
 
 	SetPixel(hdestdc, left + 6, top + 6, COLOR_MUMINE);
 	SetPixel(hdestdc, left + 6, top + 18, COLOR_MUMINE);
 	SetPixel(hdestdc, left + 18, top + 6, COLOR_MUMINE);
 	SetPixel(hdestdc, left + 18, top + 18, COLOR_MUMINE);
-
-	DeleteObject(hbmine);
-	DeleteObject(hblight);
 }
 //draw a question mark icon
 static void drawmuitemmark(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ bool clicked)
 {
-	HBRUSH hbmark = CreateSolidBrush(COLOR_MUMARK);
-	RECT rect = { left + clicked + 9,top + clicked + 4,left + clicked + 15,top + clicked + 5 };
-	FillRect(hdestdc, &rect, hbmark);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
+
+	SetDCBrushColor(hdestdc, COLOR_MUMARK);
+	rect = (RECT){ left + clicked + 9,top + clicked + 4,left + clicked + 15,top + clicked + 5 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + clicked + 7,top + clicked + 5,left + clicked + 10,top + clicked + 9 };
-	FillRect(hdestdc, &rect, hbmark);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + clicked + 14,top + clicked + 5,left + clicked + 17,top + clicked + 10 };
-	FillRect(hdestdc, &rect, hbmark);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + clicked + 12,top + clicked + 10,left + clicked + 15,top + clicked + 12 };
-	FillRect(hdestdc, &rect, hbmark);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + clicked + 10,top + clicked + 12,left + clicked + 14,top + clicked + 15 };
-	FillRect(hdestdc, &rect, hbmark);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + clicked + 10,top + clicked + 17,left + clicked + 14,top + clicked + 20 };
-	FillRect(hdestdc, &rect, hbmark);
-	DeleteObject(hbmark);
+	FillRect(hdestdc, &rect, hdcbrush);
 }
 //draw a flag icon
 static void drawmuitemflag(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
-	HBRUSH hbflag, hbbase;
-	hbflag = CreateSolidBrush(COLOR_MUFLAGF);
-	hbbase = CreateSolidBrush(COLOR_MUFLAGB);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
 
-	RECT rect = { left + 6,top + 7,left + 7,top + 9 };
-	FillRect(hdestdc, &rect, hbflag);
+	SetDCBrushColor(hdestdc, COLOR_MUFLAGF);
+	rect = (RECT){ left + 6,top + 7,left + 7,top + 9 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 7,top + 6,left + 10,top + 10 };
-	FillRect(hdestdc, &rect, hbflag);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 10,top + 4,left + 13,top + 12 };
-	FillRect(hdestdc, &rect, hbflag);
+	FillRect(hdestdc, &rect, hdcbrush);
 
+	SetDCBrushColor(hdestdc, COLOR_MUFLAGB);
 	rect = (RECT){ left + 12,top + 12,left + 13,top + 15 };
-	FillRect(hdestdc, &rect, hbbase);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 9,top + 15,left + 15,top + 16 };
-	FillRect(hdestdc, &rect, hbbase);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 6,top + 16,left + 18,top + 19 };
-	FillRect(hdestdc, &rect, hbbase);
-
-	DeleteObject(hbflag);
-	DeleteObject(hbbase);
+	FillRect(hdestdc, &rect, hdcbrush);
 }
 //draw a cross mark icon
 static void drawmuitemcross(_In_ HDC hdestdc, _In_ int left, _In_ int top)
@@ -371,156 +357,171 @@ static void drawmuitemcross(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 	LineTo(hdestdc, left + 20, top + 20);
 	MoveToEx(hdestdc, left + 4, top + 20, NULL);
 	LineTo(hdestdc, left + 20, top + 4);
+	SelectObject(hdestdc, GetStockObject(DC_PEN));
 	DeleteObject(hpcross);
 }
 //draw a number 1 icon
 static void drawmuitemnum1(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
-	HBRUSH hbrush = CreateSolidBrush(COLOR_MUNUM1);
-	RECT rect = { left + 11,top + 5,left + 15,top + 6 };
-	FillRect(hdestdc, &rect, hbrush);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
+
+	SetDCBrushColor(hdestdc, COLOR_MUNUM1);
+	rect = (RECT){ left + 11,top + 5,left + 15,top + 6 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 9,top + 6,left + 15,top + 7 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 7,top + 7,left + 15,top + 8 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 8,left + 15,top + 10 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 10,top + 10,left + 15,top + 17 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 17,left + 20,top + 20 };
-	FillRect(hdestdc, &rect, hbrush);
-	DeleteObject(hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 }
 //draw a number 2 icon
 static void drawmuitemnum2(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
-	HBRUSH hbrush = CreateSolidBrush(COLOR_MUNUM2);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
 
-	RECT rect = { left + 5,top + 7,left + 9,top + 10 };
-	FillRect(hdestdc, &rect, hbrush);
+	SetDCBrushColor(hdestdc, COLOR_MUNUM2);
+	rect = (RECT){ left + 5,top + 7,left + 9,top + 10 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 7,top + 5,left + 18,top + 8 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 16,top + 7,left + 20,top + 11 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 
 	rect = (RECT){ left + 15,top + 10,left + 19,top + 13 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 13,top + 11,left + 17,top + 14 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 11,top + 12,left + 15,top + 15 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 9,top + 13,left + 13,top + 16 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 7,top + 14,left + 11,top + 17 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 15,left + 9,top + 18 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 
 	rect = (RECT){ left + 5,top + 17,left + 20,top + 20 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 
 	SetPixel(hdestdc, left + 6, top + 6, COLOR_MUNUM2);
 	SetPixel(hdestdc, left + 18, top + 6, COLOR_MUNUM2);
-
-	DeleteObject(hbrush);
 }
 //draw a number 3 icon
 static void drawmuitemnum3(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
-	HBRUSH hbrush = CreateSolidBrush(COLOR_MUNUM3);
-	RECT rect = { left + 5,top + 5,left + 19,top + 8 };
-	FillRect(hdestdc, &rect, hbrush);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
+
+	SetDCBrushColor(hdestdc, COLOR_MUNUM3);
+	rect = (RECT){ left + 5,top + 5,left + 19,top + 8 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 16,top + 7,left + 20,top + 11 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 10,top + 11,left + 19,top + 14 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 16,top + 14,left + 20,top + 19 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 17,left + 19,top + 20 };
-	FillRect(hdestdc, &rect, hbrush);
-	DeleteObject(hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 }
 //draw a number 4 icon
 static void drawmuitemnum4(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
-	HBRUSH hbrush = CreateSolidBrush(COLOR_MUNUM4);
-	RECT rect = { left + 8,top + 5,left + 13,top + 8 };
-	FillRect(hdestdc, &rect, hbrush);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
+
+	SetDCBrushColor(hdestdc, COLOR_MUNUM4);
+	rect = (RECT){ left + 8,top + 5,left + 13,top + 8 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 7,top + 8,left + 11,top + 11 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 11,left + 20,top + 14 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 14,top + 5,left + 19,top + 20 };
-	FillRect(hdestdc, &rect, hbrush);
-	DeleteObject(hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 }
 //draw a number 5 icon
 static void drawmuitemnum5(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
-	HBRUSH hbrush = CreateSolidBrush(COLOR_MUNUM5);
-	RECT rect = { left + 5,top + 5,left + 20,top + 8 };
-	FillRect(hdestdc, &rect, hbrush);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
+
+	SetDCBrushColor(hdestdc, COLOR_MUNUM5);
+	rect = (RECT){ left + 5,top + 5,left + 20,top + 8 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 8,left + 10,top + 11 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 11,left + 19,top + 14 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 16,top + 13,left + 20,top + 19 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 17,left + 19,top + 20 };
-	FillRect(hdestdc, &rect, hbrush);
-	DeleteObject(hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 }
 //draw a number 6 icon
 static void drawmuitemnum6(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
-	HBRUSH hbrush = CreateSolidBrush(COLOR_MUNUM6);
-	RECT rect = { left + 7,top + 5,left + 19,top + 8 };
-	FillRect(hdestdc, &rect, hbrush);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
+
+	SetDCBrushColor(hdestdc, COLOR_MUNUM6);
+	rect = (RECT){ left + 7,top + 5,left + 19,top + 8 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 7,left + 10,top + 19 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 10,top + 11,left + 19,top + 14 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 16,top + 13,left + 20,top + 19 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 7,top + 17,left + 19,top + 20 };
-	FillRect(hdestdc, &rect, hbrush);
-	DeleteObject(hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 }
 //draw a number 7 icon
 static void drawmuitemnum7(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
-	HBRUSH hbrush = CreateSolidBrush(COLOR_MUNUM7);
-	RECT rect = { left + 5,top + 5,left + 20,top + 8 };
-	FillRect(hdestdc, &rect, hbrush);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
+
+	SetDCBrushColor(hdestdc, COLOR_MUNUM7);
+	rect = (RECT){ left + 5,top + 5,left + 20,top + 8 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 16,top + 8,left + 20,top + 11 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 14,top + 11,left + 19,top + 14 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 13,top + 14,left + 17,top + 17 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 11,top + 17,left + 16,top + 20 };
-	FillRect(hdestdc, &rect, hbrush);
-	DeleteObject(hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 }
 //draw a number 8 icon
 static void drawmuitemnum8(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
-	HBRUSH hbrush = CreateSolidBrush(COLOR_MUNUM8);
-	RECT rect = { left + 7,top + 5,left + 19,top + 8 };
-	FillRect(hdestdc, &rect, hbrush);
+	HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
+	RECT rect;
+
+	SetDCBrushColor(hdestdc, COLOR_MUNUM8);
+	rect = (RECT){ left + 7,top + 5,left + 19,top + 8 };
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 7,left + 10,top + 11 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 16,top + 7,left + 20,top + 11 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 7,top + 11,left + 19,top + 14 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 5,top + 14,left + 10,top + 19 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 16,top + 14,left + 20,top + 19 };
-	FillRect(hdestdc, &rect, hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 	rect = (RECT){ left + 7,top + 17,left + 19,top + 20 };
-	FillRect(hdestdc, &rect, hbrush);
-	DeleteObject(hbrush);
+	FillRect(hdestdc, &rect, hdcbrush);
 }
 
 
@@ -579,9 +580,8 @@ inline bool _xor(const bool A, const bool B)
 void drawDCClientBg(HDC hdestdc, int left, int top)
 {
 	RECT rect = { left,top,left + CLIENT_WIDTH,top + CLIENT_HEIGHT };
-	HBRUSH hbrush = CreateSolidBrush(COLOR_CLIENT);
-	FillRect(hdestdc, &rect, hbrush);
-	DeleteObject(hbrush);
+	SetDCBrushColor(hdestdc, COLOR_CLIENT);
+	FillRect(hdestdc, &rect, GetStockObject(DC_BRUSH));
 }
 
 void drawDCInfoBg(HDC hdestdc, int left, int top)
@@ -631,8 +631,8 @@ void drawDCINums(HDC hdestdc, int left, int top, int num)
 //draw a single InfoNum directly on DC
 void drawDCInfoNum(HDC hdestdc, int left, int top, int num)
 {
-	HPEN hpen = CreatePen(PS_SOLID, 1, COLOR_INFONUMBT);
-	SelectObject(hdestdc, hpen);
+	SelectObject(hdestdc, GetStockObject(DC_PEN));
+	SetDCPenColor(hdestdc, COLOR_INFONUMBT);
 	draw7sdbg(hdestdc, left, top);
 
 	bool D = num & 0x8, C = num & 0x4, B = num & 0x2, A = num & 0x1;
@@ -643,8 +643,6 @@ void drawDCInfoNum(HDC hdestdc, int left, int top, int num)
 	if ((!C || B) && !A) draw7sde(hdestdc, left, top);
 	if ((D || C || !A) && !B || C && !A) draw7sdf(hdestdc, left, top);
 	if (D || _xor(C, B) || B && !A) draw7sdg(hdestdc, left, top);
-
-	DeleteObject(hpen);
 }
 
 
@@ -736,9 +734,9 @@ void drawDCMUNum(HDC hdestdc, int left, int top, int num)
 }
 
 //draw a mapunit depends on MapUnitState with default color
-void drawDCMapUnit(HDC hdestdc, int left, int top, int index)
+void drawDCMapUnit(HDC hdestdc, int left, int top, byte mapunit)
 {
-	switch (GETMUSTATE(Game.map[index])) {
+	switch (GETMUSTATE(mapunit)) {
 	case MUS_COVER:
 		drawDCMUCover(hdestdc, left, top);
 		break;
@@ -749,8 +747,8 @@ void drawDCMapUnit(HDC hdestdc, int left, int top, int index)
 		drawDCMUMark(hdestdc, left, top, false);
 		break;
 	case MUS_UNCOV:
-		if (MUISMINE(Game.map[index])) drawDCMUMine(hdestdc, left, top, false);
-		else drawDCMUNum(hdestdc, left, top, GETMUMINES(Game.map[index]));
+		if (MUISMINE(mapunit)) drawDCMUMine(hdestdc, left, top, false);
+		else drawDCMUNum(hdestdc, left, top, GETMUMINES(mapunit));
 		break;
 	case MUS_BOMB:
 		drawDCMUMine(hdestdc, left, top, true);
@@ -762,15 +760,13 @@ void drawDCMapUnit(HDC hdestdc, int left, int top, int index)
 		drawDCMUCover(hdestdc, left, top);
 		break;
 	}
-	REMMUUPDATE(Game.map[index]);
 }
 
 
 //draw Game Map directly on DC
-void drawDCMap(HDC hdestdc, int left, int top, bool force)
+void drawDCMap(HDC hdestdc, int left, int top, byte* gamemap, word gamesize)
 {
-	for (word i = 0; i < Game.size; i++) {
-		if (!force && !MUISUPDATE(Game.map[i])) continue;
-		drawDCMapUnit(hdestdc, left + index2px(i), top + index2py(i), i);
+	for (word i = 0; i < gamesize; i++) {
+		drawDCMapUnit(hdestdc, left + index2px(i), top + index2py(i), gamemap[i]);
 	}
 }
