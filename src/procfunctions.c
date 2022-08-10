@@ -379,11 +379,11 @@ LRESULT onPaint(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	drawDCINums(hdcbuffer, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains);
 	drawDCINums(hdcbuffer, TNUMS_LEFT, TNUMS_TOP, Game.time);
 	drawDCResetButton(hdcbuffer, RB_LEFT, RB_TOP, hbm_current, false);
-	drawDCMap(hdcbuffer, MAP_LEFT, MAP_TOP, true);
+	drawDCMap(hdcbuffer, MAP_LEFT, MAP_TOP, Game.map, Game.size);
 
 	BitBlt(hpaintdc, 0, 0, CLIENT_WIDTH, CLIENT_HEIGHT, hdcbuffer, 0, 0, SRCCOPY);
+	DeleteDC(hdcbuffer);
 	DeleteObject(hbmbuffer);
-	DeleteObject(hdcbuffer);
 
 	EndPaint(hwnd, &ps);
 	return 0;
