@@ -76,12 +76,20 @@ Check <https://www.gnu.org/licenses/> and view GNU General Public License v3.0 f
 
 
 
-//bitmap handle, point to bitmaps which will be drawn on ResetButton
-//DO NOT rewrite directly, use loadBitmaps() and freeBitmaps()
-extern HBITMAP hbm_rb, hbm_click, hbm_fail, hbm_success;
-//an argument to remember current using bitmap
-//use setRBBitmap() to change it
-extern HBITMAP hbm_current;
+//bitmap handles structure, these bitmaps are used to draw Reset Button
+typedef struct ResetButtonHBitmaps {
+	HBITMAP def;		//default bitmap
+	HBITMAP click;		//show when click on map
+	HBITMAP fail;		//show when game fail
+	HBITMAP success;	//show when game success
+	HBITMAP current;	//remember current using bitmap
+} RBHBM;
+
+
+
+//bitmap handles, point to bitmaps which will be drawn on Reset Button
+//DO NOT write it directly, use loadBitmaps(), freeBitmaps() and setRBBitmap()
+extern RBHBM RBhbm;
 
 
 //check if a mouse position is inside the ResetButton area
@@ -98,7 +106,6 @@ int lparam2index(LPARAM lparam);
 
 
 //manage bitmaps
-//'hbm_current' is set to 'hbm_rb' by default
 void loadBitmaps(HINSTANCE hinst);
 void freeBitmaps();
 
@@ -122,28 +129,21 @@ void setRBBitmap(HBITMAP hbm);
 
 //draw a mapunit depends on MapUnit data with default color
 //draw a covered mapunit by default
-//this function will clear Update bit after return
 void paintMapUnit(HDC hdestdc, int muleft, int mutop, int index);
 
 //paint GameMap, the left-top is position 0
-//update map_units that have been changed and clear Update bit
-//update all map_units if force is set
 //it redraws the whole MapArea content
-void paintMap(HDC hdestdc, int mapleft, int maptop, bool force);
+void paintMap(HDC hdestdc, int mapleft, int maptop);
 
 
 //show clicked state when a MapUnit is clicked down
 //it will do nothing if the index is out of GameMap range
-//this function clear Update bits which are set before calling,
-//and set Update bit of MapUnit which is clicked
-//NOTE: use the whole Map's left and top position istead of a MapUnit's
+//NOTE: use the whole Map's left and top position instead of a MapUnit's
 void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, int index);
 
 //show clicked state when a group of MapUnits are clicked down
 //it jumps MapUnit whose index is out of GameMap range
-//this function clear Update bits which are set before calling,
-//and set Update bit of MapUnits which are clicked
-//NOTE: use the whole Map's left and top position istead of a MapUnit's
+//NOTE: use the whole Map's left and top position instead of a MapUnit's
 void showClickedMapUnits(HDC hdestdc, int mapleft, int maptop, Neighbor* pindexes);
 
 

@@ -378,7 +378,7 @@ LRESULT onPaint(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	drawDCNumBg(hdcbuffer, TIME_LEFT, TIME_TOP);
 	drawDCINums(hdcbuffer, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains);
 	drawDCINums(hdcbuffer, TNUMS_LEFT, TNUMS_TOP, Game.time);
-	drawDCResetButton(hdcbuffer, RB_LEFT, RB_TOP, hbm_current, false);
+	drawDCResetButton(hdcbuffer, RB_LEFT, RB_TOP, RBhbm.current, false);
 	drawDCMap(hdcbuffer, MAP_LEFT, MAP_TOP, Game.map, Game.size);
 
 	BitBlt(hpaintdc, 0, 0, CLIENT_WIDTH, CLIENT_HEIGHT, hdcbuffer, 0, 0, SRCCOPY);
@@ -401,32 +401,8 @@ LRESULT onGameReset(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	KillTimer(hwnd, GAME_TIMER_ID);
 	resetGame();
 	last_dbclick = false;
-	setRBBitmap(hbm_rb);
+	setRBBitmap(RBhbm.def);
 	InvalidateRect(hwnd, NULL, FALSE);
-	return 0;
-}
-
-LRESULT onGameStart(HWND hwnd, WPARAM wparam, LPARAM lparam)
-{
-	HDC hdc = GetDC(hwnd);
-	int ret = startGame(index2x((int)lparam), index2y((int)lparam));
-	paintMap(hdc, MAP_LEFT, MAP_TOP, true);
-	paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains);
-	paintINums(hdc, TNUMS_LEFT, TNUMS_TOP, Game.time);
-	switch (ret) {
-	case 1:
-		PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
-		break;
-	case -1:
-		PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
-		break;
-	case 0:
-		SetTimer(hwnd, GAME_TIMER_ID, GAME_TIMER_ELAPSE, NULL);
-		break;
-	default:
-		break;
-	}
-	ReleaseDC(hwnd, hdc);
 	return 0;
 }
 
@@ -434,10 +410,9 @@ LRESULT onGameFail(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
 	KillTimer(hwnd, GAME_TIMER_ID);
-	finishGame();
-	setRBBitmap(hbm_fail);
+	setRBBitmap(RBhbm.fail);
 	paintResetButton(hdc, RB_LEFT, RB_TOP, false);
-	paintMap(hdc, MAP_LEFT, MAP_TOP, false);
+	paintMap(hdc, MAP_LEFT, MAP_TOP);
 	ReleaseDC(hwnd, hdc);
 	return 0;
 }
@@ -446,14 +421,13 @@ LRESULT onGameSuccess(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
 	KillTimer(hwnd, GAME_TIMER_ID);
-	int ret = finishGame();
-	setRBBitmap(hbm_success);
+	setRBBitmap(RBhbm.success);
 	paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 	paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, 0);
-	paintMap(hdc, MAP_LEFT, MAP_TOP, false);
+	paintMap(hdc, MAP_LEFT, MAP_TOP);
 
 	//if break record
-	if (ret) {
+	if (isNewRecord()) {
 		setRecordTime(Game.mode, Game.time);
 		DialogBox(hInst, MAKEINTRESOURCE(IDD_GETNAME), hwnd, GetNameProc);
 		DialogBox(hInst, MAKEINTRESOURCE(IDD_RECORD), hwnd, RecordProc);
@@ -478,7 +452,7 @@ LRESULT onGameModeChg(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	wndrect.bottom = CLIENT_HEIGHT + ((wndrect.bottom - wndrect.top) - cltrect.bottom) + wndrect.top;
 	MoveWindow(hwnd, wndrect.left, wndrect.top, wndrect.right - wndrect.left, wndrect.bottom - wndrect.top, TRUE);
 
-	setRBBitmap(hbm_rb);
+	setRBBitmap(RBhbm.def);
 	InvalidateRect(hwnd, NULL, FALSE);
 	return 0;
 }
@@ -492,7 +466,7 @@ LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam)
 		paintResetButton(hdc, RB_LEFT, RB_TOP, true);
 	}
 	else if (!ISGAMESET(Game.state)){	//won't work after game finished
-		setRBBitmap(hbm_click);
+		setRBBitmap(RBhbm.click);
 		paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 
 		//if in the map area
@@ -526,7 +500,7 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 		rb_capture = false;	//release ResetButton capture
 	}
 	else if (!ISGAMESET(Game.state)) {	//won't work after game finished
-		setRBBitmap(hbm_rb);
+		setRBBitmap(RBhbm.def);
 		paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 
 		//if in the map area
@@ -538,32 +512,32 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 				if (ret == -1) {
 					PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
 				}
-				else if (isGameSuccessful()) {
+				else if (ret == -2) {
 					PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
 				}
-				else
-					paintMap(hdc, MAP_LEFT, MAP_TOP, false);
+				else {
+					paintMap(hdc, MAP_LEFT, MAP_TOP);
+				}
 			}
 			else if (!last_dbclick) {	//single button and last was not double button
 				last_dbclick = false;
-				if (Game.state == INIT && GETMUSTATE(Game.map[index]) != MUS_FLAG) {	//first click
-					PostMessage(hwnd, WMAPP_GAMESTART, 0, index);
+				if (isFirstClick(index)) {	//first click, should be done before calling leftClick()
+					SetTimer(hwnd, GAME_TIMER_ID, GAME_TIMER_ELAPSE, NULL);
 				}
-				else {	//not first click
-					int ret = leftClick(index);	//first click, then judge success
-					if (ret == -1) {
-						PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
-					}
-					else if (isGameSuccessful()) {
-						PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
-					}
-					else
-						paintMap(hdc, MAP_LEFT, MAP_TOP, false);
+				int ret = leftClick(index);	//click, then judge success
+				if (ret == -1) {
+					PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
+				}
+				else if (ret == -2) {
+					PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
+				}
+				else {
+					paintMap(hdc, MAP_LEFT, MAP_TOP);
 				}
 			}
 			else {	//single button and last was double button
 				last_dbclick = false;
-				paintMap(hdc, MAP_LEFT, MAP_TOP, false);
+				paintMap(hdc, MAP_LEFT, MAP_TOP);
 			}
 		}
 	}
@@ -579,7 +553,7 @@ LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 		int index = lparam2index(lparam);
 		if (wparam & MK_LBUTTON) {	//double buttons
 			last_dbclick = true;
-			setRBBitmap(hbm_click);
+			setRBBitmap(RBhbm.click);
 			paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 			Neighbor indexes;
 			getNeighbors(&indexes, index2x(index), index2y(index));
@@ -604,7 +578,7 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	ReleaseCapture();
 	//won't work after game finishing or ResetButton got capture
 	if (!rb_capture && !ISGAMESET(Game.state)) {
-		setRBBitmap(hbm_rb);
+		setRBBitmap(RBhbm.def);
 		paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 
 		//if in the map area
@@ -616,14 +590,16 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 				if (ret == -1) {
 					PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
 				}
-				else if (isGameSuccessful()) {
+				else if (ret == -2) {
 					PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
 				}
-				else
-					paintMap(hdc, MAP_LEFT, MAP_TOP, false);
+				else {
+					paintMap(hdc, MAP_LEFT, MAP_TOP);
+				}
 			}
-			else	//single button
+			else {	//single button
 				last_dbclick = false;
+			}
 		}
 	}
 	ReleaseDC(hwnd, hdc);
@@ -638,7 +614,7 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	}
 	else if (!ISGAMESET(Game.state)) {	//won't work after game finishing
 		if (!lparamIsInMap(lparam)) {	//if not in the map area
-			paintMap(hdc, MAP_LEFT, MAP_TOP, false);
+			paintMap(hdc, MAP_LEFT, MAP_TOP);
 		}
 		else {	//if in the map area
 			int index = lparam2index(lparam);
@@ -648,13 +624,13 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
 					getNeighbors(&indexes, index2x(index), index2y(index));
 					showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &indexes);
 				}
-				//single button
-				else
+				else {	//single button
 					showClickedMapUnit(hdc, MAP_LEFT, MAP_TOP, index);
+				}
 			}
-			//without mouse button down
-			else
-				paintMap(hdc, MAP_LEFT, MAP_TOP, false);
+			else {	//without mouse button down
+				paintMap(hdc, MAP_LEFT, MAP_TOP);
+			}
 		}
 	}
 	ReleaseDC(hwnd, hdc);

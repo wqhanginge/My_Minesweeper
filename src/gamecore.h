@@ -21,7 +21,7 @@
  * this file contains the minesweeper core functions and data structure
  * all basic operations of Game are defined in this file
  * 
- * this file contains TWO global variables described as 'extern', which are
+ * this file contains TWO global variables described as 'extern', which are:
  * Game -- for game data, Score -- for record data
  * you can READ infomation from Game/Score struct by directly accessing
  * its member AND use defined functions to WRITE/CHANGE it (RECOMMENDED)
@@ -40,6 +40,7 @@
 #define SENIOR			2
 #define CUSTOM			3
 #define CRUSH			4
+#define ISSTDMOD(Mode)	((byte)(Mode) < CUSTOM)
 #define ISCRUSH(Mode)	((byte)(Mode) >= CRUSH)
 
 #define JUNIOR_WIDTH	9
@@ -69,40 +70,38 @@
 
 //Game States
 #define INIT				0
-#define PROGRESS			1
+#define RUNNING				1
 #define SUCCESS				2
 #define FAIL				3
 #define UNKNOW				4
-#define ISGAMESET(State)	((byte)(State) > PROGRESS)
+#define ISBADSTATE(State)	((byte)(State) >= UNKNOW)
+#define ISGAMESET(State)	((byte)(State) > RUNNING)
 //end Game States
 
 //Game Map Unit
-/*  7 6 5 4 3 2 1 0
+/*  8 7 6 5 4 3 2 1
  * +-+-+-+-+-+-+-+-+
- * |U|  S  |   M   |
+ * |M|  S  |   N   |
  * +-+-+-+-+-+-+-+-+
  *     map_unit
- * U:	if this unit is need to update/redraw
+ * M:	if this unit is a mine
  * S:	state of this unit:[covered, flagged, marked, uncovered, bombed, wrong flag]
- * M:	counts of mines in neighbors, from 0x0 to 0x8, 0xF if this unit is a mine
+ * N:	counts the number of mines in neighbors, from 0x0 to 0x8
  */
 
-#define MU_UPDATE		0x80
+#define MU_MINE			0x80
 #define MUS_COVER		0x00
-#define MUS_FLAG		0x10
-#define MUS_MARK		0x20
+#define MUS_MARK		0x10
+#define MUS_FLAG		0x20
 #define MUS_UNCOV		0x30
 #define MUS_BOMB		0x40
 #define MUS_WRONG		0x50
-#define MUM_MINE		0x0F
 #define GETMUMINES(unit)		((byte)((unit) & 0x0F))
 #define GETMUSTATE(unit)		((byte)((unit) & 0x70))
 #define SETMUMINES(m, unit)		(unit = ((byte)((byte)((m) & 0x0F) | (byte)((unit) & 0xF0))))
 #define SETMUSTATE(S, unit)		(unit = ((byte)((byte)((S) & 0x70) | (byte)((unit) & 0x8F))))
-#define MUISMINE(unit)			(((unit) & 0x0F) == MUM_MINE)
-#define SETMUUPDATE(unit)		(unit |= MU_UPDATE)
-#define REMMUUPDATE(unit)		(unit &= (~MU_UPDATE))
-#define MUISUPDATE(unit)		((bool)((unit) & MU_UPDATE))
+#define MUISMINE(unit)			((unit) & MU_MINE)
+#define MUISCLICKABLE(unit)		(GETMUSTATE(unit) <= MUS_MARK)
 //end Game Map Unit
 
 //Game Score
@@ -174,6 +173,10 @@ int index2y(int index);
 //start from 0, no arg check
 int xy2index(int x, int y);
 
+//check if the unit index is in the map area
+bool isxyinmap(int x, int y);
+bool isidxinmap(int index);
+
 
 //get all neighbors' index which around given unit
 //see detail in Type Neighbor's description
@@ -184,12 +187,11 @@ int getNeighbors(Neighbor* pneighbor, int x, int y);
 //set Game Mode with JUNIOR by default if 'mode' is undefined value
 //if 'mode' is a standard value(not CUSTOM), 'width', 'height' and 'mines' will be ignored
 //CUSTOM is limited by MAX_WIDTH, MAX_HEIGHT, MAX_MINES and MIN_*** as well
-//won't set Update bit, will set Game State to INIT and erase the whole Game Map
+//will set Game State to INIT and erase the whole Game Map
 void setGameMode(byte mode, byte width, byte height, word mines);
 
 
 //change Game State
-//won't set Update bit
 //return -1 if state is illegal
 int setGameState(byte state);
 
@@ -207,67 +209,61 @@ void stepGameTime();
 
 
 //erase the GameMap and reset Game infomation
-//won't set Update bit
 void resetGame();
 
 
-//start a new Game by click one position
-//only set Update bit for clicked units, recommend to redraw the whole map
-//return 0 if no exception, return -2 if error,
-//return 1 if game success, return -1 if digged mine(game fail)
-int startGame(int x, int y);
-
 //create a new GameMap with a safe area at given position
-//won't set Update bit
-//return -1 if the Game State is not INIT
-int createGameMap(int x, int y);
+//return -1 if the Game State is not INIT or index out of range
+int createGameMap(int index);
 
 
 //click a unit in GameMap
-//set Update bit before return
 //return mines around neighbor, or return -1 if this unit is mine,
 //or return -2 if this unit can't be clicked
 int clickOne(int index);
 
-//open all neighbors around a uncovered unit witch has mines-value 0
-//set Update bit before return
+//open all neighbors around a uncovered unit which has mines-value 0
 //return 0 if no error, or -1 if error
 int openBlanks(int index);
 
 
+//show all mines' positions after Game Set
+void showAllMines();
+
+//check if all the non-mine unit is open
+bool isMapFullyOpen();
+
+//check if break the record
+bool isNewRecord();
+
+//check if it is the first click of a Game
+bool isFirstClick(int index);
+
+
 //click the given unit and open all blanks if it is blank
 //or open the given unit only if it is not blank
-//set Update bit before return
-//return mines around neighbor, or return -1 if this unit is mine,
-//or return -2 if this unit can't be clicked
+//will start a new Game then click if it is the first click
+//return mines around neighbor,
+//or return -1 if this unit is mine(game fail),
+//or return -2 if game success,
+//or return -3 if this unit can't be clicked
 int leftClick(int index);
 
 
 //open all neighbors around the uncovered unit
 //represent double click operation in Game
-//set Update bit before return
-//return 0 if no error, or -1 if digged mine, or -2 if error
+//return 0 if no error,
+//or -1 if digged mine(game fail),
+//or -2 if game success,
+//or -3 if error
 int clickAround(int index);
 
 
 //change the MapUnitState and remained mines when right clicked on a unit
-//set Update bit before return
-//return 0 if changed, return -1 if not changed, return -2 if error
+//return 0 if changed,
+//return -1 if not changed,
+//return -2 if error
 int rightClick(int index);
-
-
-//update Game Map and open all mines' positions when game finish
-//clear mine_remains and check if breaking record
-//set Update bit before return
-//return 1 if breaking record, or 0 if no
-int finishGame();
-
-//show all mines' positions after Game Set
-//set Update bit before return
-void showAllMines();
-
-//judge if the current Game is Successful
-bool isGameSuccessful();
 
 
 //reset all scores
@@ -278,7 +274,7 @@ void resetRecord();
 dword getRecordTime(byte gamemode);
 
 //get player name under given Game Mode
-//this function return a pointer to first element of TCHAR[SCORE_NAME_LEN],
+//this function return a pointer to TCHAR[SCORE_NAME_LEN],
 //you can directly edit Record content by this pointer
 //be careful with array bound
 //return nullptr if error

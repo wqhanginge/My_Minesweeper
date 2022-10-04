@@ -38,7 +38,6 @@
 #define WMAPP_GAMERESET		(WM_APP + 0)		//send when game needs reset
 #define WMAPP_GAMESUCCESS	(WM_APP + 1)		//send when game is succeed
 #define WMAPP_GAMEFAIL		(WM_APP + 2)		//send when game is failed
-#define WMAPP_GAMESTART		(WM_APP + 3)		//send when game is going to start, use lparam as start index on GameMap
 
 /* send when game mode is changed,
  * use wparam as new GameMode,
@@ -47,7 +46,7 @@
  * call MAKECHGLAPRAM to create a lparam
  * call GETCHG*** family to unpack a lparam
  */
-#define WMAPP_GAMEMODECHG	(WM_APP + 4)
+#define WMAPP_GAMEMODECHG	(WM_APP + 3)
 
 //create a lparam by width, height and mines
 #define MAKECHGLPARAM(w, h, m)	((LPARAM)((((dword)(w) & 0xFF) | (((dword)(h) & 0xFF) << 8)) | (((dword)(m) & 0xFFFF) << 16)))
@@ -139,9 +138,6 @@ LRESULT onCommand(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
 //WMAPP_GAMERESET
 LRESULT onGameReset(HWND hwnd, WPARAM wparam, LPARAM lparam);
-
-//WMAPP_GAMESTART
-LRESULT onGameStart(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
 //WMAPP_GAMEFAIL
 LRESULT onGameFail(HWND hwnd, WPARAM wparam, LPARAM lparam);

@@ -32,10 +32,8 @@
 #include "encapsulations.h"
 
 
-//bitmap handle, point to bitmaps which will be drawn on Reset Button
-HBITMAP hbm_rb, hbm_click, hbm_fail, hbm_success;
-//an argument to remember current using bitmap
-HBITMAP hbm_current;
+//bitmap handles, point to bitmaps which will be drawn on Reset Button
+RBHBM RBhbm;
 
 
 /* usefull functions */
@@ -68,19 +66,20 @@ int lparam2index(LPARAM lparam)
 //manage bitmaps
 void loadBitmaps(HINSTANCE hinst)
 {
-	hbm_rb = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_RESET));
-	hbm_click = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_CLICK));
-	hbm_success = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_SUCCESS));
-	hbm_fail = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_FAIL));
-	hbm_current = hbm_rb;
+	RBhbm.def = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_RESET));
+	RBhbm.click = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_CLICK));
+	RBhbm.success = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_SUCCESS));
+	RBhbm.fail = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_FAIL));
+	RBhbm.current = RBhbm.def;
 }
 
 void freeBitmaps()
 {
-	DeleteObject(hbm_rb);
-	DeleteObject(hbm_click);
-	DeleteObject(hbm_success);
-	DeleteObject(hbm_fail);
+	DeleteObject(RBhbm.def);
+	DeleteObject(RBhbm.click);
+	DeleteObject(RBhbm.success);
+	DeleteObject(RBhbm.fail);
+	RBhbm = (RBHBM){0};
 }
 
 
@@ -106,7 +105,7 @@ void paintResetButton(HDC hdestdc, int left, int top, bool clicked)
 	HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, RB_SIZE, RB_SIZE);
 
 	SelectObject(hdcbuffer, hbmbuffer);
-	drawDCResetButton(hdcbuffer, 0, 0, hbm_current, clicked);
+	drawDCResetButton(hdcbuffer, 0, 0, RBhbm.current, clicked);
 	BitBlt(hdestdc, left, top, RB_SIZE, RB_SIZE, hdcbuffer, 0, 0, SRCCOPY);
 
 	DeleteDC(hdcbuffer);
@@ -116,7 +115,7 @@ void paintResetButton(HDC hdestdc, int left, int top, bool clicked)
 //change bitmap of ResetButton
 void setRBBitmap(HBITMAP hbm)
 {
-	hbm_current = hbm;
+	RBhbm.current = hbm;
 }
 
 
@@ -128,7 +127,6 @@ void paintMapUnit(HDC hdestdc, int muleft, int mutop, int index)
 
 	SelectObject(hdcbuffer, hbmbuffer);
 	drawDCMapUnit(hdcbuffer, 0, 0, Game.map[index]);
-	REMMUUPDATE(Game.map[index]);
 	BitBlt(hdestdc, muleft, mutop, MU_SIZE, MU_SIZE, hdcbuffer, 0, 0, SRCCOPY);
 
 	DeleteDC(hdcbuffer);
@@ -136,19 +134,13 @@ void paintMapUnit(HDC hdestdc, int muleft, int mutop, int index)
 }
 
 //paint GameMap, the mapleft-maptop is position 0
-void paintMap(HDC hdestdc, int mapleft, int maptop, bool force)
+void paintMap(HDC hdestdc, int mapleft, int maptop)
 {
 	HDC hdcbuffer = CreateCompatibleDC(hdestdc);
 	HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MAP_WIDTH, MAP_HEIGHT);
 
 	SelectObject(hdcbuffer, hbmbuffer);
-	//copy current UI content and draw new content on it
-	BitBlt(hdcbuffer, 0, 0, MAP_WIDTH, MAP_HEIGHT, hdestdc, mapleft, maptop, SRCCOPY);
-	for (word i = 0; i < Game.size; i++) {
-		if (!force && !MUISUPDATE(Game.map[i])) continue;
-		drawDCMapUnit(hdcbuffer, index2px(i), index2py(i), Game.map[i]);
-		REMMUUPDATE(Game.map[i]);
-	}
+	drawDCMap(hdcbuffer, 0, 0, Game.map, Game.size);
 	BitBlt(hdestdc, mapleft, maptop, MAP_WIDTH, MAP_HEIGHT, hdcbuffer, 0, 0, SRCCOPY);
 
 	DeleteDC(hdcbuffer);
@@ -156,46 +148,46 @@ void paintMap(HDC hdestdc, int mapleft, int maptop, bool force)
 }
 
 
-/* it needs to clear clicked state after mouse mapleft prior position
- * first remove Update bit of clicked map_units,
- * then refresh the whole map,
- * then redraw clicked map_units,
- * finally set Update bit of clicked map_units
- */
-
-//show clicked state when a MapUnit is clicked down
+ //show clicked state when a MapUnit is clicked down
 void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, int index)
 {
-	if (index < 0 || index >= (int)Game.size) return;
+	if (!isidxinmap(index)) return;
 
-	REMMUUPDATE(Game.map[index]);
-	paintMap(hdestdc, mapleft, maptop, false);
+	HDC hdcbuffer = CreateCompatibleDC(hdestdc);
+	HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MAP_WIDTH, MAP_HEIGHT);
+
+	SelectObject(hdcbuffer, hbmbuffer);
+	drawDCMap(hdcbuffer, 0, 0, Game.map, Game.size);
 	if (GETMUSTATE(Game.map[index]) == MUS_COVER)
-		drawDCMUUncov(hdestdc, mapleft + index2px(index), maptop + index2py(index));
+		drawDCMUUncov(hdcbuffer, index2px(index), index2py(index));
 	else if (GETMUSTATE(Game.map[index]) == MUS_MARK)
-		drawDCMUMark(hdestdc, mapleft + index2px(index), maptop + index2py(index), true);
-	SETMUUPDATE(Game.map[index]);
+		drawDCMUMark(hdcbuffer, index2px(index), index2py(index), true);
+	BitBlt(hdestdc, mapleft, maptop, MAP_WIDTH, MAP_HEIGHT, hdcbuffer, 0, 0, SRCCOPY);
+
+	DeleteDC(hdcbuffer);
+	DeleteObject(hbmbuffer);
 }
 
 //show clicked state when a group of MapUnits are clicked down
 void showClickedMapUnits(HDC hdestdc, int mapleft, int maptop, Neighbor* pindexes)
 {
+	HDC hdcbuffer = CreateCompatibleDC(hdestdc);
+	HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MAP_WIDTH, MAP_HEIGHT);
+
+	SelectObject(hdcbuffer, hbmbuffer);
+	drawDCMap(hdcbuffer, 0, 0, Game.map, Game.size);
 	for (word i = 0; i < 9; i++) {
-		if ((*pindexes)[i] >= 0 && (*pindexes)[i] < (int)Game.size)
-			REMMUUPDATE(Game.map[(*pindexes)[i]]);
+		int index = (*pindexes)[i];
+		if (!isidxinmap(index)) continue;
+		if (GETMUSTATE(Game.map[index]) == MUS_COVER)
+			drawDCMUUncov(hdcbuffer, index2px(index), index2py(index));
+		else if (GETMUSTATE(Game.map[index]) == MUS_MARK)
+			drawDCMUMark(hdcbuffer, index2px(index), index2py(index), true);
 	}
-	paintMap(hdestdc, mapleft, maptop, false);
-	for (word i = 0; i < 9; i++) {
-		if ((*pindexes)[i] < 0 || (*pindexes)[i] >= (int)Game.size) continue;
-		if (GETMUSTATE(Game.map[(*pindexes)[i]]) == MUS_COVER)
-			drawDCMUUncov(hdestdc, mapleft + index2px((*pindexes)[i]), maptop + index2py((*pindexes)[i]));
-		else if (GETMUSTATE(Game.map[(*pindexes)[i]]) == MUS_MARK)
-			drawDCMUMark(hdestdc, mapleft + index2px((*pindexes)[i]), maptop + index2py((*pindexes)[i]), true);
-	}
-	for (word i = 0; i < 9; i++) {
-		if ((*pindexes)[i] >= 0 && (*pindexes)[i] < (int)Game.size)
-			SETMUUPDATE(Game.map[(*pindexes)[i]]);
-	}
+	BitBlt(hdestdc, mapleft, maptop, MAP_WIDTH, MAP_HEIGHT, hdcbuffer, 0, 0, SRCCOPY);
+
+	DeleteDC(hdcbuffer);
+	DeleteObject(hbmbuffer);
 }
 
 
