@@ -21,7 +21,7 @@
  * this file contains the minesweeper core functions and Game data
  * all basic operations of Game are defined in this file
  * 
- * this file contains TWO global variables described as 'extern', which are
+ * this file contains TWO global variables described as 'extern', which are:
  * Game -- for game data, Score -- for record data
  * you can READ infomation from Game/Score struct by directly accessing
  * its member AND use defined functions to WRITE/CHANGE it (RECOMMENDED)
@@ -54,11 +54,22 @@ int xy2index(int x, int y)
 	return (y * Game.width) + x;
 }
 
+//check if the unit index is in the map area
+bool isxyinmap(int x, int y)
+{
+	return (x >= 0 && x < Game.width && y >=0 && y < Game.height);
+}
+
+//check if the unit index is in the map area
+bool isidxinmap(int index)
+{
+	return (index >= 0 && index < Game.size);
+}
+
 //get all neighbors' index which around given unit
 int getNeighbors(Neighbor* pneighbor, int x, int y)
 {
-	if (x < 0 || y < 0) return -1;
-	if ((word)xy2index(x, y) >= Game.size) return -1;
+	if (!isxyinmap(x, y)) return -1;
 	(*pneighbor)[0] = xy2index(x, y);
 	(*pneighbor)[1] = (x > 0 && y > 0) ? xy2index(x - 1, y - 1) : -1;
 	(*pneighbor)[2] = (y > 0) ? xy2index(x, y - 1) : -1;
@@ -135,7 +146,7 @@ void setGameMode(byte mode, byte width, byte height, word mines)
 //change Game State by param
 int setGameState(byte state)
 {
-	if (state >= UNKNOW) return -1;
+	if (ISBADSTATE(state)) return -1;
 	Game.state = state;
 	return 0;
 }
@@ -170,38 +181,19 @@ void resetGame()
 	memset(Game.map, 0, sizeof(byte) * Game.size);
 }
 
-//start a new Game by click one position
-int startGame(int x, int y)
-{
-	if (x < 0 || y < 0 || xy2index(x, y) >= Game.size) return -2;
-
-	//create map and init game infomation
-	if (createGameMap(x, y) == -1) return -2;
-	Game.state = PROGRESS;
-	Game.mine_remains = Game.mines;
-	Game.uncov_units = 0;
-	Game.time = 0;
-
-	//click on the given unit
-	//because of the safe area, the first click will always be safe with 0 mines
-	if (leftClick(xy2index(x, y)) == -1) return -1;
-
-	//it is possible that you win the game at first click
-	return isGameSuccessful();
-}
-
 //create a new GameMap with a safe area at given position
-int createGameMap(int x, int y)
+int createGameMap(int index)
 {
 	if (Game.state != INIT) return -1;
+	if (!isidxinmap(index)) return -1;
 
 	Neighbor safepos;
-	getNeighbors(&safepos, x, y);
+	getNeighbors(&safepos, index2x(index), index2y(index));
 
 	//generate mines, 8 units around where clicked won't have mines
 	//use shuffle algorithm
 	memset(Game.map, 0, sizeof(byte) * Game.size);	//clear the whole map
-	memset(Game.map, MUM_MINE, sizeof(byte) * Game.mines);	//generate mines
+	memset(Game.map, MU_MINE, sizeof(byte) * Game.mines);	//generate mines
 	dword neicount = 0;
 	for (int i = 0; i < 9; i++) neicount += (safepos[i] != -1);	//remember how many safe positions needed
 	for (dword k = 0; k < Game.mines; k++) {	//shuffle algorithm, ignore reserved tail
@@ -211,15 +203,11 @@ int createGameMap(int x, int y)
 		Game.map[k] = temp;
 	}
 
-	//there may be overlap between safe area and neighbor area, need handling
-	//if the safe area is at back-half of the whole map, move reserved tail to head
-	if (safepos[0] >= Game.size / 2) {
-		for (dword i = 0; i < neicount; i++) {
-			byte temp = Game.map[Game.size - 1 - i];
-			Game.map[Game.size - 1 - i] = Game.map[i];
-			Game.map[i] = temp;
-		}
-		neicount = Game.size;	//WARNING:the meaning of neicount has been changed
+	//shift the safe area center unit index to the middle of Neighbor list
+	for (int i = 0; i < 4; i++) {
+		int temp = safepos[i];
+		safepos[i] = safepos[i + 1];
+		safepos[i + 1] = temp;
 	}
 
 	//move safe area to where it is
@@ -248,12 +236,11 @@ int createGameMap(int x, int y)
 //click a unit in GameMap
 int clickOne(int index)
 {
-	if (Game.state != PROGRESS) return -2;
-	if (index < 0 || index >= (int)Game.size) return -2;
-	if (GETMUSTATE(Game.map[index]) != MUS_COVER && GETMUSTATE(Game.map[index]) != MUS_MARK) return -2;
+	if (Game.state != RUNNING) return -2;
+	if (!isidxinmap(index)) return -2;
+	if (!MUISCLICKABLE(Game.map[index])) return -2;
 
 	Game.uncov_units++;
-	SETMUUPDATE(Game.map[index]);
 	if (MUISMINE(Game.map[index])) {	//bomb
 		SETMUSTATE(MUS_BOMB, Game.map[index]);
 		return -1;
@@ -264,11 +251,11 @@ int clickOne(int index)
 	}
 }
 
-//open all neighbors around a uncovered unit witch has mines-value 0
+//open all neighbors around a uncovered unit which has mines-value 0
 int openBlanks(int index)
 {
-	if (Game.state != PROGRESS) return -1;
-	if (index < 0 || index >= (int)Game.size) return -1;
+	if (Game.state != RUNNING) return -1;
+	if (!isidxinmap(index)) return -1;
 	if (GETMUSTATE(Game.map[index]) != MUS_UNCOV) return -1;
 	if (GETMUMINES(Game.map[index]) != 0) return -1;
 
@@ -281,25 +268,85 @@ int openBlanks(int index)
 	return 0;
 }
 
+//show all mines' positions after Game Set
+void showAllMines()
+{
+	if (Game.state == FAIL) {
+		for (word i = 0; i < Game.size; i++) {
+			if (MUISMINE(Game.map[i]) && MUISCLICKABLE(Game.map[i])) {
+				SETMUSTATE(MUS_UNCOV, Game.map[i]);
+			}
+			else if (!MUISMINE(Game.map[i]) && GETMUSTATE(Game.map[i]) == MUS_FLAG) {
+				SETMUSTATE(MUS_WRONG, Game.map[i]);
+			}
+		}
+	}
+	else if (Game.state == SUCCESS) {
+		for (word i = 0; i < Game.size; i++) {
+			if (MUISMINE(Game.map[i]) && MUISCLICKABLE(Game.map[i])) {
+				SETMUSTATE(MUS_FLAG, Game.map[i]);
+			}
+		}
+	}
+}
+
+//check if all the non-mine unit is open
+bool isMapFullyOpen()
+{
+	return (Game.uncov_units == Game.size - Game.mines);
+}
+
+//check if break the record
+bool isNewRecord()
+{
+	return (ISSTDMOD(Game.mode) && Game.state == SUCCESS && Game.time < getRecordTime(Game.mode));
+}
+
+bool isFirstClick(int index)
+{
+	return (Game.state == INIT && MUISCLICKABLE(Game.map[index]));
+}
+
 //click the given unit and open all blanks if it is blank
 //or open the given unit only if it is not blank
 int leftClick(int index)
 {
-	if (Game.state != PROGRESS) return -2;
-	if (index < 0 || index >= (int)Game.size) return -2;
-	if (GETMUSTATE(Game.map[index]) != MUS_COVER && GETMUSTATE(Game.map[index]) != MUS_MARK) return -2;
+	if (!isidxinmap(index)) return -3;
+
+	//first click
+	if (isFirstClick(index)) {
+		//create map and init game infomation
+		if (createGameMap(index) == -1) return -3;
+		Game.state = RUNNING;
+		Game.mine_remains = Game.mines;
+		Game.uncov_units = 0;
+		Game.time = 0;
+	}
+
+	//normal click
+	if (Game.state != RUNNING) return -3;
+	if (!MUISCLICKABLE(Game.map[index])) return -3;
 
 	int ret = clickOne(index);
 	if (ret == 0) openBlanks(index);
+
+	//after click
+	if (ret == -1 || isMapFullyOpen()) {
+		ret = (ret == -1) ? -1 : -2;
+		Game.state = (ret == -1) ? FAIL : SUCCESS;
+		//show all mines' positions when game set
+		Game.mine_remains = 0;
+		showAllMines();
+	}
 	return ret;
 }
 
 //open all neighbors around the uncovered unit
 int clickAround(int index)
 {
-	if (Game.state != PROGRESS) return -2;
-	if (index < 0 || index >= (int)Game.size) return -2;
-	if (GETMUSTATE(Game.map[index]) != MUS_UNCOV) return -2;
+	if (Game.state != RUNNING) return -3;
+	if (!isidxinmap(index)) return -3;
+	if (GETMUSTATE(Game.map[index]) != MUS_UNCOV) return -3;
 
 	Neighbor pos;
 	getNeighbors(&pos, index2x(index), index2y(index));
@@ -308,7 +355,7 @@ int clickAround(int index)
 	int flags = 0;
 	for (int i = 1; i < 9; i++)
 		if (pos[i] != -1 && GETMUSTATE(Game.map[pos[i]]) == MUS_FLAG) flags++;
-	if (GETMUMINES(Game.map[pos[0]]) != flags) return -2;
+	if (GETMUMINES(Game.map[pos[0]]) != flags) return -3;
 
 	Neighbor info;
 	flags = 0;	//WARNING:the meaning of flags has been changed
@@ -318,6 +365,15 @@ int clickAround(int index)
 		if (info[i] == 0) openBlanks(pos[i]);
 		if (info[i] == -1) flags = -1;	//if bombed
 	}
+
+	//after open
+	if (flags == -1 || isMapFullyOpen()) {
+		flags = (flags == -1) ? -1 : -2;
+		Game.state = (flags == -1) ? FAIL : SUCCESS;
+		//show all mines' positions when game set
+		Game.mine_remains = 0;
+		showAllMines();
+	}
 	return flags;
 }
 
@@ -325,7 +381,7 @@ int clickAround(int index)
 int rightClick(int index)
 {
 	if (ISGAMESET(Game.state)) return -2;
-	if (index < 0 || index >= (int)Game.size) return -2;
+	if (!isidxinmap(index)) return -2;
 
 	//take effect only on covered units
 	byte new_mapunit_state;
@@ -346,50 +402,7 @@ int rightClick(int index)
 	}
 
 	SETMUSTATE(new_mapunit_state, Game.map[index]);
-	SETMUUPDATE(Game.map[index]);
 	return 0;
-}
-
-//update Game Map and open all mines' positions when game finish
-int finishGame()
-{
-	Game.state = isGameSuccessful() ? SUCCESS : FAIL;
-	//show all mines' positions when game set
-	Game.mine_remains = 0;
-	showAllMines();
-	//if break record
-	return (Game.mode < CUSTOM && Game.state == SUCCESS && Game.time < getRecordTime(Game.mode));
-}
-
-//show all mines' positions after Game Set
-void showAllMines()
-{
-	if (Game.state == FAIL) {
-		for (word i = 0; i < Game.size; i++) {
-			if (MUISMINE(Game.map[i]) && (GETMUSTATE(Game.map[i]) == MUS_COVER || GETMUSTATE(Game.map[i]) == MUS_MARK)) {
-				SETMUSTATE(MUS_UNCOV, Game.map[i]);
-				SETMUUPDATE(Game.map[i]);
-			}
-			else if (!MUISMINE(Game.map[i]) && GETMUSTATE(Game.map[i]) == MUS_FLAG) {
-				SETMUSTATE(MUS_WRONG, Game.map[i]);
-				SETMUUPDATE(Game.map[i]);
-			}
-		}
-	}
-	else if (Game.state == SUCCESS) {
-		for (word i = 0; i < Game.size; i++) {
-			if (MUISMINE(Game.map[i]) && (GETMUSTATE(Game.map[i]) == MUS_COVER || GETMUSTATE(Game.map[i]) == MUS_MARK)) {
-				SETMUSTATE(MUS_FLAG, Game.map[i]);
-				SETMUUPDATE(Game.map[i]);
-			}
-		}
-	}
-}
-
-//judge if the current Game is Successful
-bool isGameSuccessful()
-{
-	return (Game.mines == Game.size - Game.uncov_units);
 }
 
 //reset all scores
