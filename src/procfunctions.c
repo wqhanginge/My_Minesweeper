@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2022 Gee W.
+ *  Copyright (C) 2020-2023 Gee W.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 
 TCHAR conf_path[MAX_PATH];	//conf file path
 bool last_dbclick;			//indicate if last mouse event was a double click
-bool rb_capture;			//indicate if ResetButton get the capture
+bool rb_capture;			//indicate if Reset Button get the capture
 
 
 //change GameMode checked in Menu, do nothing if GameMode is illegal
@@ -196,7 +196,7 @@ INT_PTR CALLBACK GetNameProc(HWND hgetname, UINT msg, WPARAM wparam, LPARAM lpar
 		GetWindowText(heditname, getpRecordName(Game.mode), NAME_EDIT_LEN);
 		break;
 	case WM_COMMAND:
-		if (LOWORD(wparam) == IDC_OK) EndDialog(hgetname, 0);
+		if (LOWORD(wparam) == IDOK) EndDialog(hgetname, 0);
 		break;
 	default:
 		return FALSE;
@@ -325,7 +325,7 @@ LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	_tcscat_s(conf_path, MAX_PATH, TEXT("\\"));
 	_tcscat_s(conf_path, MAX_PATH, TEXT(DEF_CONFNAME));
 	initGame(conf_path, &wndpos);
-	srand((dword)time(nullptr));
+	srand((dword)time(NULL));
 
 	//init menu info
 	setMenuChecked(Game.mode);
@@ -462,7 +462,7 @@ LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	HDC hdc = GetDC(hwnd);
 	SetCapture(hwnd);
 	if (lparamIsInRB(lparam)) {	//click on Reset Button
-		rb_capture = true;	//set ResetButton capture
+		rb_capture = true;	//set Reset Button capture
 		paintResetButton(hdc, RB_LEFT, RB_TOP, true);
 	}
 	else if (!ISGAMESET(Game.state)){	//won't work after game finished
@@ -475,7 +475,7 @@ LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			if (wparam & MK_RBUTTON) {	//double buttons down
 				last_dbclick = true;
 				Neighbor indexes;
-				getNeighbors(&indexes, index2x(index), index2y(index));
+				getNeighbors(indexes, index2x(index), index2y(index));
 				showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &indexes);
 			}
 			else {	//single button
@@ -492,12 +492,12 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
 	ReleaseCapture();
-	if (rb_capture) {	//if ResetButton got capture
+	if (rb_capture) {	//if Reset Button got capture
 		if (lparamIsInRB(lparam)) {	//click up
 			paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 			PostMessage(hwnd, WMAPP_GAMERESET, 0, 0);
 		}
-		rb_capture = false;	//release ResetButton capture
+		rb_capture = false;	//release Reset Button capture
 	}
 	else if (!ISGAMESET(Game.state)) {	//won't work after game finished
 		setRBBitmap(RBhbm.def);
@@ -548,7 +548,7 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
-	//won't work after game finished or the mouse is not in the map area or ResetButton got capture
+	//won't work after game finished or the mouse is not in the map area or Reset Button got capture
 	if (!rb_capture && !ISGAMESET(Game.state) && lparamIsInMap(lparam)) {
 		int index = lparam2index(lparam);
 		if (wparam & MK_LBUTTON) {	//double buttons
@@ -556,7 +556,7 @@ LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			setRBBitmap(RBhbm.click);
 			paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 			Neighbor indexes;
-			getNeighbors(&indexes, index2x(index), index2y(index));
+			getNeighbors(indexes, index2x(index), index2y(index));
 			showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &indexes);
 		}
 		else {	//single button, flag a unit or mark a unit
@@ -576,7 +576,7 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
 	ReleaseCapture();
-	//won't work after game finishing or ResetButton got capture
+	//won't work after game finishing or Reset Button got capture
 	if (!rb_capture && !ISGAMESET(Game.state)) {
 		setRBBitmap(RBhbm.def);
 		paintResetButton(hdc, RB_LEFT, RB_TOP, false);
@@ -609,7 +609,7 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
-	if (rb_capture && (wparam & MK_LBUTTON)) {	//if ResetButton got capture
+	if (rb_capture && (wparam & MK_LBUTTON)) {	//if Reset Button got capture
 		paintResetButton(hdc, RB_LEFT, RB_TOP, lparamIsInRB(lparam));
 	}
 	else if (!ISGAMESET(Game.state)) {	//won't work after game finishing
@@ -621,7 +621,7 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			if (wparam & MK_LBUTTON) {	//with left button down
 				if (wparam & MK_RBUTTON) {	//double buttons
 					Neighbor indexes;
-					getNeighbors(&indexes, index2x(index), index2y(index));
+					getNeighbors(indexes, index2x(index), index2y(index));
 					showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &indexes);
 				}
 				else {	//single button

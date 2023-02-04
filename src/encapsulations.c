@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2022 Gee W.
+ *  Copyright (C) 2020-2023 Gee W.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ RBHBM RBhbm;
 
 /* usefull functions */
 
-//check if a mouse position is inside the ResetButton area
+//check if a mouse position is inside the Reset Button area
 bool lparamIsInRB(LPARAM lparam)
 {
 	POINTS p = MAKEPOINTS(lparam);
@@ -98,7 +98,7 @@ void paintINums(HDC hdestdc, int left, int top, int num)
 }
 
 
-//paint ResetButton without changing its bitmap
+//paint Reset Button without changing its bitmap
 void paintResetButton(HDC hdestdc, int left, int top, bool clicked)
 {
 	HDC hdcbuffer = CreateCompatibleDC(hdestdc);
@@ -112,7 +112,7 @@ void paintResetButton(HDC hdestdc, int left, int top, bool clicked)
 	DeleteObject(hbmbuffer);
 }
 
-//change bitmap of ResetButton
+//change bitmap of Reset Button
 void setRBBitmap(HBITMAP hbm)
 {
 	RBhbm.current = hbm;
@@ -272,7 +272,7 @@ void getProperty(TCHAR* property, size_t size_in_ch)
 		GetFileVersionInfo(szAppFullPath, 0, dwLen, pszAppVersion);	//get version content
 
 		UINT pnLen = 0, pvLen = 0, lcLen = 0;
-		TCHAR* pProductName = nullptr, * pProductVersion = nullptr, * pLegalCopyright = nullptr;
+		TCHAR* pProductName = NULL, * pProductVersion = NULL, * pLegalCopyright = NULL;
 		//get specific version information
 		VerQueryValue(pszAppVersion, TEXT(PNQUERYSTR), (LPVOID*)&pProductName, &pnLen);
 		VerQueryValue(pszAppVersion, TEXT(PVQUERYSTR), (LPVOID*)&pProductVersion, &pvLen);
