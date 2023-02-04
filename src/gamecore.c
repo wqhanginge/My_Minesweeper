@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2022 Gee W.
+ *  Copyright (C) 2020-2023 Gee W.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -67,18 +67,18 @@ bool isidxinmap(int index)
 }
 
 //get all neighbors' index which around given unit
-int getNeighbors(Neighbor* pneighbor, int x, int y)
+int getNeighbors(Neighbor neighbor, int x, int y)
 {
 	if (!isxyinmap(x, y)) return -1;
-	(*pneighbor)[0] = xy2index(x, y);
-	(*pneighbor)[1] = (x > 0 && y > 0) ? xy2index(x - 1, y - 1) : -1;
-	(*pneighbor)[2] = (y > 0) ? xy2index(x, y - 1) : -1;
-	(*pneighbor)[3] = (x < Game.width - 1 && y > 0) ? xy2index(x + 1, y - 1) : -1;
-	(*pneighbor)[4] = (x > 0) ? xy2index(x - 1, y) : -1;
-	(*pneighbor)[5] = (x < Game.width - 1) ? xy2index(x + 1, y) : -1;
-	(*pneighbor)[6] = (x > 0 && y < Game.height - 1) ? xy2index(x - 1, y + 1) : -1;
-	(*pneighbor)[7] = (y < Game.height - 1) ? xy2index(x, y + 1) : -1;
-	(*pneighbor)[8] = (x < Game.width - 1 && y < Game.height - 1) ? xy2index(x + 1, y + 1) : -1;
+	neighbor[0] = xy2index(x, y);
+	neighbor[1] = (x > 0 && y > 0) ? xy2index(x - 1, y - 1) : -1;
+	neighbor[2] = (y > 0) ? xy2index(x, y - 1) : -1;
+	neighbor[3] = (x < Game.width - 1 && y > 0) ? xy2index(x + 1, y - 1) : -1;
+	neighbor[4] = (x > 0) ? xy2index(x - 1, y) : -1;
+	neighbor[5] = (x < Game.width - 1) ? xy2index(x + 1, y) : -1;
+	neighbor[6] = (x > 0 && y < Game.height - 1) ? xy2index(x - 1, y + 1) : -1;
+	neighbor[7] = (y < Game.height - 1) ? xy2index(x, y + 1) : -1;
+	neighbor[8] = (x < Game.width - 1 && y < Game.height - 1) ? xy2index(x + 1, y + 1) : -1;
 	return 0;
 }
 
@@ -188,7 +188,7 @@ int createGameMap(int index)
 	if (!isidxinmap(index)) return -1;
 
 	Neighbor safepos;
-	getNeighbors(&safepos, index2x(index), index2y(index));
+	getNeighbors(safepos, index2x(index), index2y(index));
 
 	//generate mines, 8 units around where clicked won't have mines
 	//use shuffle algorithm
@@ -225,7 +225,7 @@ int createGameMap(int index)
 		if (MUISMINE(Game.map[i])) continue;
 		int m = 0;
 		Neighbor neipos;
-		getNeighbors(&neipos, index2x(i), index2y(i));
+		getNeighbors(neipos, index2x(i), index2y(i));
 		for (int j = 1; j < 9; j++)
 			if (neipos[j] != -1 && MUISMINE(Game.map[neipos[j]])) m++;
 		SETMUMINES(m, Game.map[i]);
@@ -260,7 +260,7 @@ int openBlanks(int index)
 	if (GETMUMINES(Game.map[index]) != 0) return -1;
 
 	Neighbor pos;
-	getNeighbors(&pos, index2x(index), index2y(index));
+	getNeighbors(pos, index2x(index), index2y(index));
 	for (int i = 1; i < 9; i++) {
 		int ret = clickOne(pos[i]);
 		if (ret == 0) openBlanks(pos[i]);	//do in a recursive manner
@@ -349,7 +349,7 @@ int clickAround(int index)
 	if (GETMUSTATE(Game.map[index]) != MUS_UNCOV) return -3;
 
 	Neighbor pos;
-	getNeighbors(&pos, index2x(index), index2y(index));
+	getNeighbors(pos, index2x(index), index2y(index));
 
 	//you can open neighbors only when flags EQ mines around neighbors
 	int flags = 0;
@@ -432,7 +432,7 @@ TCHAR *getpRecordName(byte gamemode)
 	case SENIOR:	return Score.senior_name;
 	default:		break;
 	}
-	return nullptr;
+	return NULL;
 }
 
 //update best time under given Game Mode

@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2022 Gee W.
+ *  Copyright (C) 2020-2023 Gee W.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@
 /*
 TCHAR conf_path[MAX_PATH];	//conf file path
 bool last_dbclick;			//indicate if last mouse event was a double click
-bool rb_capture;			//indicate if ResetButton get the capture
+bool rb_capture;			//indicate if Reset Button get the capture
 */
 
 
