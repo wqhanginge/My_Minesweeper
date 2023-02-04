@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2022 Gee W.
+ *  Copyright (C) 2020-2023 Gee W.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -165,12 +165,12 @@ extern GameScore Score;
  */
 
 //transform GameMap index-type into xy-type
-//start from 0, no arg check
+//start from 0, NO ARG CHECK
 int index2x(int index);
 int index2y(int index);
 
 //transform GameMap xy-type into index-type
-//start from 0, no arg check
+//start from 0, NO ARG CHECK
 int xy2index(int x, int y);
 
 //check if the unit index is in the map area
@@ -181,7 +181,7 @@ bool isidxinmap(int index);
 //get all neighbors' index which around given unit
 //see detail in Type Neighbor's description
 //return -1 if error
-int getNeighbors(Neighbor* pneighbor, int x, int y);
+int getNeighbors(Neighbor neighbor, int x, int y);
 
 
 //set Game Mode with JUNIOR by default if 'mode' is undefined value
@@ -218,12 +218,13 @@ int createGameMap(int index);
 
 
 //click a unit in GameMap
-//return mines around neighbor, or return -1 if this unit is mine,
+//return mines around neighbor,
+//or return -1 if this unit is mine,
 //or return -2 if this unit can't be clicked
 int clickOne(int index);
 
 //open all neighbors around a uncovered unit which has mines-value 0
-//return 0 if no error, or -1 if error
+//return -1 if error
 int openBlanks(int index);
 
 
@@ -277,7 +278,7 @@ dword getRecordTime(byte gamemode);
 //this function return a pointer to TCHAR[SCORE_NAME_LEN],
 //you can directly edit Record content by this pointer
 //be careful with array bound
-//return nullptr if error
+//return NULL if error
 TCHAR *getpRecordName(byte gamemode);
 
 //update best time under given Game Mode

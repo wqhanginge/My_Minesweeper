@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2022 Gee W.
+ *  Copyright (C) 2020-2023 Gee W.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  * this file also contians some useful functions
  * 
  * this file contains several HBITMAP global variables which can be accessed
- * by external functions, they are used for drawing ResetButton,
+ * by external functions, they are used for drawing Reset Button,
  * DO NOT rewrite them directly, but use predefined functions(IMPORTANT)
  * 
  * NOTE:most functions do not have arg check process, use with care
@@ -72,7 +72,7 @@
 #define COPYRIGHTSTR	\
 "This program comes with ABSOLUTELY NO WARRANTY.\n\
 This is free software, and you are welcome to redistribute it under certain conditions.\n\n\
-Check <https://www.gnu.org/licenses/> and view GNU General Public License v3.0 for details."
+Check <https://www.gnu.org/licenses/> and view GNU General Public License version 3 (or any later) for details."
 
 
 
@@ -92,7 +92,7 @@ typedef struct ResetButtonHBitmaps {
 extern RBHBM RBhbm;
 
 
-//check if a mouse position is inside the ResetButton area
+//check if a mouse position is inside the Reset Button area
 bool lparamIsInRB(LPARAM lparam);
 
 //check if a mouse position is inside the Map area
@@ -119,11 +119,11 @@ void freeBitmaps();
 void paintINums(HDC hdestdc, int left, int top, int num);
 
 
-//paint ResetButton without changing its bitmap
+//paint Reset Button without changing its bitmap
 void paintResetButton(HDC hdestdc, int left, int top, bool clicked);
 
-//change bitmap on ResetButton
-//NOTE:you need to redraw ResetButton after calling this function
+//change bitmap on Reset Button
+//NOTE:you need to redraw Reset Button after calling this function
 void setRBBitmap(HBITMAP hbm);
 
 

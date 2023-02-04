@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2022 Gee W.
+ *  Copyright (C) 2020-2023 Gee W.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -77,8 +77,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR lpCmdLi
 	wndc.cbWndExtra = 0;
 	wndc.hInstance = hInstance;
 	wndc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wndc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
-	wndc.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
+	wndc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPICON));
+	wndc.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPICON));
 	wndc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wndc.lpfnWndProc = WndProc;
 	wndc.lpszClassName = TEXT(WNDC_NAME);
@@ -88,7 +88,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR lpCmdLi
 	RegisterClassEx(&wndc);
 
 	hInst = hInstance;
-	hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU1));
+	hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINMENU));
 	hWnd = CreateWindowEx(0, wndc.lpszClassName, TEXT(APP_NAME),
 		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
 		CW_USEDEFAULT, CW_USEDEFAULT,
