@@ -18,12 +18,11 @@
 /*****************************************************************************\
  * procfunctions.h
  *****************************************************************************
- * this file contains Win32 Window Proc Functions and definations for Window
- * and Message Queue
- * each function is aim to handle a particular Window Message or is a Child
- * Window's Procedure Function
+ * This file contains definations for Window and Message Queue.
+ * This file contains Win32 Window Proc Functions and Message Processing
+ * Functions.
  * 
- * NOTE:most functions have no arg check, use with care
+ * NOTE: Most functions have NO arg check, use with care.
 \*****************************************************************************/
 
 
@@ -31,6 +30,7 @@
 
 #include "stdincludes.h"
 #include "encapsulations.h"
+
 
 
 /* Game's private window messages */
@@ -49,12 +49,12 @@
 #define WMAPP_GAMEMODECHG	(WM_APP + 3)
 
 //create a lparam by width, height and mines
-#define MAKECHGLPARAM(w, h, m)	((LPARAM)((((dword)(w) & 0xFF) | (((dword)(h) & 0xFF) << 8)) | (((dword)(m) & 0xFFFF) << 16)))
+#define MAKECHGLPARAM(w, h, m)	((LPARAM)((((DWORD)(w) & 0xFF) | (((DWORD)(h) & 0xFF) << 8)) | (((DWORD)(m) & 0xFFFF) << 16)))
 
 //unpack infomation from a lparam
-#define GETCHGWIDTH(l)			((byte)((dword)(l) & 0xFF))
-#define GETCHGHEIGHT(l)			((byte)(((dword)(l) >> 8) & 0xFF))
-#define GETCHGMINES(l)			((word)(((dword)(l) >> 16) & 0xFFFF))
+#define GETCHGWIDTH(l)			((BYTE)((DWORD)(l) & 0xFF))
+#define GETCHGHEIGHT(l)			((BYTE)(((DWORD)(l) >> 8) & 0xFF))
+#define GETCHGMINES(l)			((WORD)(((DWORD)(l) >> 16) & 0xFFFF))
 
 
 /* Dialog defines */
@@ -88,23 +88,36 @@
 
 /* following arguments are private, they can not be seen external */
 /*
-TCHAR conf_path[MAX_PATH];	//conf file path
-bool last_dbclick;			//indicate if last mouse event was a double click
-bool rb_capture;			//indicate if Reset Button get the capture
+GameInfo Game;		//Game information
+GameScore Score;	//Record information
+RBHBM RBhbm;		//bitmap handles, point to bitmaps which will be drawn on Reset Button
+
+TCHAR conf_path[MAX_CONFPATH];	//config file path
+bool last_dbclick;				//indicate if last mouse event was a double click
+bool rb_capture;				//indicate if ResetButton get the capture
 */
+
+
+/* Followings are global handles for program and window,
+ * they are defined in main.c but need to be accessed in this file.
+ */
+
+extern HINSTANCE hInst;	//program instance handle
+extern HWND hWnd;		//main window handle
+extern HMENU hMenu;		//main menu handle
+
 
 
 /* change checked position in Menu */
 
-//change GameMode checked in Menu, do nothing if GameMode is illegal
-void setMenuChecked(byte GameMode);
+//Change GameMode checked in Menu, do nothing if GameMode is illegal.
+void setMenuChecked(BYTE GameMode);
 
-//check Question Mark in Menu if Mark is true
+//Check or uncheck QuestionMark in Menu.
 void setQMarkChecked(bool Mark);
 
 
-
-/* window Porc Functions */
+/* Window Porc Functions */
 
 //About Dialog, show program description on child modal window
 INT_PTR CALLBACK AboutProc(HWND habout, UINT msg, WPARAM wparam, LPARAM lparam);

@@ -18,9 +18,9 @@
 /*****************************************************************************\
  * main.c
  *****************************************************************************
- * this file contains the program entry and main Window Procedure
- * this file contains the global program and window handles which are defined
- * as 'extern' in stdincludes.h
+ * This file is the program entry and contains main Window Procedure.
+ * This file contains the program instance and window handles as global
+ * variables.
 \*****************************************************************************/
 
 

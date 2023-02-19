@@ -18,19 +18,18 @@
 /*****************************************************************************\
  * basicUI.h
  *****************************************************************************
- * this file contains the Game UI design and basic drawing functions
- * this file also contains some transform functions
- * drawing functions use Win32 APIs and will draw directly on DC without
- * creating a DC-buffer
+ * This file contains the Game UI design and basic drawing functions.
+ * This file also contains some transform functions.
+ * Drawing functions use Win32 APIs and draw directly on Device Context(DC)
+ * without creating a DC-buffer.
  * 
- * NOTE:almost all functions have no arg check process, use with care
+ * NOTE: Almost all functions have NO arg check process, use with care.
 \*****************************************************************************/
 
 
 #pragma once
 
 #include "stdincludes.h"
-#include "gamecore.h"
 
 
 /*         Main Client Area
@@ -68,25 +67,25 @@
  * A:left_dist	B:inums_width	C:mid_dist	D:reset_button_size
  * E:mid_dist	F:inums_width	G:right_dist
  *
- * the Info Part contains Mine Part, Time Part and Reset Button
+ * the Info Part contains Mine Part, Time Part and ResetButton
  * 
  * static: top_dist, bottom_dist, nums_height, left_dist, right_dist,
  *         nums_width, reset_button_size
  * flexible: mid_dist
  * 
- * NOTE: Reset Button is NOT a "BUTTON" Window
- * NOTE: Reset Button is a Square, Mine Part and Time Part are Rectangles
+ * NOTE: ResetButton is NOT a "BUTTON" Window
+ * NOTE: ResetButton is a Square, Mine Part and Time Part are Rectangles
  * NOTE: the 'reset_button_size' is different from 'inums_height' and 'inums_width',
  *       i.e. the 'bottom_dist' can be varied, but the 'top_dist' is static
  * NOTE: Mine Part and Time Part have edges of their own,
- *       but Reset Button have no edges
+ *       but ResetButton have no edges
  *
- * Mine Part, Time Part and Reset Button have static size, and Reset Button is
+ * Mine Part, Time Part and ResetButton have static size, and ResetButton is
  * always center aligned and Mine Part/Time Part is always close to the edge,
  * but Info Part has flexible width, so that it's necessary to recalculate
- * the position when Game Mode is changed
+ * the position when GameMode is changed
  * 
- * PS: although we say that Reset Button has NO edge, we still regard it as
+ * PS: although we say that ResetButton has NO edge, we still regard it as
  *     edge+inner structure because it also has a 3D outlook(button like),
  *     so as the MapUnit in MapArea Part
  */
@@ -139,7 +138,7 @@
  *              Map
  * 
  * 'px' and 'py' means positon in pixel on window
- * 'x' and 'y' means position in unit on Game Map
+ * 'x' and 'y' means position in unit on GameMap
  * px = x * w, py = y * h, ppos = (px, py)
  * 
  * NOTE: 'px' and 'py' indicate the left-top of one MapUnit
@@ -156,12 +155,11 @@
 #define COLOR_DEFSHADOW	RGB(128,128,128)
 #define COLOR_DEFSEMIS	RGB(160,160,160)
 
-/*following two macros use variables from gamecore.h, make sure it is included*/
-#define MAPUNITS_WIDTH	(Game.width * MU_SIZE)
-#define MAPUNITS_HEIGHT	(Game.height * MU_SIZE)
+#define MAPUNITS_WIDTH(w)	((w) * MU_SIZE)
+#define MAPUNITS_HEIGHT(h)	((h) * MU_SIZE)
 
 //Info Part
-#define INFO_WIDTH		(PART_EDGE + MAPUNITS_WIDTH + PART_EDGE)
+#define INFO_WIDTH(w)	(PART_EDGE + MAPUNITS_WIDTH(w) + PART_EDGE)
 #define INFO_HEIGHT		(PART_EDGE + 36 + PART_EDGE)
 #define INFO_LEFT		AREA_EDGE
 #define INFO_TOP		AREA_EDGE
@@ -171,7 +169,7 @@
 #define COLOR_INFOS		COLOR_DEFSHADOW
 //end Info Part
 
-//Mine Part, Time Part and Reset Button
+//Mine Part, Time Part and ResetButton
 #define LEFT_DIST		(PART_EDGE + 6)
 #define RIGHT_DIST		LEFT_DIST
 #define INFONUM_WIDTH	15
@@ -204,11 +202,11 @@
 
 #define TIME_WIDTH		NUM_WIDTH
 #define TIME_HEIGHT		NUM_HEIGHT
-#define TIME_LEFT		(INFO_LEFT + INFO_WIDTH - RIGHT_DIST - TIME_WIDTH)
+#define TIME_LEFT(w)	(INFO_LEFT + INFO_WIDTH(w) - RIGHT_DIST - TIME_WIDTH)
 #define TIME_TOP		MINE_TOP
 #define TNUMS_WIDTH		INUMS_WIDTH
 #define TNUMS_HEIGHT	INUMS_HEIGHT
-#define TNUMS_LEFT		(TIME_LEFT + INUMS_EDGE)
+#define TNUMS_LEFT(w)	(TIME_LEFT(w) + INUMS_EDGE)
 #define TNUMS_TOP		(TIME_TOP + INUMS_EDGE)
 
 #define COLOR_TIME		COLOR_NUM
@@ -216,10 +214,10 @@
 #define COLOR_TIMES		COLOR_NUMS
 
 #define RB_SIZE			32
-#define RB_LEFT			(INFO_LEFT + (INFO_WIDTH - RB_SIZE) / 2)
+#define RB_LEFT(w)		(INFO_LEFT + (INFO_WIDTH(w) - RB_SIZE) / 2)
 #define RB_TOP			(INFO_TOP + PART_EDGE + 2)
 #define BMP_SIZE		28
-#define BMP_LEFT		(RB_LEFT + 2)
+#define BMP_LEFT(w)		(RB_LEFT(w) + 2)
 #define BMP_TOP			(RB_TOP + 2)
 
 #define COLOR_RB		COLOR_DEFBG
@@ -227,16 +225,16 @@
 #define COLOR_RBS		COLOR_DEFSHADOW
 #define COLOR_RBSL		COLOR_DEFSEMIL
 #define COLOR_RBSS		COLOR_DEFSEMIS
-//end Mine Part, Time Part and Reset Button
+//end Mine Part, Time Part and ResetButton
 
 //MapArea
-#define MAPAREA_WIDTH	INFO_WIDTH
-#define MAPAREA_HEIGHT	(PART_EDGE + MAPUNITS_HEIGHT + PART_EDGE)
-#define MAPAREA_LEFT	AREA_EDGE
-#define MAPAREA_TOP		(AREA_EDGE + INFO_HEIGHT + AREA_EDGE)
+#define MAPAREA_WIDTH(w)	INFO_WIDTH(w)
+#define MAPAREA_HEIGHT(h)	(PART_EDGE + MAPUNITS_HEIGHT(h) + PART_EDGE)
+#define MAPAREA_LEFT		AREA_EDGE
+#define MAPAREA_TOP			(AREA_EDGE + INFO_HEIGHT + AREA_EDGE)
 
-#define MAP_WIDTH		MAPUNITS_WIDTH
-#define MAP_HEIGHT		MAPUNITS_HEIGHT
+#define MAP_WIDTH(w)	MAPUNITS_WIDTH(w)
+#define MAP_HEIGHT(h)	MAPUNITS_HEIGHT(h)
 #define MAP_LEFT		(MAPAREA_LEFT + PART_EDGE)
 #define MAP_TOP			(MAPAREA_TOP + PART_EDGE)
 
@@ -267,10 +265,10 @@
 //end MapArea
 
 //Client Area
-#define CLIENT_WIDTH	(AREA_EDGE + INFO_WIDTH + AREA_EDGE)
-#define CLIENT_HEIGHT	(AREA_EDGE + INFO_HEIGHT + AREA_EDGE + MAPAREA_HEIGHT + AREA_EDGE)
-#define CLIENT_LEFT		0
-#define CLIENT_TOP		0
+#define CLIENT_WIDTH(w)		(AREA_EDGE + INFO_WIDTH(w) + AREA_EDGE)
+#define CLIENT_HEIGHT(h)	(AREA_EDGE + INFO_HEIGHT + AREA_EDGE + MAPAREA_HEIGHT(h) + AREA_EDGE)
+#define CLIENT_LEFT			0
+#define CLIENT_TOP			0
 
 #define COLOR_CLIENT	COLOR_DEFBG
 #define COLOR_CLIENTL	COLOR_DEFLIGHT
@@ -279,22 +277,21 @@
 
 
 
-/* this array stores InfoNum backgroud, it is private
+/* This array stores InfoNum backgroud, it is private.
 /*
 const bool InfoNumBG[INFONUM_WIDTH][INFONUM_HEIGHT];
 */
 
 
 
-/* these function implementations are private
- * they are invisible outside
+/* These function implementations are private,
+ * they are invisible outside.
  */
 
-/* these functions draw a concave or convex like area with different type of edges
+/* These functions draw a concave or convex like area with different type of edges.
 /**********************************************************************************
-//draw 2 pixel edge concave background,
-//exchange 'light' and 'shadow' to draw a convex background
-//no DC-Buffer
+//Draw 2 pixel edge concave background,
+//exchange 'light' and 'shadow' to draw a convex background.
 static void drawthickedgebg(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -305,10 +302,9 @@ static void drawthickedgebg(
 	_In_ COLORREF light,
 	_In_ COLORREF shadow
 );
-//draw 2 pixel edge concave background with 2 layers of color,
-//exchange colors to draw a convex background
-//no DC-Buffer
-static void drawdoubleedgebg(
+//Draw 2 pixel edge concave background with 2 layers of color,
+//exchange colors to draw a convex background.
+static void drawdualedgebg(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
@@ -320,9 +316,8 @@ static void drawdoubleedgebg(
 	_In_ COLORREF shadow,
 	_In_ COLORREF semishadow
 );
-//draw 1 pixel edge concave background,
-//exchange 'light' and 'shadow' to draw a convex background
-//no DC-Buffer
+//Draw 1 pixel edge concave background,
+//exchange 'light' and 'shadow' to draw a convex background.
 static void drawthinedgebg(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -333,9 +328,8 @@ static void drawthinedgebg(
 	_In_ COLORREF light,
 	_In_ COLORREF shadow
 );
-//draw 1 pixel half edge 2D like background,
-//draw left edge and top edge
-//no DC-Buffer
+//Draw 1 pixel half edge 2D like background,
+//draw left edge and top edge only.
 static void drawhalfedgebg(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -347,14 +341,10 @@ static void drawhalfedgebg(
 );
 */
 
-/* these functions draw a seven-segment display like area,
- * which is used for InfoNum
+/* These functions draw a seven-segment display like area,
+ * which is used for InfoNum.
 /*****************************************************************************
-//no DC-Buffer
-//draw 7sd background
-static inline void draw7sdbg(_In_ HDC hdestdc, _In_ int left, _In_ int top);
-
-//following draw each segment in 7sd
+// a 7sd's look and defination
 //    a
 //  +---+
 // f| g |b
@@ -362,6 +352,11 @@ static inline void draw7sdbg(_In_ HDC hdestdc, _In_ int left, _In_ int top);
 // e|   |c
 //  +---+
 //    d
+
+//Draw 7sd background.
+static inline void draw7sdbg(_In_ HDC hdestdc, _In_ int left, _In_ int top);
+
+//following draw each segment in 7sd
 static void draw7sda(_In_ HDC h7sddc, _In_ int left, _In_ int top);
 static void draw7sdb(_In_ HDC h7sddc, _In_ int left, _In_ int top);
 static void draw7sdc(_In_ HDC h7sddc, _In_ int left, _In_ int top);
@@ -371,22 +366,21 @@ static void draw7sdf(_In_ HDC h7sddc, _In_ int left, _In_ int top);
 static void draw7sdg(_In_ HDC h7sddc, _In_ int left, _In_ int top);
 */
 
-/* these functions draw different content inside a MapUnit
+/* These functions draw different content inside a MapUnit.
 /***********************************************************************************
-//no DC-Buffer
-//draw a mine icon
+//Draw a mine icon.
 static void drawmuitemmine(_In_ HDC hdestdc, _In_ int left, _In_ int top);
 
-//draw a question mark icon
+//Draw a question mark icon.
 static void drawmuitemmark(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ bool clicked);
 
-//draw a flag icon
+//Draw a flag icon.
 static void drawmuitemflag(_In_ HDC hdestdc, _In_ int left, _In_ int top);
 
-//draw a cross icon
+//Draw a cross icon.
 static void drawmuitemcross(_In_ HDC hdestdc, _In_ int left, _In_ int top);
 
-//following draw a number inside MapUnit
+//Following draw a number inside MapUnit.
 static void drawmuitemnum1(_In_ HDC hdestdc, _In_ int left, _In_ int top);
 static void drawmuitemnum2(_In_ HDC hdestdc, _In_ int left, _In_ int top);
 static void drawmuitemnum3(_In_ HDC hdestdc, _In_ int left, _In_ int top);
@@ -397,58 +391,53 @@ static void drawmuitemnum7(_In_ HDC hdestdc, _In_ int left, _In_ int top);
 static void drawmuitemnum8(_In_ HDC hdestdc, _In_ int left, _In_ int top);
 */
 
+/* logical xor
+static inline bool _xor(const bool A, const bool B);
+*/
+
 
 /* following functions are public */
 
-//transform pixel position on MapArea into GameMap index
-//use the whole Map's left-top as position 0
-//take care of the input, they must be offset of MAP_LEFT and MAP_TOP
-int ppos2index(int px, int py);
+//Transform between pixel position on MapArea and GameMap xy-type.
+//Assume the whole Map's left-top as position 0.
+//The pixel position must be offset of MAP_LEFT and MAP_TOP.
 int px2x(int px);
 int py2y(int py);
-
-//transform a GameMap index into MapArea pixels
-//use the whole Map's left-top as position 0
-//take care of the output, they are offset of MAP_LEFT and MAP_TOP respectively
-int index2px(int index);
-int index2py(int index);
 int x2px(int x);
 int y2py(int y);
 
-//logical xor
-inline bool _xor(const bool A, const bool B);
 
-
-/* these functions draw backgroung with edge for each Part
- * color and size are predefined, check relative macros
- * a DC handle and position should be provided by calling function
+/* These functions draw backgroung with edge for each Part
+ * with predefined color, check relative macros.
  */
+
 //w:CLIENT_WIDTH, h:CLIENT_HEIGHT
-//no DC-Buffer
 void drawDCClientBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top
+	_In_ int top,
+	_In_ int map_width,
+	_In_ int map_height
 );
 
 //w:INFO_WIDTH, h:INFO_HEIGHT
-//no DC-Buffer
 void drawDCInfoBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top
+	_In_ int top,
+	_In_ int map_width
 );
 
 //w:MAPAREA_WIDTH, h:MAPAREA_HEIGHT
-//no DC-Buffer
 void drawDCMapAreaBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top
+	_In_ int top,
+	_In_ int map_width,
+	_In_ int map_height
 );
 
 //w:NUM_WIDTH, h:NUM_HEIGHT
-//no DC-Buffer
 void drawDCNumBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -456,16 +445,14 @@ void drawDCNumBg(
 );
 
 
-/* these functions draw specfic numbers inside Num Part
- * color and size are predefined, check relative macros
- * size is relative to external resource file, be careful on changing it
+/* These functions draw specfic numbers inside Num Part
+ * with predefined color and size, check relative macros.
  */
 
-//draw all three InfoNum
-//if num is out of range, it draws '---'
-//-100 < num < 1000
+//Draw all three InfoNum.
+//If 'num' is out of range, it draws '---'.
+//(-100 < num < 1000)
 //w:INUMS_WIDTH, h:INUMS_HEIGHT
-//no DC-Buffer
 void drawDCINums(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -473,10 +460,11 @@ void drawDCINums(
 	_In_ int num
 );
 
-//draw a single InfoNum directly on DC
-//if num EQ -1, it draws '-', if num GE 10, it draws nothing
+//Draw a single InfoNum directly on DC.
+//If num EQ -1, it draws '-';
+//if num is within [0, 9], it draws num;
+//otherwise, it draws nothing.
 //w:INFONUM_WIDTH, h:INFONUM_HEIGHT
-//no DC-Buffer
 void drawDCInfoNum(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -485,13 +473,12 @@ void drawDCInfoNum(
 );
 
 
-/* these functions draw a Reset Button inside Info Part
- * color and size are predefined, check relative macros
+/* These functions draw a ResetButton inside Info Part
+ * with predefined color and size, check relative macros.
  */
 
-//draw Reset Button background directly on DC
+//Draw ResetButton background directly on DC.
 //w:RB_SIZE, h:RB_SIZE
-//no DC-Buffer
 void drawDCResetButtonBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -499,10 +486,9 @@ void drawDCResetButtonBg(
 	_In_ bool clicked
 );
 
-//draw bitmap on Reset Button directly
+//Draw a bitmap on ResetButton directly.
 //it will do nothing if the hbm is NULL
 //w:BMP_SIZE, h:BMP_SIZE
-//no DC-Buffer
 void drawDCResetButtonBmp(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -511,10 +497,9 @@ void drawDCResetButtonBmp(
 	_In_ bool clicked
 );
 
-//draw a Reset Button
-//use NULL for hbm if no bitmap
+//Draw a ResetButton with specified bitmap.
+//Use NULL if no bitmap to be drawn.
 //w:RB_SIZE, h:RB_SIZE
-//no DC-buffer
 void drawDCResetButton(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -524,11 +509,11 @@ void drawDCResetButton(
 );
 
 
-/* these functions draw a MapUnit on MapArea Part
- * color and size are predefined, check relative macros
+/* These functions draw a MapUnit on MapArea Part
+ * with predefined color and size, check relative macros.
  */
+
 //w:MU_SIZE, h:MU_SIZE
-//no DC-buffer
 void drawDCMUCover(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -536,7 +521,6 @@ void drawDCMUCover(
 );
 
 //w:MU_SIZE, h:MU_SIZE
-//no DC-buffer
 void drawDCMUUncov(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -544,7 +528,6 @@ void drawDCMUUncov(
 );
 
 //w:MU_SIZE, h:MU_SIZE
-//no DC-buffer
 void drawDCMUFlag(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -552,7 +535,6 @@ void drawDCMUFlag(
 );
 
 //w:MU_SIZE, h:MU_SIZE
-//no DC-buffer
 void drawDCMUMark(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -561,7 +543,6 @@ void drawDCMUMark(
 );
 
 //w:MU_SIZE, h:MU_SIZE
-//no DC-buffer
 void drawDCMUMine(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -570,7 +551,6 @@ void drawDCMUMine(
 );
 
 //w:MU_SIZE, h:MU_SIZE
-//no DC-buffer
 void drawDCMUWrong(
 	_In_ HDC hdestdc,
 	_In_ int left,
@@ -578,33 +558,9 @@ void drawDCMUWrong(
 );
 
 //w:MU_SIZE, h:MU_SIZE
-//no DC-buffer
 void drawDCMUNum(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
 	_In_ int num
-);
-
-//draw a mapunit depends on MapUnitState with default color
-//draw a covered mapunit by default
-//w:MU_SIZE, h:MU_SIZE
-//no DC-buffer
-void drawDCMapUnit(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ byte mapunit
-);
-
-
-//draw Game Map directly on DC
-//w:MAP_WIDTH, h:MAP_HEIGHT
-//no DC-Buffer
-void drawDCMap(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ byte* gamemap,
-	_In_ word gamesize
 );
