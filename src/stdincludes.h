@@ -18,20 +18,20 @@
 /*****************************************************************************\
  * stdincludes.h
  *****************************************************************************
- * this file is a overall include of std-libs used in program,
- * and global type and variable defines as well
+ * This file is a overall include of std-libs used in program,
+ * and global type and variable defines as well.
 \*****************************************************************************/
 
 
 #pragma once
 
-//disable uncommonly used APIs to reduce program size
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
 //use unicode in program
 #ifndef UNICODE
 #define UNICODE
+#endif
+//disable uncommonly used APIs to reduce program size
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #endif
 //This is needed to workaround C preprocessor errors when using legacy versions of the Windows SDK. (dmex)
 #ifndef MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS
@@ -45,17 +45,3 @@
 #include <stdbool.h>
 #include "../res/resource.h"
 #pragma comment(lib, "Version.lib")
-
-
-typedef unsigned char byte;
-typedef unsigned short word;
-typedef unsigned dword;
-
-
-/* followings are global handles for program and window,
- * they are defined in main.c but should be used across all files
- */
-
-extern HINSTANCE hInst;	//program instance handle
-extern HWND hWnd;		//main window handle
-extern HMENU hMenu;		//main menu handle
