@@ -250,32 +250,32 @@ void initGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT plastwndp
 
 void saveGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
 {
-	TCHAR str[STRBUFFERLEN];
+	TCHAR str[CONFBUFFLEN];
 
 	//save window position
-	_sntprintf_s(str, STRBUFFERLEN, _TRUNCATE, TEXT("%d"), pwndpos->x);
+	_sntprintf_s(str, CONFBUFFLEN, _TRUNCATE, TEXT("%d"), pwndpos->x);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_XPOS), str, Path);
-	_sntprintf_s(str, STRBUFFERLEN, _TRUNCATE, TEXT("%d"), pwndpos->y);
+	_sntprintf_s(str, CONFBUFFLEN, _TRUNCATE, TEXT("%d"), pwndpos->y);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_YPOS), str, Path);
 
 	//save Game information
-	_sntprintf_s(str, STRBUFFERLEN, _TRUNCATE, TEXT("%d"), pGame->mode);
+	_sntprintf_s(str, CONFBUFFLEN, _TRUNCATE, TEXT("%d"), pGame->mode);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_MODE), str, Path);
-	_sntprintf_s(str, STRBUFFERLEN, _TRUNCATE, TEXT("%d"), pGame->width);
+	_sntprintf_s(str, CONFBUFFLEN, _TRUNCATE, TEXT("%d"), pGame->width);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_WIDTH), str, Path);
-	_sntprintf_s(str, STRBUFFERLEN, _TRUNCATE, TEXT("%d"), pGame->height);
+	_sntprintf_s(str, CONFBUFFLEN, _TRUNCATE, TEXT("%d"), pGame->height);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_HEIGHT), str, Path);
-	_sntprintf_s(str, STRBUFFERLEN, _TRUNCATE, TEXT("%d"), pGame->mines);
+	_sntprintf_s(str, CONFBUFFLEN, _TRUNCATE, TEXT("%d"), pGame->mines);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_MINES), str, Path);
-	_sntprintf_s(str, STRBUFFERLEN, _TRUNCATE, TEXT("%d"), pGame->mark);
+	_sntprintf_s(str, CONFBUFFLEN, _TRUNCATE, TEXT("%d"), pGame->mark);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_MARK), str, Path);
 
 	//save Record information
-	_sntprintf_s(str, STRBUFFERLEN, _TRUNCATE, TEXT("%d"), pScore->junior_time);
+	_sntprintf_s(str, CONFBUFFLEN, _TRUNCATE, TEXT("%d"), pScore->junior_time);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_JTIME), str, Path);
-	_sntprintf_s(str, STRBUFFERLEN, _TRUNCATE, TEXT("%d"), pScore->middle_time);
+	_sntprintf_s(str, CONFBUFFLEN, _TRUNCATE, TEXT("%d"), pScore->middle_time);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_MTIME), str, Path);
-	_sntprintf_s(str, STRBUFFERLEN, _TRUNCATE, TEXT("%d"), pScore->senior_time);
+	_sntprintf_s(str, CONFBUFFLEN, _TRUNCATE, TEXT("%d"), pScore->senior_time);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_STIME), str, Path);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_JNAME), pScore->junior_name, Path);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_MNAME), pScore->middle_name, Path);
@@ -308,7 +308,7 @@ void getProperty(LPTSTR property, size_t size_in_ch)
 				pProductName,
 				pProductVersion,
 				pLegalCopyright,
-				TEXT(COPYRIGHTSTR)
+				TEXT(LICENSESTR)
 			);
 		}
 		free(pszAppVersion);
