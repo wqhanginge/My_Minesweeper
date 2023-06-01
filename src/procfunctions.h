@@ -68,11 +68,12 @@
 //end GetName Dialog
 
 //Record Dialog
-#define TIME_STRBUFFERLEN	10
+#define TIMESTR_BUFF_LEN	10
 #define DEF_TIMEUNIT_EN		"Sec"
 //end Record Dialog
 
 //About Dialog
+#define EXEC_BUFF_LEN		128
 #define ABOUT_INFO_LEN		320
 //end About Dialog
 

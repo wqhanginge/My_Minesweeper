@@ -14,6 +14,7 @@
 #define IDD_RECORD                      114
 #define IDC_ABOUTTEXT                   1001
 #define IDC_ABOUTICON                   1002
+#define IDLICENSE                       1003
 #define IDC_TEXTWIDTH                   1011
 #define IDC_TEXTHEIGHT                  1012
 #define IDC_TEXTMINES                   1013

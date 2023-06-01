@@ -100,6 +100,9 @@ INT_PTR CALLBACK AboutProc(HWND habout, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	HWND htext;
 	TCHAR aboutinfo[ABOUT_INFO_LEN];
+	TCHAR execcmdl[EXEC_BUFF_LEN];
+	STARTUPINFO si = { sizeof(STARTUPINFO) };
+	PROCESS_INFORMATION pi = { 0 };
 
 	switch (msg) {
 	case WM_INITDIALOG:
@@ -114,7 +117,20 @@ INT_PTR CALLBACK AboutProc(HWND habout, UINT msg, WPARAM wparam, LPARAM lparam)
 		EndDialog(habout, 0);
 		break;
 	case WM_COMMAND:
-		if (LOWORD(wparam) == IDOK) EndDialog(habout, 0);
+		switch (LOWORD(wparam)) {
+		case IDLICENSE:
+			//open browser and redirect to license url
+			_sntprintf_s(execcmdl, EXEC_BUFF_LEN, _TRUNCATE, TEXT("%s %s"), TEXT("explorer"), TEXT(LICENSEURL));
+			CreateProcess(NULL, execcmdl, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+			CloseHandle(pi.hProcess);
+			CloseHandle(pi.hThread);
+			break;
+		case IDOK:
+			EndDialog(habout, 0);
+			break;
+		default:
+			break;
+		}
 		break;
 	default:
 		return FALSE;
@@ -125,7 +141,7 @@ INT_PTR CALLBACK AboutProc(HWND habout, UINT msg, WPARAM wparam, LPARAM lparam)
 INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	static HWND hjt, hmt, hst, hjn, hmn, hsn;
-	TCHAR strbuffer[TIME_STRBUFFERLEN];
+	TCHAR strbuffer[TIMESTR_BUFF_LEN];
 
 	switch (msg) {
 	case WM_INITDIALOG:
@@ -138,11 +154,11 @@ INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam
 		hsn = FindWindowEx(hrecord, hmn, TEXT("STATIC"), NULL);
 
 		//init static control's content
-		_sntprintf_s(strbuffer, TIME_STRBUFFERLEN, _TRUNCATE, TEXT("%d %s"), Score.junior_time, TEXT(DEF_TIMEUNIT_EN));
+		_sntprintf_s(strbuffer, TIMESTR_BUFF_LEN, _TRUNCATE, TEXT("%d %s"), Score.junior_time, TEXT(DEF_TIMEUNIT_EN));
 		SetWindowText(hjt, strbuffer);
-		_sntprintf_s(strbuffer, TIME_STRBUFFERLEN, _TRUNCATE, TEXT("%d %s"), Score.middle_time, TEXT(DEF_TIMEUNIT_EN));
+		_sntprintf_s(strbuffer, TIMESTR_BUFF_LEN, _TRUNCATE, TEXT("%d %s"), Score.middle_time, TEXT(DEF_TIMEUNIT_EN));
 		SetWindowText(hmt, strbuffer);
-		_sntprintf_s(strbuffer, TIME_STRBUFFERLEN, _TRUNCATE, TEXT("%d %s"), Score.senior_time, TEXT(DEF_TIMEUNIT_EN));
+		_sntprintf_s(strbuffer, TIMESTR_BUFF_LEN, _TRUNCATE, TEXT("%d %s"), Score.senior_time, TEXT(DEF_TIMEUNIT_EN));
 		SetWindowText(hst, strbuffer);
 		SetWindowText(hjn, Score.junior_name);
 		SetWindowText(hmn, Score.middle_name);
@@ -156,7 +172,7 @@ INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam
 		case IDRESET:
 			//reset the record
 			resetRecord(&Score);
-			_sntprintf_s(strbuffer, TIME_STRBUFFERLEN, _TRUNCATE, TEXT("%d %s"), MAX_TIME, TEXT(DEF_TIMEUNIT_EN));
+			_sntprintf_s(strbuffer, TIMESTR_BUFF_LEN, _TRUNCATE, TEXT("%d %s"), MAX_TIME, TEXT(DEF_TIMEUNIT_EN));
 			SetWindowText(hjt, strbuffer);
 			SetWindowText(hmt, strbuffer);
 			SetWindowText(hst, strbuffer);
