@@ -76,4 +76,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\res\license.txt.dat">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
 </Project>
