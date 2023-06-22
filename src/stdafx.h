@@ -16,10 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \*****************************************************************************/
 /*****************************************************************************\
- * stdincludes.h
+ * stdafx.h
  *****************************************************************************
- * This file is a overall include of std-libs used in program,
- * and global type and variable defines as well.
+ * This file is a precompile header, including common used std libs.
 \*****************************************************************************/
 
 
@@ -27,21 +26,20 @@
 
 //use unicode in program
 #ifndef UNICODE
-#define UNICODE
+	#define UNICODE
 #endif
 //disable uncommonly used APIs to reduce program size
 #ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
+	#define WIN32_LEAN_AND_MEAN
 #endif
 //This is needed to workaround C preprocessor errors when using legacy versions of the Windows SDK. (dmex)
 #ifndef MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS
-#define MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS 0
+	#define MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS 0
 #endif
 
 #include <Windows.h>
 #include <stdlib.h>
 #include <tchar.h>
-#include <time.h>
 #include <stdbool.h>
 #include "../res/resource.h"
 #pragma comment(lib, "Version.lib")

@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "stdincludes.h"
+#include "stdafx.h"
 
 
 /*         Main Client Area

@@ -28,7 +28,6 @@
 
 #pragma once
 
-#include "stdincludes.h"
 #include "encapsulations.h"
 
 
@@ -68,12 +67,13 @@
 //end GetName Dialog
 
 //Record Dialog
-#define TIME_STRBUFFERLEN	10
+#define TIMESTR_BUFF_LEN	10
 #define DEF_TIMEUNIT_EN		"Sec"
 //end Record Dialog
 
 //About Dialog
-#define ABOUT_INFO_LEN		500
+#define EXEC_BUFF_LEN		128
+#define ABOUT_INFO_LEN		512
 //end About Dialog
 
 

@@ -28,7 +28,6 @@
 
 #pragma once
 
-#include "stdincludes.h"
 #include "gamecore.h"
 #include "basicUI.h"
 
@@ -42,7 +41,7 @@
 #define DEF_WND_HEIGHT	700
 #define DEF_CONFNAME	"MyMinesweeper.ini"
 #define DEF_CONFPATHENV	"LOCALAPPDATA"
-#define STRBUFFERLEN	5
+#define CONFBUFFLEN		5
 #define MAX_APPPATH		512
 #define MAX_CONFPATH	MAX_APPPATH
 
@@ -67,13 +66,14 @@
 /* property related defines */
 
 //lang-codepage is 000004b0 (Language Neutral)
-#define PNQUERYSTR		"\\StringFileInfo\\000004b0\\ProductName"
-#define PVQUERYSTR		"\\StringFileInfo\\000004b0\\ProductVersion"
-#define LCQUERYSTR		"\\StringFileInfo\\000004b0\\LegalCopyright"
-#define COPYRIGHTSTR	\
+#define PNQUERYSTR	"\\StringFileInfo\\000004b0\\ProductName"
+#define PVQUERYSTR	"\\StringFileInfo\\000004b0\\ProductVersion"
+#define LCQUERYSTR	"\\StringFileInfo\\000004b0\\LegalCopyright"
+#define LICENSEURL	"https://www.gnu.org/licenses/gpl-3.0.html"
+#define LICENSESTR	\
 "This program comes with ABSOLUTELY NO WARRANTY.\n\
 This is free software, and you are welcome to redistribute it under certain conditions.\n\n\
-Check <https://www.gnu.org/licenses/> and view GNU General Public License version 3 (or any later) for details."
+Click \"License\" to consult the GNU General Public License version 3 (or any later) for details."
 
 
 

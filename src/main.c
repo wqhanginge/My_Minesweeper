@@ -24,7 +24,7 @@
 \*****************************************************************************/
 
 
-#include "stdincludes.h"
+#include "stdafx.h"
 #include "procfunctions.h"
 
 
