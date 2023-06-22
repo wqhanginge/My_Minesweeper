@@ -196,6 +196,11 @@ void initGame(TCHAR* Path, POINT& lastwndpos)
 {
 	lastwndpos.x = GetPrivateProfileInt(TEXT(INIT_ANAME), TEXT(INIT_XPOS), DEF_WND_LEFT, Path);
 	lastwndpos.y = GetPrivateProfileInt(TEXT(INIT_ANAME), TEXT(INIT_YPOS), DEF_WND_TOP, Path);
+	RECT desktop_rect;
+	SystemParametersInfo(SPI_GETWORKAREA, 0, &desktop_rect, 0);
+	if ((dword)(lastwndpos.x - desktop_rect.left) > (dword)(desktop_rect.right - desktop_rect.left)
+		|| (dword)(lastwndpos.y - desktop_rect.top) > (dword)(desktop_rect.bottom - desktop_rect.top))
+		lastwndpos = { DEF_WND_LEFT,DEF_WND_TOP };
 
 	int mode, width, height, mines, mark;
 	mode = (byte)GetPrivateProfileInt(TEXT(INIT_ANAME), TEXT(INIT_MODE), CRUSH, Path);
