@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2022  Gee W.
+ *  Copyright (C) 2020-2023  Gee W.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -70,7 +70,6 @@
 //Record Dialog
 #define TIME_STRBUFFERLEN	10
 #define DEF_TIMEUNIT_EN		"Sec"
-#define DEF_TIMEUNIT_CH		"√Î"
 //end Record Dialog
 
 //About Dialog

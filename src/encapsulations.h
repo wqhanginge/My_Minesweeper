@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2022  Gee W.
+ *  Copyright (C) 2020-2023  Gee W.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@
 #define COPYRIGHTSTR	\
 "This program comes with ABSOLUTELY NO WARRANTY.\n\
 This is free software, and you are welcome to redistribute it under certain conditions.\n\n\
-Check <https://www.gnu.org/licenses/> and view GNU General Public License v3.0 for details."
+Check <https://www.gnu.org/licenses/> and view GNU General Public License version 3 (or any later) for details."
 
 
 

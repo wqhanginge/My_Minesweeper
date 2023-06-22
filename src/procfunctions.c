@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2022  Gee W.
+ *  Copyright (C) 2020-2023  Gee W.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -196,7 +196,7 @@ INT_PTR CALLBACK GetNameProc(HWND hgetname, UINT msg, WPARAM wparam, LPARAM lpar
 		GetWindowText(heditname, getpRecordName(Game.mode), NAME_EDIT_LEN);
 		break;
 	case WM_COMMAND:
-		if (LOWORD(wparam) == IDC_OK) EndDialog(hgetname, 0);
+		if (LOWORD(wparam) == IDOK) EndDialog(hgetname, 0);
 		break;
 	default:
 		return FALSE;
@@ -325,7 +325,7 @@ LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	_tcscat_s(conf_path, MAX_PATH, TEXT("\\"));
 	_tcscat_s(conf_path, MAX_PATH, TEXT(DEF_CONFNAME));
 	initGame(conf_path, &wndpos);
-	srand((dword)time(nullptr));
+	srand((dword)time(NULL));
 
 	//init menu info
 	setMenuChecked(Game.mode);
@@ -475,7 +475,7 @@ LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			if (wparam & MK_RBUTTON) {	//double buttons down
 				last_dbclick = true;
 				Neighbor indexes;
-				getNeighbors(&indexes, index2x(index), index2y(index));
+				getNeighbors(indexes, index2x(index), index2y(index));
 				showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &indexes);
 			}
 			else {	//single button
@@ -556,7 +556,7 @@ LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			setRBBitmap(RBhbm.click);
 			paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 			Neighbor indexes;
-			getNeighbors(&indexes, index2x(index), index2y(index));
+			getNeighbors(indexes, index2x(index), index2y(index));
 			showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &indexes);
 		}
 		else {	//single button, flag a unit or mark a unit
@@ -621,7 +621,7 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			if (wparam & MK_LBUTTON) {	//with left button down
 				if (wparam & MK_RBUTTON) {	//double buttons
 					Neighbor indexes;
-					getNeighbors(&indexes, index2x(index), index2y(index));
+					getNeighbors(indexes, index2x(index), index2y(index));
 					showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &indexes);
 				}
 				else {	//single button
