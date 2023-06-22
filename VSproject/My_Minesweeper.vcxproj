@@ -156,8 +156,8 @@
     <ClInclude Include="..\res\resource.h" />
     <ClInclude Include="..\src\defines.h" />
     <ClInclude Include="..\src\gamecore.h" />
-    <ClInclude Include="..\src\imlogistic.h" />
     <ClInclude Include="..\src\interface.h" />
+    <ClInclude Include="..\src\lrand.h" />
     <ClInclude Include="..\src\userinterface.h" />
   </ItemGroup>
   <ItemGroup>
@@ -172,8 +172,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\gamecore.cpp" />
-    <ClCompile Include="..\src\imlogistic.cpp" />
     <ClCompile Include="..\src\interface.cpp" />
+    <ClCompile Include="..\src\lrand.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\userinterface.cpp" />
   </ItemGroup>
