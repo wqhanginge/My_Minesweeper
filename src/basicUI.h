@@ -588,7 +588,6 @@ void drawDCMUNum(
 
 //draw a mapunit depends on MapUnitState with default color
 //draw a covered mapunit by default
-//do NOT affect the Update bit
 //w:MU_SIZE, h:MU_SIZE
 //no DC-buffer
 void drawDCMapUnit(
@@ -600,9 +599,6 @@ void drawDCMapUnit(
 
 
 //draw Game Map directly on DC
-//update map_units with Update bit and clear Update bit
-//update all given map_units
-//do NOT affect the Update bit
 //w:MAP_WIDTH, h:MAP_HEIGHT
 //no DC-Buffer
 void drawDCMap(

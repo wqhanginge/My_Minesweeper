@@ -20,7 +20,7 @@
  *****************************************************************************
  * this file contains the program entry and main Window Procedure
  * this file contains the global program and window handles which are defined
- * 'extern' in stdincludes.h
+ * as 'extern' in stdincludes.h
 \*****************************************************************************/
 
 
@@ -47,8 +47,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		return onCommand(hwnd, wparam, lparam);
 	case WMAPP_GAMERESET:
 		return onGameReset(hwnd, wparam, lparam);
-	case WMAPP_GAMESTART:
-		return onGameStart(hwnd, wparam, lparam);
 	case WMAPP_GAMEFAIL:
 		return onGameFail(hwnd, wparam, lparam);
 	case WMAPP_GAMESUCCESS:
