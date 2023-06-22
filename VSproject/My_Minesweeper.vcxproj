@@ -171,11 +171,11 @@
     <ResourceCompile Include="..\res\Resource.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\basicUI.cpp" />
-    <ClCompile Include="..\src\encapsulations.cpp" />
-    <ClCompile Include="..\src\gamecore.cpp" />
-    <ClCompile Include="..\src\main.cpp" />
-    <ClCompile Include="..\src\procfunctions.cpp" />
+    <ClCompile Include="..\src\basicUI.c" />
+    <ClCompile Include="..\src\encapsulations.c" />
+    <ClCompile Include="..\src\gamecore.c" />
+    <ClCompile Include="..\src\main.c" />
+    <ClCompile Include="..\src\procfunctions.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

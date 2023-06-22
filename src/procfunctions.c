@@ -1,3 +1,21 @@
+/*****************************************************************************\
+ *  My Minesweepper -- a classic minesweeper game
+ *  Copyright (C) 2020-2022  Gee W.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+\*****************************************************************************/
+
 #include "procfunctions.h"
 
 TCHAR save_path[MAX_PATH];
@@ -73,8 +91,7 @@ INT_PTR CALLBACK AboutProc(HWND habout, UINT msg, WPARAM wparam, LPARAM lparam)
 		htext = FindWindowEx(habout, NULL, TEXT("STATIC"), NULL);
 		
 		//show program description
-		_tcscpy_s(aboutinfo, ABOUT_INFO_LEN, TEXT(ABOUT_TEXT));
-		getVersion(&aboutinfo[_tcslen(aboutinfo)], ABOUT_INFO_LEN - _tcslen(aboutinfo));
+		getProperty(aboutinfo, ABOUT_INFO_LEN);
 		SetWindowText(htext, aboutinfo);
 		break;
 	case WM_CLOSE:
@@ -105,14 +122,11 @@ INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam
 		hsn = FindWindowEx(hrecord, hmn, TEXT("STATIC"), NULL);
 
 		//init static control show
-		tcsprintf(strbuffer, TIME_STRLEN, TEXT("%d"), Score.junior_time);
-		_tcsncat_s(strbuffer, TIME_STRLEN, TEXT(DEF_TIMEUNIT_EN), _TRUNCATE);
+		_sntprintf_s(strbuffer, TIME_STRLEN, _TRUNCATE, TEXT("%d %s"), Score.junior_time, TEXT(DEF_TIMEUNIT_EN));
 		SetWindowText(hjt, strbuffer);
-		tcsprintf(strbuffer, TIME_STRLEN, TEXT("%d"), Score.middle_time);
-		_tcsncat_s(strbuffer, TIME_STRLEN, TEXT(DEF_TIMEUNIT_EN), _TRUNCATE);
+		_sntprintf_s(strbuffer, TIME_STRLEN, _TRUNCATE, TEXT("%d %s"), Score.middle_time, TEXT(DEF_TIMEUNIT_EN));
 		SetWindowText(hmt, strbuffer);
-		tcsprintf(strbuffer, TIME_STRLEN, TEXT("%d"), Score.senior_time);
-		_tcsncat_s(strbuffer, TIME_STRLEN, TEXT(DEF_TIMEUNIT_EN), _TRUNCATE);
+		_sntprintf_s(strbuffer, TIME_STRLEN, _TRUNCATE, TEXT("%d %s"), Score.senior_time, TEXT(DEF_TIMEUNIT_EN));
 		SetWindowText(hst, strbuffer);
 		SetWindowText(hjn, Score.junior_name);
 		SetWindowText(hmn, Score.middle_name);
@@ -126,8 +140,7 @@ INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam
 		case IDRESET:
 			//reset the record
 			resetRecord();
-			tcsprintf(strbuffer, TIME_STRLEN, TEXT("%d"), MAX_TIME);
-			_tcsncat_s(strbuffer, TIME_STRLEN, TEXT(DEF_TIMEUNIT_EN), _TRUNCATE);
+			_sntprintf_s(strbuffer, TIME_STRLEN, _TRUNCATE, TEXT("%d %s"), MAX_TIME, TEXT(DEF_TIMEUNIT_EN));
 			SetWindowText(hjt, strbuffer);
 			SetWindowText(hmt, strbuffer);
 			SetWindowText(hst, strbuffer);
@@ -191,11 +204,11 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
 		mines = Game.mines;
 
 		//init edit control show
-		tcsprintf(str, CUSTOM_EDIT_LEN, TEXT("%u"), width);
+		_sntprintf_s(str, CUSTOM_EDIT_LEN, _TRUNCATE, TEXT("%u"), width);
 		SetWindowText(heditw, str);
-		tcsprintf(str, CUSTOM_EDIT_LEN, TEXT("%u"), height);
+		_sntprintf_s(str, CUSTOM_EDIT_LEN, _TRUNCATE, TEXT("%u"), height);
 		SetWindowText(hedith, str);
-		tcsprintf(str, CUSTOM_EDIT_LEN, TEXT("%u"), mines);
+		_sntprintf_s(str, CUSTOM_EDIT_LEN, _TRUNCATE, TEXT("%u"), mines);
 		SetWindowText(heditm, str);
 		break;
 	case WM_CLOSE:
@@ -203,18 +216,18 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
 		break;
 	case WM_DESTROY:
 		//set game mode when exit dialog
-		PostMessage(hWnd, WM_GAMEMODECHG, CUSTOM, MAKECHGLPARAM(width, height, mines));
+		PostMessage(hWnd, WMAPP_GAMEMODECHG, CUSTOM, MAKECHGLPARAM(width, height, mines));
 		break;
 	case WM_COMMAND:
 		switch (LOWORD(wparam)) {
 		case IDOK:
 			//get what int edit control when click OK
 			GetWindowText(heditw, str, CUSTOM_EDIT_LEN);
-			tcsscanf_s(str, TEXT("%u"), &width);
+			width = (dword)_ttoi(str);
 			GetWindowText(hedith, str, CUSTOM_EDIT_LEN);
-			tcsscanf_s(str, TEXT("%u"), &height);
+			height = (dword)_ttoi(str);
 			GetWindowText(heditm, str, CUSTOM_EDIT_LEN);
-			tcsscanf_s(str, TEXT("%u"), &mines);
+			mines = (dword)_ttoi(str);
 			EndDialog(hcustom, 0);
 			break;
 		case IDCANCEL:
@@ -238,20 +251,20 @@ LRESULT onMenu(WPARAM wparam) {
 
 	switch (LOWORD(wparam)) {
 	case ID_GAME_START:
-		PostMessage(hWnd, WM_GAMERESET, 0, 0);
+		PostMessage(hWnd, WMAPP_GAMERESET, 0, 0);
 		break;
 	case ID_GAME_JUNIOR:
 		//change game mode
 		setMenuChecked(JUNIOR);
-		PostMessage(hWnd, WM_GAMEMODECHG, JUNIOR, 0);
+		PostMessage(hWnd, WMAPP_GAMEMODECHG, JUNIOR, 0);
 		break;
 	case ID_GAME_MIDDLE:
 		setMenuChecked(MIDDLE);
-		PostMessage(hWnd, WM_GAMEMODECHG, MIDDLE, 0);
+		PostMessage(hWnd, WMAPP_GAMEMODECHG, MIDDLE, 0);
 		break;
 	case ID_GAME_SENIOR:
 		setMenuChecked(SENIOR);
-		PostMessage(hWnd, WM_GAMEMODECHG, SENIOR, 0);
+		PostMessage(hWnd, WMAPP_GAMEMODECHG, SENIOR, 0);
 		break;
 	case ID_GAME_CUSTOM:
 		setMenuChecked(CUSTOM);
@@ -289,10 +302,10 @@ LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	loadBitmaps(hInst);
 
 	//init game from file
-	GetEnvironmentVariable(TEXT(DEF_FILEPATH_EV), save_path, MAX_PATH);
-	_tcscat_s(save_path, TEXT("\\"));
-	_tcscat_s(save_path, TEXT(DEF_FILENAME));
-	initGame(save_path, wndpos);
+	GetEnvironmentVariable(TEXT(DEF_CONFPATH_EV), save_path, MAX_PATH);
+	_tcscat_s(save_path, MAX_PATH, TEXT("\\"));
+	_tcscat_s(save_path, MAX_PATH, TEXT(DEF_CONFNAME));
+	initGame(save_path, &wndpos);
 	srand((dword)time(nullptr));
 
 	//init menu info
@@ -304,7 +317,7 @@ LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	GetClientRect(hwnd, &cltrect);
 	edgew = (wndrect.right - wndrect.left) - cltrect.right;
 	edgeh = (wndrect.bottom - wndrect.top) - cltrect.bottom;
-	wndrect = { wndpos.x,wndpos.y,wndpos.x + CLIENT_WIDTH + edgew,wndpos.y + CLIENT_HEIGHT + edgeh };
+	wndrect = (RECT){ wndpos.x,wndpos.y,wndpos.x + CLIENT_WIDTH + edgew,wndpos.y + CLIENT_HEIGHT + edgeh };
 	MoveWindow(hwnd, wndrect.left, wndrect.top, wndrect.right - wndrect.left, wndrect.bottom - wndrect.top, FALSE);
 
 	//init double mouse button state
@@ -321,8 +334,8 @@ LRESULT onDestroy(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	freeBitmaps();
 	//save game info
 	GetWindowRect(hwnd, &wndrect);
-	wndpos = { wndrect.left,wndrect.top };
-	saveGame(save_path, wndpos);
+	wndpos = (POINT){ wndrect.left,wndrect.top };
+	saveGame(save_path, &wndpos);
 
 	PostQuitMessage(0);
 	return 0;
@@ -375,16 +388,16 @@ LRESULT onGameReset(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onGameStart(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
-	int ret = gameStart((int)lparam);
+	int ret = gameStart(index2x((int)lparam), index2y((int)lparam));
 	paintMap(hdc, MAP_LEFT, MAP_TOP, false);
 	drawIN(hdc, MN_LEFT, MN_TOP, Game.mine_remains);
 	drawIN(hdc, TN_LEFT, TN_TOP, Game.time);
 	switch (ret) {
 	case 1:
-		PostMessage(hwnd, WM_GAMESUCCESS, 0, 0);
+		PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
 		break;
 	case -1:
-		PostMessage(hwnd, WM_GAMEFAIL, 0, 0);
+		PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
 		break;
 	case 0:
 		SetTimer(hwnd, GAME_TIMER_ID, GAME_TIMER_ELAPSE, NULL);
@@ -457,18 +470,18 @@ LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam)
 		rb_capture = true;	//set ResetButton capture
 		paintResetButton(hdc, RB_LEFT, RB_TOP, true);
 	}
-	else if (Game.state < GAMESET){	//won't work after game finished
+	else if (!ISGAMESET(Game.state)){	//won't work after game finished
 		setRBBitmap(hbm_click);
 		paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 
 		//if in the map area
 		if (lparamIsInMap(lparam)) {
 			int index = lparam2index(lparam);
-			Neighbor indexes;
 			if (wparam & MK_RBUTTON) {	//double buttons down
 				last_dbclick = true;
-				getNeighbors(indexes, index);
-				showClickedMapUnit(hdc, MAP_LEFT, MAP_TOP, indexes);
+				Neighbor indexes;
+				getNeighbors(&indexes, index2x(index), index2y(index));
+				showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &indexes);
 			}
 			else {	//single button
 				last_dbclick = false;
@@ -487,11 +500,11 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	if (rb_capture) {	//if ResetButton got capture
 		if (lparamIsInRB(lparam)) {	//click up
 			paintResetButton(hdc, RB_LEFT, RB_TOP, false);
-			PostMessage(hwnd, WM_GAMERESET, 0, 0);
+			PostMessage(hwnd, WMAPP_GAMERESET, 0, 0);
 		}
 		rb_capture = false;	//release ResetButton capture
 	}
-	else if (Game.state < GAMESET) {	//won't work after game finished
+	else if (!ISGAMESET(Game.state)) {	//won't work after game finished
 		setRBBitmap(hbm_rb);
 		paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 
@@ -500,12 +513,12 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			int index = lparam2index(lparam);
 			if (wparam & MK_RBUTTON) {	//double buttons
 				last_dbclick = true;
-				int ret = digNeighbors(index);
+				int ret = clickAround(index);
 				if (ret == -1) {
-					PostMessage(hwnd, WM_GAMEFAIL, 0, 0);
+					PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
 				}
 				else if (isGameSuccessful()) {
-					PostMessage(hwnd, WM_GAMESUCCESS, 0, 0);
+					PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
 				}
 				else
 					paintMap(hdc, MAP_LEFT, MAP_TOP, false);
@@ -513,16 +526,16 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			else if (!last_dbclick) {	//single button and last was not double button
 				last_dbclick = false;
 				if (Game.state == INIT && GETMUSTATE(Game.map[index]) != MUS_FLAG) {	//first click
-					PostMessage(hwnd, WM_GAMESTART, 0, index);
+					PostMessage(hwnd, WMAPP_GAMESTART, 0, index);
 				}
 				else {	//not first click
-					int ret = clickUnit(index);
+					int ret = clickOne(index);
 					if (ret == 0) openBlanks(index);
 					if (ret == -1) {
-						PostMessage(hwnd, WM_GAMEFAIL, 0, 0);
+						PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
 					}
 					else if (isGameSuccessful()) {
-						PostMessage(hwnd, WM_GAMESUCCESS, 0, 0);
+						PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
 					}
 					else
 						paintMap(hdc, MAP_LEFT, MAP_TOP, false);
@@ -542,40 +555,22 @@ LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	HDC hdc = GetDC(hwnd);
 	//won't work after game finished or the mouse not in the map area or ResetButton got capture
-	if (!rb_capture && Game.state < GAMESET && lparamIsInMap(lparam)) {
+	if (!rb_capture && !ISGAMESET(Game.state) && lparamIsInMap(lparam)) {
 		int index = lparam2index(lparam);
-		Neighbor indexes;
 		if (wparam & MK_LBUTTON) {	//double buttons
 			last_dbclick = true;
 			setRBBitmap(hbm_click);
 			paintResetButton(hdc, RB_LEFT, RB_TOP, false);
-			getNeighbors(indexes, index);
-			showClickedMapUnit(hdc, MAP_LEFT, MAP_TOP, indexes);
+			Neighbor indexes;
+			getNeighbors(&indexes, index2x(index), index2y(index));
+			showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &indexes);
 		}
 		else {	//single button, flag a unit or mark a unit
 			last_dbclick = false;
-			if (GETMUSTATE(Game.map[index]) == MUS_COVER) {
-				SETMUSTATE(MUS_FLAG, Game.map[index]);
-				paintMapUnit(hdc, MAP_LEFT + index2px(index), MAP_TOP + index2py(index), Game.map[index]);
-				Game.mine_remains--;
+			int ret = rightClick(index);
+			if (ret == 0) {
+				paintMapUnit(hdc, MAP_LEFT + index2px(index), MAP_TOP + index2py(index), index);
 				drawIN(hdc, MN_LEFT, MN_TOP, Game.mine_remains);
-			}
-			else if (GETMUSTATE(Game.map[index]) == MUS_FLAG && Game.mark) {
-				SETMUSTATE(MUS_MARK, Game.map[index]);
-				paintMapUnit(hdc, MAP_LEFT + index2px(index), MAP_TOP + index2py(index), Game.map[index]);
-				Game.mine_remains++;
-				drawIN(hdc, MN_LEFT, MN_TOP, Game.mine_remains);
-			}
-			else if (GETMUSTATE(Game.map[index]) == MUS_FLAG && !Game.mark)
-			{
-				SETMUSTATE(MUS_COVER, Game.map[index]);
-				paintMapUnit(hdc, MAP_LEFT + index2px(index), MAP_TOP + index2py(index), Game.map[index]);
-				Game.mine_remains++;
-				drawIN(hdc, MN_LEFT, MN_TOP, Game.mine_remains);
-			}
-			else if (GETMUSTATE(Game.map[index]) == MUS_MARK) {
-				SETMUSTATE(MUS_COVER, Game.map[index]);
-				paintMapUnit(hdc, MAP_LEFT + index2px(index), MAP_TOP + index2py(index), Game.map[index]);
 			}
 		}
 	}
@@ -588,7 +583,7 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	HDC hdc = GetDC(hwnd);
 	ReleaseCapture();
 	//won't work after game finishing or ResetButton got capture
-	if (!rb_capture && Game.state < GAMESET) {
+	if (!rb_capture && !ISGAMESET(Game.state)) {
 		setRBBitmap(hbm_rb);
 		paintResetButton(hdc, RB_LEFT, RB_TOP, false);
 
@@ -597,12 +592,12 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			int index = lparam2index(lparam);
 			if (wparam & MK_LBUTTON) {	//double buttons
 				last_dbclick = true;
-				int ret = digNeighbors(index);
+				int ret = clickAround(index);
 				if (ret == -1) {
-					PostMessage(hwnd, WM_GAMEFAIL, 0, 0);
+					PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
 				}
 				else if (isGameSuccessful()) {
-					PostMessage(hwnd, WM_GAMESUCCESS, 0, 0);
+					PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
 				}
 				else
 					paintMap(hdc, MAP_LEFT, MAP_TOP, false);
@@ -620,7 +615,7 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
 	HDC hdc = GetDC(hwnd);
 	if (rb_capture && (wparam & MK_LBUTTON))	//if ResetButton got capture
 		paintResetButton(hdc, RB_LEFT, RB_TOP, lparamIsInRB(lparam));
-	else if (Game.state < GAMESET) {	//won't work after game finishing
+	else if (!ISGAMESET(Game.state)) {	//won't work after game finishing
 		if (!lparamIsInMap(lparam)) {	//if not in the map area
 			paintMap(hdc, MAP_LEFT, MAP_TOP, false);
 		}
@@ -629,8 +624,8 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			if (wparam & MK_LBUTTON) {	//with left button down
 				if (wparam & MK_RBUTTON) {	//double buttons
 					Neighbor indexes;
-					getNeighbors(indexes, index);
-					showClickedMapUnit(hdc, MAP_LEFT, MAP_TOP, indexes);
+					getNeighbors(&indexes, index2x(index), index2y(index));
+					showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &indexes);
 				}
 				//single button
 				else
@@ -649,7 +644,7 @@ LRESULT onTimer(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
 	if (Game.time <= MAX_TIME) {
 		HDC hdc = GetDC(hwnd);
-		nextGameTime();
+		stepGameTime();
 		drawIN(hdc, TN_LEFT, TN_TOP, Game.time);
 		ReleaseDC(hwnd, hdc);
 	}

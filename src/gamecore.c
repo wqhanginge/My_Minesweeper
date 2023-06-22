@@ -1,3 +1,21 @@
+/*****************************************************************************\
+ *  My Minesweepper -- a classic minesweeper game
+ *  Copyright (C) 2020-2022  Gee W.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+\*****************************************************************************/
+
 #include "gamecore.h"
 
 
@@ -19,28 +37,23 @@ int xy2index(int x, int y)
 	return (y * Game.width) + x;
 }
 
-int getNeighbors(Neighbor & neighbor, int x, int y)
+int getNeighbors(Neighbor* pneighbor, int x, int y)
 {
 	if (x < 0 || y < 0) return -1;
 	if ((word)xy2index(x, y) >= Game.size) return -1;
-	neighbor[0] = xy2index(x, y);
-	neighbor[1] = (x > 0 && y > 0) ? xy2index(x - 1, y - 1) : -1;
-	neighbor[2] = (y > 0) ? xy2index(x, y - 1) : -1;
-	neighbor[3] = (x < Game.width - 1 && y > 0) ? xy2index(x + 1, y - 1) : -1;
-	neighbor[4] = (x > 0) ? xy2index(x - 1, y) : -1;
-	neighbor[5] = (x < Game.width - 1) ? xy2index(x + 1, y) : -1;
-	neighbor[6] = (x > 0 && y < Game.height - 1) ? xy2index(x - 1, y + 1) : -1;
-	neighbor[7] = (y < Game.height - 1) ? xy2index(x, y + 1) : -1;
-	neighbor[8] = (x < Game.width - 1 && y < Game.height - 1) ? xy2index(x + 1, y + 1) : -1;
+	(*pneighbor)[0] = xy2index(x, y);
+	(*pneighbor)[1] = (x > 0 && y > 0) ? xy2index(x - 1, y - 1) : -1;
+	(*pneighbor)[2] = (y > 0) ? xy2index(x, y - 1) : -1;
+	(*pneighbor)[3] = (x < Game.width - 1 && y > 0) ? xy2index(x + 1, y - 1) : -1;
+	(*pneighbor)[4] = (x > 0) ? xy2index(x - 1, y) : -1;
+	(*pneighbor)[5] = (x < Game.width - 1) ? xy2index(x + 1, y) : -1;
+	(*pneighbor)[6] = (x > 0 && y < Game.height - 1) ? xy2index(x - 1, y + 1) : -1;
+	(*pneighbor)[7] = (y < Game.height - 1) ? xy2index(x, y + 1) : -1;
+	(*pneighbor)[8] = (x < Game.width - 1 && y < Game.height - 1) ? xy2index(x + 1, y + 1) : -1;
 	return 0;
 }
 
-int getNeighbors(Neighbor & neighbor, int index)
-{
-	return getNeighbors(neighbor, index2x(index), index2y(index));
-}
-
-void setGameMode(byte mode, byte width/*=0*/, byte height/*=0*/, word mines/*=0*/)
+void setGameMode(byte mode, byte width, byte height, word mines)
 {
 	switch (mode) {
 	case JUNIOR:
@@ -95,7 +108,7 @@ void setGameMode(byte mode, byte width/*=0*/, byte height/*=0*/, word mines/*=0*
 		memset(Game.map, 0, sizeof(byte) * Game.size);
 		break;
 	default:
-		setGameMode(JUNIOR);
+		setGameMode(JUNIOR, 0, 0, 0);
 		break;
 	}
 }
@@ -112,7 +125,7 @@ int setGameTime(word time)
 	return 0;
 }
 
-void nextGameTime()
+void stepGameTime()
 {
 	Game.time++;
 }
@@ -138,7 +151,7 @@ int createGameMap(int x, int y)
 	if (Game.state != INIT) return -1;
 
 	Neighbor safepos;
-	getNeighbors(safepos, x, y);
+	getNeighbors(&safepos, x, y);
 
 	//generate mines, 8 units around where clicked won't have mines
 	//use shuffle algorithm
@@ -148,15 +161,23 @@ int createGameMap(int x, int y)
 	for (int i = 0; i < 9; i++) neicount += (safepos[i] != -1);	//remember how many safe positions needed
 	for (dword k = 0; k < Game.mines; k++) {	//shuffle algorithm, ignore tail
 		dword index = rand() % (Game.size - neicount - k) + k;
-		swap(Game.map[k], Game.map[index]);
+		byte temp = Game.map[index];
+		Game.map[index] = Game.map[k];
+		Game.map[k] = temp;
 	}
 	if (safepos[0] >= Game.size / 2) {	//there may be overlap between safe area and neighbor area, need handling
-		for (dword i = 0; i < neicount; i++) swap(Game.map[i], Game.map[Game.size - 1 - i]);
+		for (dword i = 0; i < neicount; i++) {
+			byte temp = Game.map[Game.size - 1 - i];
+			Game.map[Game.size - 1 - i] = Game.map[i];
+			Game.map[i] = temp;
+		}
 		neicount = Game.size;	//WARNING:the meaning of neicount has been changed
 	}
 	for (int i = 0; i < 9; i++) {	//move safe area to where it is
 		if (safepos[i] != -1) {
-			swap(Game.map[safepos[i]], Game.map[Game.size - neicount]);
+			byte temp = Game.map[Game.size - neicount];
+			Game.map[Game.size - neicount] = Game.map[safepos[i]];
+			Game.map[safepos[i]] = temp;
 			neicount--;
 		}
 	}
@@ -166,7 +187,7 @@ int createGameMap(int x, int y)
 		if (MUISMINE(Game.map[i])) continue;
 		int m = 0;
 		Neighbor neipos;
-		getNeighbors(neipos, i);
+		getNeighbors(&neipos, index2x(i), index2y(i));
 		for (int j = 1; j < 9; j++)
 			if (neipos[j] != -1 && MUISMINE(Game.map[neipos[j]])) m++;
 		SETMUMINES(m, Game.map[i]);
@@ -174,17 +195,7 @@ int createGameMap(int x, int y)
 	return 0;
 }
 
-int createGameMap(int index)
-{
-	return createGameMap(index2x(index), index2y(index));
-}
-
-int clickUnit(int x, int y)
-{
-	return clickUnit(xy2index(x, y));
-}
-
-int clickUnit(int index)
+int clickOne(int index)
 {
 	if (Game.state != PROGRESS) return -2;
 	if (index < 0 || index >= (int)Game.size) return -2;
@@ -202,11 +213,6 @@ int clickUnit(int index)
 	}
 }
 
-int openBlanks(int x, int y)
-{
-	return openBlanks(xy2index(x, y));
-}
-
 int openBlanks(int index)
 {
 	if (Game.state != PROGRESS) return -1;
@@ -215,27 +221,22 @@ int openBlanks(int index)
 	if (GETMUMINES(Game.map[index]) != 0) return -1;
 
 	Neighbor pos;
-	getNeighbors(pos, index);
+	getNeighbors(&pos, index2x(index), index2y(index));
 	for (int i = 1; i < 9; i++) {
-		int ret = clickUnit(pos[i]);
+		int ret = clickOne(pos[i]);
 		if (ret == 0) openBlanks(pos[i]);
 	}
 	return 0;
 }
 
-int digNeighbors(int x, int y)
-{
-	return digNeighbors(xy2index(x, y));
-}
-
-int digNeighbors(int index)
+int clickAround(int index)
 {
 	if (Game.state != PROGRESS) return -2;
 	if (index < 0 || index >= (int)Game.size) return -2;
 	if (GETMUSTATE(Game.map[index]) != MUS_UNCOV) return -2;
 
 	Neighbor pos;
-	getNeighbors(pos, index);
+	getNeighbors(&pos, index2x(index), index2y(index));
 
 	//you can open neighbors only when flags EQ mines around neighbors
 	int flags = 0;
@@ -247,11 +248,38 @@ int digNeighbors(int index)
 	flags = 0;	//WARNING:the meaning of flags has been changed
 	//open neighbors
 	for (int i = 1; i < 9; i++) {
-		info[i] = clickUnit(pos[i]);
+		info[i] = clickOne(pos[i]);
 		if (info[i] == 0) openBlanks(pos[i]);
 		if (info[i] == -1) flags = -1;	//if bombed
 	}
 	return flags;
+}
+
+int rightClick(int index)
+{
+	if (ISGAMESET(Game.state)) return -2;
+	if (index < 0 || index >= (int)Game.size) return -2;
+
+	byte new_mapunit_state;
+	switch (GETMUSTATE(Game.map[index])) {
+	case MUS_COVER:
+		new_mapunit_state = MUS_FLAG;
+		Game.mine_remains--;
+		break;
+	case MUS_FLAG:
+		new_mapunit_state = (Game.mark) ? MUS_MARK : MUS_COVER;
+		Game.mine_remains++;
+		break;
+	case MUS_MARK:
+		new_mapunit_state = MUS_COVER;
+		break;
+	default:
+		return -1;
+	}
+
+	SETMUSTATE(new_mapunit_state, Game.map[index]);
+	SETMUUPDATE(Game.map[index]);
+	return 0;
 }
 
 void uncovAllMines()
@@ -286,17 +314,9 @@ int gameStart(int x, int y)
 	Game.mine_remains = Game.mines;
 	Game.time = 0;
 	Game.uncov_units = 0;
-	if (clickUnit(x, y) == -1) return -1;
-	openBlanks(x, y);
-	if (Game.mines == Game.size - Game.uncov_units)
-		return 1;
-	else
-		return 0;
-}
-
-int gameStart(int index)
-{
-	return gameStart(index2x(index), index2y(index));
+	if (clickOne(xy2index(x, y)) == -1) return -1;
+	openBlanks(xy2index(x, y));
+	return isGameSuccessful();
 }
 
 bool isGameSuccessful()
@@ -311,14 +331,12 @@ int gameSet()
 	Game.mine_remains = 0;
 	uncovAllMines();
 	//if break record
-	if (Game.mode < CUSTOM && Game.state == SUCCESS && Game.time < getRecordTime(Game.mode))
-		return 1;
-	return 0;
+	return (Game.mode < CUSTOM && Game.state == SUCCESS && Game.time < getRecordTime(Game.mode));
 }
 
 void resetRecord()
 {
-	Score = { MAX_TIME,MAX_TIME,MAX_TIME,_T(DEF_SCORE_NAME_EN),_T(DEF_SCORE_NAME_EN),_T(DEF_SCORE_NAME_EN) };
+	Score = (GameScore){ MAX_TIME,MAX_TIME,MAX_TIME,_T(DEF_SCORE_NAME_EN),_T(DEF_SCORE_NAME_EN),_T(DEF_SCORE_NAME_EN) };
 }
 
 dword getRecordTime(byte gamemode)
@@ -345,6 +363,7 @@ TCHAR *getpRecordName(byte gamemode)
 
 int setRecordTime(byte gamemode, word besttime)
 {
+	if (besttime > MAX_TIME) return -1;
 	switch (gamemode) {
 	case JUNIOR:
 		Score.junior_time = besttime;

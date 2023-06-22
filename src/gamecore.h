@@ -1,13 +1,32 @@
+/*****************************************************************************\
+ *  My Minesweepper -- a classic minesweeper game
+ *  Copyright (C) 2020-2022  Gee W.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+\*****************************************************************************/
+
 #pragma once
 
-/* 
+/* gamecore.h
  * this file contains the minesweeper core functions and data structure
  * all basic operations of Game are defined in this file
- * you can read infomation from Game/Score struct by directly access its member
- * AND use defined functions to write/change it (RECOMMENDED)
+ * you can READ infomation from Game/Score struct by directly accessing its member
+ * AND use defined functions to WRITE/CHANGE it (RECOMMENDED)
  */
 
 #include "stdincludes.h"
+
 
 
 //Game Modes
@@ -36,20 +55,20 @@
 #define MAX_WIDTH		30
 #define MAX_HEIGHT		24
 #define MAX_SIZE		(MAX_WIDTH * MAX_HEIGHT)
-#define MAX_MINES(Size)	((word)((word)(Size) * 9 / 10))
 #define MIN_WIDTH		9
 #define MIN_HEIGHT		9
 #define MIN_SIZE		(MIN_WIDTH * MIN_HEIGHT)
+#define MAX_MINES(Size)	((word)((word)(Size) * 9 / 10))
 #define MIN_MINES		10
 //end Game Modes
 
 //Game States
 #define INIT		0
 #define PROGRESS	1
-#define GAMESET		2
 #define SUCCESS		2
 #define FAIL		3
 #define UNKNOW		4
+#define ISGAMESET(State)	((byte)(State) > PROGRESS)
 //end Game States
 
 //Game Map Unit
@@ -58,8 +77,8 @@
  * |U|  S  |   M   |
  * +-+-+-+-+-+-+-+-+
  *     map_unit
- * U:	if this unit is need to redraw
- * S:	state of this unit: covered, flagged, marked, uncovered, bombed, wrong flag
+ * U:	if this unit is need to update/redraw
+ * S:	state of this unit:[covered, flagged, marked, uncovered, bombed, wrong flag]
  * M:	counts of mines in neighbors, from 0x0 to 0x8, 0xF if this unit is a mine
  */
 
@@ -72,14 +91,14 @@
 #define MUS_WRONG	0x50
 #define MUM_MINE	0x0F
 #define GETMUMINES(unit)		((byte)((unit) & 0x0F))
-#define SETMUMINES(m, unit)		unit = ((byte)((byte)((m) & 0x0F) | (byte)((unit) & 0xF0)))
 #define GETMUSTATE(unit)		((byte)((unit) & 0x70))
+#define SETMUMINES(m, unit)		unit = ((byte)((byte)((m) & 0x0F) | (byte)((unit) & 0xF0)))
 #define SETMUSTATE(S, unit)		unit = ((byte)((byte)((S) & 0x70) | (byte)((unit) & 0x8F)))
 #define MUISMINE(unit)			(((unit) & 0x0F) == MUM_MINE)
 #define SETMUUPDATE(unit)		unit |= MU_UPDATE
 #define REMMUUPDATE(unit)		unit &= (~MU_UPDATE)
 #define MUISUPDATE(unit)		((bool)((unit) & MU_UPDATE))
- //end Game Map Unit
+//end Game Map Unit
 
 //Game Score
 #define SCORE_NAME_LEN		20
@@ -91,7 +110,7 @@
 
 
 
-struct GameInfo {
+typedef struct GameInfo {
 	byte mode;			//junior, middle, senior or custom
 	byte state;			//init, progress, success or fail
 	bool mark;			//if the Question Mark is used
@@ -103,28 +122,29 @@ struct GameInfo {
 	word uncov_units;	//counts of map_units that have been uncovered
 	word time;			//Game time
 	byte map[MAX_SIZE];	//GameMap data, avaliable area depends on Game Mode
-};
+} GameInfo;
 
-struct GameScore {
+typedef struct GameScore {
 	word junior_time;
 	word middle_time;
 	word senior_time;
 	TCHAR junior_name[SCORE_NAME_LEN];
 	TCHAR middle_name[SCORE_NAME_LEN];
 	TCHAR senior_name[SCORE_NAME_LEN];
-};
+} GameScore;
 
-/* order:
+/* order in 2D:
  * +---+---+---+
- * | 1 | 2 | 3 |
- * +---+---+---+
- * | 4 | 0 | 5 |
- * +---+---+---+
+ * | 1 | 2 | 3 |           transform to arrary:
+ * +---+---+---+      +---+---+---+---+---+---+---+---+---+
+ * | 4 | 0 | 5 | ---> | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+ * +---+---+---+      +---+---+---+---+---+---+---+---+---+
  * | 6 | 7 | 8 |
  * +---+---+---+
  * store index of each neighbor, -1 means no such neighbor
  */
 typedef int Neighbor[9];
+
 
 
 extern GameInfo Game;
@@ -134,7 +154,7 @@ extern GameScore Score;
  *      ----->
  *       0   1   2   3
  *     +---+---+---+---+
- * y| 0| 0 | 1 | 2 | 3 |
+ * y| 0| 0 | 1 | 2 | 3 |	eg: index = 2  <==>  (x, y) = (2, 0)
  *  |  +---+---+---+---+
  *  v 1| 4 |...index...|
  *     +---+---+---+---+
@@ -152,28 +172,26 @@ int xy2index(int x, int y);
 
 //see detail in Type Neighbor's description
 //return -1 if error
-int getNeighbors(Neighbor &neighbor, int x, int y);
-
-//see detail in Type Neighbor's description
-//return -1 if error
-int getNeighbors(Neighbor &neighbor, int index);
+int getNeighbors(Neighbor* pneighbor, int x, int y);
 
 
-//set Game Mode with JUNIOR by default
+//set Game Mode with JUNIOR by default if 'mode' is undefined value
+//if 'mode' is a standard value(not CUSTOM), 'width', 'height' and 'mines' will be ignored
 //CUSTOM is limited by MAX_WIDTH, MAX_HEIGHT, MAX_MINES and MIN_*** as well
-//won't set Update bit
-void setGameMode(byte mode, byte width = 0, byte height = 0, word mines = 0);
+//won't set Update bit, will set Game State to INIT and erase the whole Game Map
+void setGameMode(byte mode, byte width, byte height, word mines);
 
 
 //on/off Question Mark mode
 void setMark(bool enable);
 
+
 //set Game Time with a specific time
 //return -1 if time bigger than MAX_TIME
 int setGameTime(word time);
 
-//step in time if the time is still smaller than MAX_TIME
-void nextGameTime();
+//step in time
+void stepGameTime();
 
 
 //change Game State
@@ -182,7 +200,7 @@ void nextGameTime();
 int setGameState(byte state);
 
 
-//erase the GameMap
+//erase the GameMap and reset Game infomation
 //won't set Update bit
 void resetGame();
 
@@ -192,27 +210,12 @@ void resetGame();
 //return -1 if the Game State is not INIT
 int createGameMap(int x, int y);
 
-//create a new GameMap
-//set Update bit before return
-//return -1 if the Game State is not INIT
-int createGameMap(int index);
 
-
-//click a unit in GameMap, return mines in neighbor, or return -1 if this unit is mine,
+//click a unit in GameMap, return mines around neighbor, or return -1 if this unit is mine,
 //or return -2 if this unit can't be clicked
 //set Update bit before return
-int clickUnit(int x, int y);
+int clickOne(int index);
 
-//click a unit in GameMap, return mines in neighbor, or return -1 if this unit is mine,
-//or return -2 if this unit can't be clicked
-//set Update bit before return
-int clickUnit(int index);
-
-
-//open all neighbors around a uncovered unit witch has 0 mines value
-//return 0 if no error, or -1 if error
-//set Update bit before return
-int openBlanks(int x, int y);
 
 //open all neighbors around a uncovered unit witch has 0 mines value
 //return 0 if no error, or -1 if error
@@ -223,12 +226,13 @@ int openBlanks(int index);
 //open all neighbors around the open unit
 //return 0 if no error, or -1 if digged mine, or -2 if error
 //set Update bit before return
-int digNeighbors(int x, int y);
+int clickAround(int index);
 
-//open all neighbors around the open unit
-//return 0 if no error, or -1 if digged mine, or -2 if error
+
+//change the MapUnitState and remained mines when right clicked on a unit
+//return 0 if normal, return -1 if not changed, return -2 if error
 //set Update bit before return
-int digNeighbors(int index);
+int rightClick(int index);
 
 
 //open all mines' positions after Game Fail
@@ -241,12 +245,6 @@ void uncovAllMines();
 //return 0 if no exception, return -2 if error,
 //return 1 if game success, return -1 if digged mine(game fail)
 int gameStart(int x, int y);
-
-//start a new Game by click one position
-//set Update bit before return
-//return 0 if no exception, return -2 if error,
-//return 1 if game success, return -1 if digged mine(game fail)
-int gameStart(int index);
 
 //judge if the current Game is Successful
 bool isGameSuccessful();
@@ -270,5 +268,5 @@ dword getRecordTime(byte gamemode);
 //return nullptr if error
 TCHAR *getpRecordName(byte gamemode);
 
-//update best time, return -1 if gamemode is illegal
+//update best time, return -1 if gamemode is illegal or besttime bigger than MAX_TIME
 int setRecordTime(byte gamemode, word besttime);

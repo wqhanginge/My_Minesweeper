@@ -1,6 +1,24 @@
+/*****************************************************************************\
+ *  My Minesweepper -- a classic minesweeper game
+ *  Copyright (C) 2020-2022  Gee W.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+\*****************************************************************************/
+
 #pragma once
 
-/* 
+/* basicUI.h
  * this file contains the Game UI design and basic drawing functions
  * drawing functions use Win32 API
  * NOTE:almost all functions have no arg check process, use with care
@@ -25,12 +43,13 @@
  * |------------width------------|
  *
  * NOTE: these two Parts have edges
+ * NOTE: there are edges around Main Client Area and between these two Parts
  *
  * Info_height is static
  * MapArea_height and width are flexible
  */
 
-/*                  Info
+/*                    Info
  * +----------------------------------------+---
  * |  +------+      +------+ --   +------+  |--- top_dist
  * |  | Mine |      |Reset | |    | Time |  |nums_height
@@ -45,11 +64,14 @@
  * static: top_dist, bottom_dist, nums_height, left_dist, right_dist,
  *         nums_width, reset_button_size
  * flexible: mid_dist
+ * NOTE: Reset Button is a Square, Mine Part and Time Part are Rectangles
  * NOTE: the reset_button_size is different from nums_height or nums_width,
  *       i.e. the bottom_dist may has different value, but the top_dist has
  *       only one value.
+ * NOTE: Mine Part and Time Part have edges, but Reset Button have no edges
  *
- * Mine Part, Time Part and Reset Button have static size,
+ * Mine Part, Time Part and Reset Button have static size, and Reset Button is
+ * always center aligned and Mine Part/Time Part is always close to the edge,
  * but Info Part has flexible width, so that it's necessary to recalculate
  * the position when Game Mode changed.
  */
@@ -61,6 +83,7 @@
  * |   |   |   |   |   |   |   |
  * +---+---+---+   +---+---+---+
  * 
+ * N: a number between 0 and 9
  * Mine Part and Time Part are composed by three-digit number
  */
 
@@ -90,6 +113,7 @@
 #define COLOR_DEFSHADOW	RGB(128,128,128)
 #define COLOR_DEFSH		RGB(160,160,160)
 
+/*following two macros use variables from gamecore.h, make sure it is included*/
 #define MAPUNITS_WIDTH	(Game.width * MU_SIZE)
 #define MAPUNITS_HEIGHT	(Game.height * MU_SIZE)
 
@@ -192,7 +216,6 @@
 #define COLOR_MUNUM6	RGB(0,128,128)
 #define COLOR_MUNUM7	RGB(0,0,0)
 #define COLOR_MUNUM8	RGB(128,128,128)
-#define COLOR_MUNUMDEF	(-1)
 //end MapArea
 
 //Client Area
@@ -237,7 +260,7 @@ static void drawthickedgebg(
 //draw 2 pixel edge concave background with 2 layers of color,
 //exchange colors to draw a convex background
 //no DC-Buffer
-static void drawthickedgebg(
+static void drawdoubleedgebg(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
@@ -248,7 +271,7 @@ static void drawthickedgebg(
 	_In_ COLORREF lightlow,
 	_In_ COLORREF shadow,
 	_In_ COLORREF shadowhigh
-)
+);
 //draw 1 pixel edge concave background,
 //exchange 'light' and 'shadow' to draw a convex background
 //no DC-Buffer
@@ -262,14 +285,24 @@ static void drawthickedgebg(
 	_In_ COLORREF light,
 	_In_ COLORREF shadow
 );
+//draw 1 pixel half edge 2D like background,
+//draw left edge and top edge
+//no DC-Buffer
+void drawhalfedgebg(
+	_In_ HDC hdestdc,
+	_In_ int left,
+	_In_ int top,
+	_In_ int width,
+	_In_ int height,
+	_In_ COLORREF inner,
+	_In_ COLORREF edge
+);
 //use for 7sd
 //no DC-Buffer
 static inline void draw7sdbg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF bg = COLOR_INBG,
-	_In_ COLORREF dark = COLOR_INDK
+	_In_ int top
 );
 static void draw7sda(_In_ HDC h7sddc, _In_ int left, _In_ int top);
 static void draw7sdb(_In_ HDC h7sddc, _In_ int left, _In_ int top);
@@ -286,8 +319,7 @@ static bool _xor(const bool A, const bool B);
 void drawClientBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF def = COLOR_CLIENT
+	_In_ int top
 );
 
 //w:INFO_WIDTH, h:INFO_HEIGHT
@@ -295,10 +327,7 @@ void drawClientBg(
 void drawInfoBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF inner = COLOR_INFO,
-	_In_ COLORREF light = COLOR_INFOL,
-	_In_ COLORREF shadow = COLOR_INFOS
+	_In_ int top
 );
 
 //w:MAPAREA_WIDTH, h:MAPAREA_HEIGHT
@@ -306,10 +335,7 @@ void drawInfoBg(
 void drawMapAreaBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF inner = COLOR_MAPAREA,
-	_In_ COLORREF light = COLOR_MAPAREAL,
-	_In_ COLORREF shadow = COLOR_MAPAREAS
+	_In_ int top
 );
 
 //w:MINE_WIDTH, h:MINE_HEIGHT
@@ -317,10 +343,7 @@ void drawMapAreaBg(
 void drawMineBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF inner = COLOR_MINE,
-	_In_ COLORREF light = COLOR_MINEL,
-	_In_ COLORREF shadow = COLOR_MINES
+	_In_ int top
 );
 
 //w:TIME_WIDTH, h:TIME_HEIGHT
@@ -328,10 +351,7 @@ void drawMineBg(
 void drawTimeBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF inner = COLOR_TIME,
-	_In_ COLORREF light = COLOR_TIMEL,
-	_In_ COLORREF shadow = COLOR_TIMES
+	_In_ int top
 );
 
 
@@ -342,10 +362,7 @@ void drawIN(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
-	_In_ int num,
-	_In_ COLORREF bg = COLOR_INBG,
-	_In_ COLORREF dark = COLOR_INDK,
-	_In_ COLORREF bright = COLOR_INBT
+	_In_ int num
 );
 //if num is out of range, it draws '---'
 //-100 < num < 1000
@@ -355,10 +372,7 @@ void drawINNB(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
-	_In_ int num,
-	_In_ COLORREF bg = COLOR_INBG,
-	_In_ COLORREF dark = COLOR_INDK,
-	_In_ COLORREF bright = COLOR_INBT
+	_In_ int num
 );
 
 //if num EQ -1, it draws '-', if num GE 10, it draws nothing
@@ -368,10 +382,7 @@ void drawInfoNum(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
-	_In_ int num,
-	_In_ COLORREF bg = COLOR_INBG,
-	_In_ COLORREF dark = COLOR_INDK,
-	_In_ COLORREF bright = COLOR_INBT
+	_In_ int num
 );
 
 
@@ -381,11 +392,7 @@ void drawResetButtonBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
-	_In_ COLORREF inner = COLOR_RB,
-	_In_ COLORREF light = COLOR_RBL,
-	_In_ COLORREF lightlow = COLOR_RBLL,
-	_In_ COLORREF shadow = COLOR_RBS,
-	_In_ COLORREF shadowhigh = COLOR_RBSH
+	_In_ bool clicked
 );
 
 //draw bitmap on Reset Button
@@ -409,12 +416,7 @@ void drawResetButton(
 	_In_ int left,
 	_In_ int top,
 	_In_ HBITMAP hbm,
-	_In_ bool clicked,
-	_In_ COLORREF inner = COLOR_RB,
-	_In_ COLORREF light = COLOR_RBL,
-	_In_ COLORREF lightlow = COLOR_RBLL,
-	_In_ COLORREF shadow = COLOR_RBS,
-	_In_ COLORREF shadowhigh = COLOR_RBSH
+	_In_ bool clicked
 );
 //draw a Reset Button
 //use NULL for hbm if no bitmap
@@ -425,12 +427,7 @@ void drawResetButtonNB(
 	_In_ int left,
 	_In_ int top,
 	_In_ HBITMAP hbm,
-	_In_ bool clicked,
-	_In_ COLORREF inner = COLOR_RB,
-	_In_ COLORREF light = COLOR_RBL,
-	_In_ COLORREF lightlow = COLOR_RBLL,
-	_In_ COLORREF shadow = COLOR_RBS,
-	_In_ COLORREF shadowhigh = COLOR_RBSH
+	_In_ bool clicked
 );
 
 
@@ -440,77 +437,62 @@ void drawResetButtonNB(
 static void drawmuitemmine(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF mine = COLOR_MUMINE,
-	_In_ COLORREF light = COLOR_MUMINEL
+	_In_ int top
 );
 static void drawmuitemmark(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ bool clicked,
-	_In_ COLORREF mark = COLOR_MUMARK
+	_In_ int top
 );
 static void drawmuitemflag(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF flag = COLOR_MUFLAGF,
-	_In_ COLORREF base = COLOR_MUFLAGB
+	_In_ int top
 );
 static void drawmuitemcross(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF cross = COLOR_MUCROSS
+	_In_ int top
 );
 static void drawmuitemnum1(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF num = COLOR_MUNUM1
+	_In_ int top
 );
 static void drawmuitemnum2(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF num = COLOR_MUNUM2
+	_In_ int top
 );
 static void drawmuitemnum3(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF num = COLOR_MUNUM3
+	_In_ int top
 );
 static void drawmuitemnum4(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF num = COLOR_MUNUM4
+	_In_ int top
 );
 static void drawmuitemnum5(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF num = COLOR_MUNUM5
+	_In_ int top
 );
 static void drawmuitemnum6(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF num = COLOR_MUNUM6
+	_In_ int top
 );
 static void drawmuitemnum7(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF num = COLOR_MUNUM7
+	_In_ int top
 );
 static void drawmuitemnum8(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF num = COLOR_MUNUM8
+	_In_ int top
 );
 */
 
@@ -519,31 +501,21 @@ static void drawmuitemnum8(
 void drawMUCoverBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF inner = COLOR_MUCOVER,
-	_In_ COLORREF light = COLOR_MUCOVERL,
-	_In_ COLORREF shadow = COLOR_MUCOVERS
+	_In_ int top
 );
 
 //w:MU_SIZE, h:MU_SIZE
 void drawMUUncovBg(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF inner = COLOR_MUUNCOV,
-	_In_ COLORREF edge = COLOR_MUUNCOVE
+	_In_ int top
 );
 
 //w:MU_SIZE, h:MU_SIZE
 void drawMUFlag(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF flag = COLOR_MUFLAGF,
-	_In_ COLORREF base = COLOR_MUFLAGB,
-	_In_ COLORREF bginner = COLOR_MUCOVER,
-	_In_ COLORREF bglight = COLOR_MUCOVERL,
-	_In_ COLORREF bgshadow = COLOR_MUCOVERS
+	_In_ int top
 );
 
 //w:MU_SIZE, h:MU_SIZE
@@ -551,13 +523,7 @@ void drawMUMark(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
-	_In_ bool clicked,
-	_In_ COLORREF mark = COLOR_MUMARK,
-	_In_ COLORREF bginner = COLOR_MUCOVER,
-	_In_ COLORREF bglight = COLOR_MUCOVERL,
-	_In_ COLORREF bgshadow = COLOR_MUCOVERS,
-	_In_ COLORREF bgclickedinner = COLOR_MUUNCOV,
-	_In_ COLORREF bgclickededge = COLOR_MUUNCOVE
+	_In_ bool clicked
 );
 
 //w:MU_SIZE, h:MU_SIZE
@@ -565,24 +531,14 @@ void drawMUMine(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
-	_In_ bool bomb,
-	_In_ COLORREF mine = COLOR_MUMINE,
-	_In_ COLORREF light = COLOR_MUMINEL,
-	_In_ COLORREF bginner = COLOR_MUUNCOV,
-	_In_ COLORREF bgbombinner = COLOR_MUUNCOVB,
-	_In_ COLORREF bgedge = COLOR_MUUNCOVE
+	_In_ bool bomb
 );
 
 //w:MU_SIZE, h:MU_SIZE
 void drawMUWrong(
 	_In_ HDC hdestdc,
 	_In_ int left,
-	_In_ int top,
-	_In_ COLORREF mine = COLOR_MUMINE,
-	_In_ COLORREF light = COLOR_MUMINEL,
-	_In_ COLORREF cross = COLOR_MUCROSS,
-	_In_ COLORREF bginner = COLOR_MUUNCOV,
-	_In_ COLORREF bgedge = COLOR_MUUNCOVE
+	_In_ int top
 );
 
 //w:MU_SIZE, h:MU_SIZE
@@ -590,8 +546,5 @@ void drawMUNum(
 	_In_ HDC hdestdc,
 	_In_ int left,
 	_In_ int top,
-	_In_ int num,
-	_In_ COLORREF numcolor = COLOR_MUNUMDEF,
-	_In_ COLORREF bginner = COLOR_MUUNCOV,
-	_In_ COLORREF bgedge = COLOR_MUUNCOVE
+	_In_ int num
 );

@@ -1,6 +1,24 @@
+/*****************************************************************************\
+ *  My Minesweepper -- a classic minesweeper game
+ *  Copyright (C) 2020-2022  Gee W.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+\*****************************************************************************/
+
 #pragma once
 
-/* 
+/* procfunctions.h
  * this file contains Win32 Window Proc Functions
  * NOTE:most functions have no arg check, use with care
  */
@@ -11,19 +29,19 @@
 
 /* Game private window messages */
 
-#define WM_GAMERESET	(WM_APP + 0)		//send when game needs reset
-#define WM_GAMESUCCESS	(WM_APP + 1)		//send when game is succeed
-#define WM_GAMEFAIL		(WM_APP + 2)		//send when game is failed
-#define WM_GAMESTART	(WM_APP + 3)		//send when game needs start, use lparam as start index on GameMap
+#define WMAPP_GAMERESET		(WM_APP + 0)		//send when game needs reset
+#define WMAPP_GAMESUCCESS	(WM_APP + 1)		//send when game is succeed
+#define WMAPP_GAMEFAIL		(WM_APP + 2)		//send when game is failed
+#define WMAPP_GAMESTART		(WM_APP + 3)		//send when game needs start, use lparam as start index on GameMap
 
- /* send when game mode needs change,
+ /* send when game mode is changed,
   * use wparam as new GameMode,
   * use lparam as a combination of new width, height and mines
   * ignore lparam if new GameMode is a standard Mode
   * call MAKECHGLAPRAM to create a lparam
-  * call GETCHG*** to unpack a lparam
+  * call GETCHG-family to unpack a lparam
   */
-#define WM_GAMEMODECHG	(WM_APP + 4)
+#define WMAPP_GAMEMODECHG	(WM_APP + 4)
 
 //create a lparam by width, height and mines
 #define MAKECHGLPARAM(w, h, m)	((LPARAM)((((dword)(w) & 0xFF) | (((dword)(h) & 0xFF) << 8)) | (((dword)(m) & 0xFFFF) << 16)))
@@ -46,13 +64,12 @@
 
 //Record Dialog
 #define TIME_STRLEN		10
-#define DEF_TIMEUNIT_EN	" Sec"
-#define DEF_TIMEUNIT_CH	" Ãë"
+#define DEF_TIMEUNIT_EN	"Sec"
+#define DEF_TIMEUNIT_CH	"Ãë"
 //end Record Dialog
 
 //About Dialog
-#define ABOUT_INFO_LEN	100
-#define ABOUT_TEXT		"My Minesweeper\nversion "
+#define ABOUT_INFO_LEN	500
 //end About Dialog
 
 

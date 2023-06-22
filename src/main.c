@@ -1,3 +1,21 @@
+/*****************************************************************************\
+ *  My Minesweepper -- a classic minesweeper game
+ *  Copyright (C) 2020-2022  Gee W.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+\*****************************************************************************/
+
 #include "stdincludes.h"
 #include "procfunctions.h"
 
@@ -17,15 +35,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		return onPaint(hwnd, wparam, lparam);
 	case WM_COMMAND:
 		return onCommand(hwnd, wparam, lparam);
-	case WM_GAMERESET:
+	case WMAPP_GAMERESET:
 		return onGameReset(hwnd, wparam, lparam);
-	case WM_GAMESTART:
+	case WMAPP_GAMESTART:
 		return onGameStart(hwnd, wparam, lparam);
-	case WM_GAMEFAIL:
+	case WMAPP_GAMEFAIL:
 		return onGameFail(hwnd, wparam, lparam);
-	case WM_GAMESUCCESS:
+	case WMAPP_GAMESUCCESS:
 		return onGameSuccess(hwnd, wparam, lparam);
-	case WM_GAMEMODECHG:
+	case WMAPP_GAMEMODECHG:
 		return onGameModeChg(hwnd, wparam, lparam);
 	case WM_LBUTTONDOWN:
 		return onLButtonDwon(hwnd, wparam, lparam);
@@ -45,7 +63,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR lpCmdLine, int nCmdShow) {
 	WNDCLASSEX wndc = { sizeof(WNDCLASSEX) };
 	wndc.cbClsExtra = 0;
 	wndc.cbWndExtra = 0;

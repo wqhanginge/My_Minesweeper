@@ -1,3 +1,21 @@
+/*****************************************************************************\
+ *  My Minesweepper -- a classic minesweeper game
+ *  Copyright (C) 2020-2022  Gee W.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+\*****************************************************************************/
+
 #include "encapsulations.h"
 
 
@@ -45,14 +63,14 @@ int y2py(int y)
 bool lparamIsInRB(LPARAM lparam)
 {
 	POINTS p = MAKEPOINTS(lparam);
-	p = { p.x - RB_LEFT,p.y - RB_TOP };
+	p = (POINTS){ p.x - RB_LEFT,p.y - RB_TOP };
 	return (p.x >= 0 && p.x < RB_SIZE&& p.y >= 0 && p.y < RB_SIZE);
 }
 
 bool lparamIsInMap(LPARAM lparam)
 {
 	POINTS p = MAKEPOINTS(lparam);
-	p = { p.x - MAP_LEFT,p.y - MAP_TOP };
+	p = (POINTS){ p.x - MAP_LEFT,p.y - MAP_TOP };
 	return (p.x >= 0 && p.x < x2px(Game.width) && p.y >= 0 && p.y < y2py(Game.height));
 }
 
@@ -81,20 +99,20 @@ void freeBitmaps()
 	DeleteObject(hbm_fail);
 }
 
-void paintMapUnit(HDC hdestdc, int muleft, int mutop, byte mapunit)
+void paintMapUnit(HDC hdestdc, int muleft, int mutop, int index)
 {
 	HDC hdcbuffer = CreateCompatibleDC(hdestdc);
 	HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MU_SIZE, MU_SIZE);
 	SelectObject(hdcbuffer, hbmbuffer);
-	paintMapUnitNB(hdcbuffer, 0, 0, mapunit);
+	paintMapUnitNB(hdcbuffer, 0, 0, index);
 	BitBlt(hdestdc, muleft, mutop, MU_SIZE, MU_SIZE, hdcbuffer, 0, 0, SRCCOPY);
 	DeleteObject(hdcbuffer);
 	DeleteObject(hbmbuffer);
 }
 
-void paintMapUnitNB(HDC hdestdc, int muleft, int mutop, byte mapunit)
+void paintMapUnitNB(HDC hdestdc, int muleft, int mutop, int index)
 {
-	switch (GETMUSTATE(mapunit)) {
+	switch (GETMUSTATE(Game.map[index])) {
 	case MUS_COVER:
 		drawMUCoverBg(hdestdc, muleft, mutop);
 		break;
@@ -105,8 +123,8 @@ void paintMapUnitNB(HDC hdestdc, int muleft, int mutop, byte mapunit)
 		drawMUMark(hdestdc, muleft, mutop, false);
 		break;
 	case MUS_UNCOV:
-		if (MUISMINE(mapunit)) drawMUMine(hdestdc, muleft, mutop, false);
-		else drawMUNum(hdestdc, muleft, mutop, GETMUMINES(mapunit));
+		if (MUISMINE(Game.map[index])) drawMUMine(hdestdc, muleft, mutop, false);
+		else drawMUNum(hdestdc, muleft, mutop, GETMUMINES(Game.map[index]));
 		break;
 	case MUS_BOMB:
 		drawMUMine(hdestdc, muleft, mutop, true);
@@ -118,6 +136,7 @@ void paintMapUnitNB(HDC hdestdc, int muleft, int mutop, byte mapunit)
 		drawMUCoverBg(hdestdc, muleft, mutop);
 		break;
 	}
+	REMMUUPDATE(Game.map[index]);
 }
 
 void paintMap(HDC hdestdc, int mapleft, int maptop, bool force)
@@ -136,8 +155,7 @@ void paintMapNB(HDC hdestdc, int mapleft, int maptop, bool force)
 {
 	for (word i = 0; i < Game.size; i++) {
 		if (!force && !MUISUPDATE(Game.map[i])) continue;
-		paintMapUnitNB(hdestdc, mapleft + index2px(i), maptop + index2py(i), Game.map[i]);
-		REMMUUPDATE(Game.map[i]);
+		paintMapUnitNB(hdestdc, mapleft + index2px(i), maptop + index2py(i), i);
 	}
 }
 
@@ -171,36 +189,36 @@ void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, int index)
 	SETMUUPDATE(Game.map[index]);
 }
 
-void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, Neighbor& indexes)
+void showClickedMapUnits(HDC hdestdc, int mapleft, int maptop, Neighbor* pindexes)
 {
 	for (word i = 0; i < 9; i++) {
-		if (indexes[i] >= 0 && indexes[i] < (int)Game.size)
-			REMMUUPDATE(Game.map[indexes[i]]);
+		if ((*pindexes)[i] >= 0 && (*pindexes)[i] < (int)Game.size)
+			REMMUUPDATE(Game.map[(*pindexes)[i]]);
 	}
 	paintMap(hdestdc, mapleft, maptop, false);
 	for (word i = 0; i < 9; i++) {
-		if (indexes[i] < 0 || indexes[i] >= (int)Game.size) continue;
-		if (GETMUSTATE(Game.map[indexes[i]]) == MUS_COVER)
-			drawMUUncovBg(hdestdc, mapleft + index2px(indexes[i]), maptop + index2py(indexes[i]));
-		else if (GETMUSTATE(Game.map[indexes[i]]) == MUS_MARK)
-			drawMUMark(hdestdc, mapleft + index2px(indexes[i]), maptop + index2py(indexes[i]), true);
+		if ((*pindexes)[i] < 0 || (*pindexes)[i] >= (int)Game.size) continue;
+		if (GETMUSTATE(Game.map[(*pindexes)[i]]) == MUS_COVER)
+			drawMUUncovBg(hdestdc, mapleft + index2px((*pindexes)[i]), maptop + index2py((*pindexes)[i]));
+		else if (GETMUSTATE(Game.map[(*pindexes)[i]]) == MUS_MARK)
+			drawMUMark(hdestdc, mapleft + index2px((*pindexes)[i]), maptop + index2py((*pindexes)[i]), true);
 	}
 	for (word i = 0; i < 9; i++) {
-		if (indexes[i] >= 0 && indexes[i] < (int)Game.size)
-			SETMUUPDATE(Game.map[indexes[i]]);
+		if ((*pindexes)[i] >= 0 && (*pindexes)[i] < (int)Game.size)
+			SETMUUPDATE(Game.map[(*pindexes)[i]]);
 	}
 }
 
 
-void initGame(TCHAR* Path, POINT& lastwndpos)
+void initGame(TCHAR* Path, POINT* plastwndpos)
 {
-	lastwndpos.x = GetPrivateProfileInt(TEXT(INIT_ANAME), TEXT(INIT_XPOS), DEF_WND_LEFT, Path);
-	lastwndpos.y = GetPrivateProfileInt(TEXT(INIT_ANAME), TEXT(INIT_YPOS), DEF_WND_TOP, Path);
+	plastwndpos->x = GetPrivateProfileInt(TEXT(INIT_ANAME), TEXT(INIT_XPOS), DEF_WND_LEFT, Path);
+	plastwndpos->y = GetPrivateProfileInt(TEXT(INIT_ANAME), TEXT(INIT_YPOS), DEF_WND_TOP, Path);
 	RECT desktop_rect;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &desktop_rect, 0);
-	if ((dword)(lastwndpos.x - desktop_rect.left) > (dword)(desktop_rect.right - desktop_rect.left)
-		|| (dword)(lastwndpos.y - desktop_rect.top) > (dword)(desktop_rect.bottom - desktop_rect.top))
-		lastwndpos = { DEF_WND_LEFT,DEF_WND_TOP };
+	if ((dword)(plastwndpos->x - desktop_rect.left) > (dword)(desktop_rect.right - desktop_rect.left)
+		|| (dword)(plastwndpos->y - desktop_rect.top) > (dword)(desktop_rect.bottom - desktop_rect.top))
+		*plastwndpos = (POINT){ DEF_WND_LEFT,DEF_WND_TOP };
 
 	int mode, width, height, mines, mark;
 	mode = (byte)GetPrivateProfileInt(TEXT(INIT_ANAME), TEXT(INIT_MODE), CRUSH, Path);
@@ -219,60 +237,64 @@ void initGame(TCHAR* Path, POINT& lastwndpos)
 	GetPrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_SNAME), TEXT(DEF_SCORE_NAME_EN), Score.senior_name, SCORE_NAME_LEN, Path);
 }
 
-void saveGame(TCHAR* Path, POINT& wndpos)
+void saveGame(TCHAR* Path, POINT* pwndpos)
 {
 	TCHAR str[CONTENT_STRLEN];
-	tcsprintf(str, CONTENT_STRLEN, TEXT("%d"), wndpos.x);
+	_sntprintf_s(str, CONTENT_STRLEN, _TRUNCATE, TEXT("%d"), pwndpos->x);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_XPOS), str, Path);
-	tcsprintf(str, CONTENT_STRLEN, TEXT("%d"), wndpos.y);
+	_sntprintf_s(str, CONTENT_STRLEN, _TRUNCATE, TEXT("%d"), pwndpos->y);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_YPOS), str, Path);
 
-	tcsprintf(str, CONTENT_STRLEN, TEXT("%d"), Game.mode);
+	_sntprintf_s(str, CONTENT_STRLEN, _TRUNCATE, TEXT("%d"), Game.mode);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_MODE), str, Path);
-	tcsprintf(str, CONTENT_STRLEN, TEXT("%d"), Game.width);
+	_sntprintf_s(str, CONTENT_STRLEN, _TRUNCATE, TEXT("%d"), Game.width);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_WIDTH), str, Path);
-	tcsprintf(str, CONTENT_STRLEN, TEXT("%d"), Game.height);
+	_sntprintf_s(str, CONTENT_STRLEN, _TRUNCATE, TEXT("%d"), Game.height);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_HEIGHT), str, Path);
-	tcsprintf(str, CONTENT_STRLEN, TEXT("%d"), Game.mines);
+	_sntprintf_s(str, CONTENT_STRLEN, _TRUNCATE, TEXT("%d"), Game.mines);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_MINES), str, Path);
-	tcsprintf(str, CONTENT_STRLEN, TEXT("%d"), Game.mark);
+	_sntprintf_s(str, CONTENT_STRLEN, _TRUNCATE, TEXT("%d"), Game.mark);
 	WritePrivateProfileString(TEXT(INIT_ANAME), TEXT(INIT_MARK), str, Path);
 
-	tcsprintf(str, CONTENT_STRLEN, TEXT("%d"), Score.junior_time);
+	_sntprintf_s(str, CONTENT_STRLEN, _TRUNCATE, TEXT("%d"), Score.junior_time);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_JTIME), str, Path);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_JNAME), Score.junior_name, Path);
-	tcsprintf(str, CONTENT_STRLEN, TEXT("%d"), Score.middle_time);
+	_sntprintf_s(str, CONTENT_STRLEN, _TRUNCATE, TEXT("%d"), Score.middle_time);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_MTIME), str, Path);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_MNAME), Score.middle_name, Path);
-	tcsprintf(str, CONTENT_STRLEN, TEXT("%d"), Score.senior_time);
+	_sntprintf_s(str, CONTENT_STRLEN, _TRUNCATE, TEXT("%d"), Score.senior_time);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_STIME), str, Path);
 	WritePrivateProfileString(TEXT(SCORE_ANAME), TEXT(SCORE_SNAME), Score.senior_name, Path);
 }
 
-void getVersion(TCHAR* version, size_t size_in_ch)
+void getProperty(TCHAR* property, size_t size_in_ch)
 {
-	memset(version, 0, sizeof(TCHAR) * size_in_ch);
+	memset(property, 0, sizeof(TCHAR) * size_in_ch);
 	TCHAR szAppFullPath[MAX_PATH] = { 0 };
 	GetModuleFileName(NULL, szAppFullPath, MAX_PATH);	//get program module name and full path
 
 	//get current exe-file version infomation
 	DWORD dwLen = GetFileVersionInfoSize(szAppFullPath, NULL);
 	if (dwLen) {
-		TCHAR* pszAppVersion = new TCHAR[dwLen + 1];
-		memset(pszAppVersion, 0, sizeof(TCHAR) * (dwLen + 1));
-		GetFileVersionInfo(szAppFullPath, NULL, dwLen, pszAppVersion);
-		UINT nLen = 0;
-		VS_FIXEDFILEINFO* pFileInfo = nullptr;
-		VerQueryValue(pszAppVersion, TEXT("\\"), (LPVOID*)&pFileInfo, &nLen);
-		if (nLen)
+		void* pszAppVersion = malloc(dwLen);
+		memset(pszAppVersion, 0, dwLen);
+		GetFileVersionInfo(szAppFullPath, 0, dwLen, pszAppVersion);
+
+		UINT pnLen = 0, pvLen = 0, lcLen = 0;
+		TCHAR* pProductName = nullptr, * pProductVersion = nullptr, * pLegalCopyright = nullptr;
+		VerQueryValue(pszAppVersion, TEXT(PNQUERYSTR), (LPVOID*)&pProductName, &pnLen);
+		VerQueryValue(pszAppVersion, TEXT(PVQUERYSTR), (LPVOID*)&pProductVersion, &pvLen);
+		VerQueryValue(pszAppVersion, TEXT(LCQUERYSTR), (LPVOID*)&pLegalCopyright, &lcLen);
+		if (pnLen && pvLen && lcLen)
 		{
-			//get file version and print as x.x.x.x form
-			tcsprintf(version, size_in_ch, TEXT("%d.%d.%d.%d"),
-				HIWORD(pFileInfo->dwFileVersionMS),
-				LOWORD(pFileInfo->dwFileVersionMS),
-				HIWORD(pFileInfo->dwFileVersionLS),
-				LOWORD(pFileInfo->dwFileVersionLS));
+			//combine property description
+			_sntprintf_s(property, size_in_ch, _TRUNCATE, TEXT("%s  %s\n%s\n\n%s"),
+				pProductName,
+				pProductVersion,
+				pLegalCopyright,
+				TEXT(RIGHTSTR)
+			);
 		}
-		delete pszAppVersion;
+		free(pszAppVersion);
 	}
 }
