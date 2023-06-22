@@ -30,6 +30,9 @@
     <ClInclude Include="..\src\userinterface.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\imlogistic.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\res\Click.bmp">
@@ -64,6 +67,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\src\userinterface.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\imlogistic.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
