@@ -204,9 +204,12 @@ void MenuProc(WPARAM wparam) {
 	case ID_GAME_EXIT:
 		PostMessage(hWnd, WM_DESTROY, 0, 0);
 		break;
-	case ID_HELP:
-		//show help infomation
-		MessageBox(hWnd, TEXT("Regular Minesweeper, please don't doubt"), TEXT("Help"), MB_OK);
+	case ID_ABOUT:
+		//show about infomation
+		TCHAR aboutinfo[ABOUTINFOLEN];
+		_tcscpy_s(aboutinfo, ABOUTINFOLEN, TEXT(ABOUTTEXT));
+		getversion(&aboutinfo[_tcslen(aboutinfo)], ABOUTINFOLEN - _tcslen(aboutinfo));
+		MessageBox(hWnd, aboutinfo, TEXT("About"), MB_OK);
 		break;
 	default:
 		break;
@@ -251,7 +254,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		changemark(Game.mark);
 
 		//create reset button
-		hresetb = CreateWindowEx(0, TEXT("BUTTON"), TEXT("ResetB"),
+		hresetb = CreateWindowEx(0, TEXT("BUTTON"), TEXT(BUTTONNAME),
 			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP,
 			RESETBLEFT, RESETBTOP,
 			RESETBSIZE, RESETBSIZE,
@@ -549,7 +552,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wndc.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
 	wndc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wndc.lpfnWndProc = WndProc;
-	wndc.lpszClassName = TEXT("My_Minesweeper");
+	wndc.lpszClassName = TEXT(WNDCNAME);
 	wndc.lpszMenuName = NULL;
 	wndc.style = CS_VREDRAW | CS_HREDRAW;
 
@@ -557,7 +560,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	hInst = hInstance;
 	hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU1));
-	hWnd = CreateWindowEx(0, wndc.lpszClassName, TEXT("My Minesweeper"),
+	hWnd = CreateWindowEx(0, wndc.lpszClassName, TEXT(APPNAME),
 		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		CW_USEDEFAULT, CW_USEDEFAULT,

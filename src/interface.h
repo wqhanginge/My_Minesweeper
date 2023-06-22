@@ -13,6 +13,8 @@
 #include "userinterface.h"
 #include "../res/resource.h"
 #include <tchar.h>
+#include <strsafe.h>
+#pragma comment(lib, "Version.lib")
 
 extern HINSTANCE hInst;
 extern HWND hWnd;
@@ -28,12 +30,12 @@ int lparamtoindex(_In_ LPARAM lparam);
 
 //transform between positive integer and c_string
 //return -1 if error
-dword str2dword(
+int str2dword(
 	_In_ TCHAR *str,
 	_In_ dword size,
 	_Out_ dword &x
 );
-template <dword size> inline dword str2dword(
+template <dword size> inline int str2dword(
 	_In_ TCHAR(&str)[size],
 	_Out_ dword &x
 )
@@ -103,3 +105,7 @@ inline int maketimestr(
 //save file management
 void initgame(_In_ TCHAR *Path, _Out_ POINT &lastwndpos);
 void savegame(_In_ TCHAR *Path, _In_ POINT &wndpos);
+
+
+//get file version information
+void getversion(_Out_ TCHAR* version, _In_ int size_in_ch);

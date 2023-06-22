@@ -13,7 +13,7 @@ int lparamtoindex(LPARAM lparam)
 	return rpostoindex(p.x - MAPUNITSLEFT, p.y - MAPUNITSTOP);
 }
 
-dword str2dword(TCHAR *str, dword len, dword &x)
+int str2dword(TCHAR *str, dword len, dword &x)
 {
 	x = 0;
 	for (dword i = 0; i < len && str[i] != TEXT('\0'); i++) {
@@ -209,4 +209,32 @@ void savegame(TCHAR * Path, POINT &wndpos)
 	dword2str(str, Score.seniortime);
 	WritePrivateProfileString(TEXT(SCOREAPPNAME), TEXT("senior_time"), str, Path);
 	WritePrivateProfileString(TEXT(SCOREAPPNAME), TEXT("senior_name"), Score.seniorname, Path);
+}
+
+void getversion(TCHAR* version, int size_in_ch)
+{
+	memset(version, 0, sizeof(TCHAR) * size_in_ch);
+	TCHAR szAppFullPath[MAX_PATH] = { 0 };
+	GetModuleFileName(NULL, szAppFullPath, MAX_PATH);	//get program module name and full path
+	
+	//get current exe-file version information length
+	DWORD dwLen = GetFileVersionInfoSize(szAppFullPath, NULL);
+	if (dwLen) {
+		TCHAR* pszAppVersion = new TCHAR[dwLen + 1];
+		memset(pszAppVersion, 0, sizeof(TCHAR) * (dwLen + 1));
+		GetFileVersionInfo(szAppFullPath, NULL, dwLen, pszAppVersion);
+		UINT nLen = 0;
+		VS_FIXEDFILEINFO* pFileInfo = nullptr;
+		VerQueryValue(pszAppVersion, TEXT("\\"), (LPVOID*)&pFileInfo, &nLen);
+		if (nLen)
+		{
+			//get file version
+			StringCchPrintf(version, size_in_ch, TEXT("%d.%d.%d.%d"),
+				HIWORD(pFileInfo->dwFileVersionMS),
+				LOWORD(pFileInfo->dwFileVersionMS),
+				HIWORD(pFileInfo->dwFileVersionLS),
+				LOWORD(pFileInfo->dwFileVersionLS));
+		}
+		delete pszAppVersion;
+	}
 }
