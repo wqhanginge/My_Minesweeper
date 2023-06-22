@@ -1,13 +1,15 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2023 Gee W.
+ *  Copyright (C) 2020-2023 Gee Wang
  *
- *  This program is free software: you can redistribute it and/or modify
+ *  This file is part of My Minesweeper.
+ *
+ *  My Minesweeper is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
+ *  My Minesweeper is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
@@ -28,7 +30,6 @@
 
 #pragma once
 
-#include "stdincludes.h"
 #include "gamecore.h"
 #include "basicUI.h"
 
@@ -36,55 +37,54 @@
 
 /* IO defines and game init defines */
 
-#define DEF_WND_LEFT	128
-#define DEF_WND_TOP		128
-#define DEF_WND_WIDTH	750
-#define DEF_WND_HEIGHT	700
-#define DEF_CONFNAME	"MyMinesweeper.ini"
-#define DEF_CONFPATHENV	"LOCALAPPDATA"
-#define CONFBUFFLEN		5
-#define MAX_APPPATH		480
-#define MAX_CONFPATH	MAX_APPPATH
+#define DEF_WND_LEFT    128
+#define DEF_WND_TOP     128
+#define CONF_FNAME      "MyMinesweeper.ini"
+#define CONF_PATHENV    "LOCALAPPDATA"
+#define MAX_APPPATH     480
+#define MAX_CONFPATH    MAX_APPPATH
 
-//key words in config file
-#define INIT_ANAME		"Init"
-#define INIT_XPOS		"xpos"
-#define INIT_YPOS		"ypos"
-#define INIT_MODE		"mode"
-#define INIT_WIDTH		"width"
-#define INIT_HEIGHT		"height"
-#define INIT_MINES		"mines"
-#define INIT_MARK		"mark"
-#define SCORE_ANAME		"Record"
-#define SCORE_JTIME		"junior_time"
-#define SCORE_MTIME		"middle_time"
-#define SCORE_STIME		"senior_time"
-#define SCORE_JNAME		"junior_name"
-#define SCORE_MNAME		"middle_name"
-#define SCORE_SNAME		"senior_name"
-//end key words
+//keywords in config file
+#define CKEY_INIT_ANAME      "Init"
+#define CKEY_INIT_XPOS       "xpos"
+#define CKEY_INIT_YPOS       "ypos"
+#define CKEY_INIT_MODE       "mode"
+#define CKEY_INIT_WIDTH      "width"
+#define CKEY_INIT_HEIGHT     "height"
+#define CKEY_INIT_MINES      "mines"
+#define CKEY_INIT_MARK       "mark"
+#define CKEY_SCORE_ANAME     "Record"
+#define CKEY_SCORE_JTIME     "junior_time"
+#define CKEY_SCORE_MTIME     "middle_time"
+#define CKEY_SCORE_STIME     "senior_time"
+#define CKEY_SCORE_JNAME     "junior_name"
+#define CKEY_SCORE_MNAME     "middle_name"
+#define CKEY_SCORE_SNAME     "senior_name"
+//end keywords
 
 /* property related defines */
 
 //lang-codepage is 000004b0 (Language Neutral)
-#define PNQUERYSTR	"\\StringFileInfo\\000004b0\\ProductName"
-#define PVQUERYSTR	"\\StringFileInfo\\000004b0\\ProductVersion"
-#define LCQUERYSTR	"\\StringFileInfo\\000004b0\\LegalCopyright"
-#define LICENSEURL	"https://www.gnu.org/licenses/gpl-3.0.html"
-#define LICENSESTR	\
+#define PNQUERYSTR      "\\StringFileInfo\\000004b0\\ProductName"
+#define PVQUERYSTR      "\\StringFileInfo\\000004b0\\ProductVersion"
+#define LCQUERYSTR      "\\StringFileInfo\\000004b0\\LegalCopyright"
+#define MAX_PROPSTR     320
+#define MAX_LICSTR      35840
+#define LICRESTYPE      "TEXT"
+#define LICNOTESTR      \
 "This program comes with ABSOLUTELY NO WARRANTY.\n\
 This is free software, and you are welcome to redistribute it under certain conditions.\n\n\
-Click \"License\" to consult the GNU General Public License version 3 (or any later) for details."
+Click \"License\" to consult the GNU General Public License version 3 for more details."
 
 
 
 //Bitmap handles structure, these bitmaps are used to draw ResetButton.
-typedef struct ResetButtonHBitmaps {
-	HBITMAP normal;		//default bitmap
-	HBITMAP click;		//show when click on map
-	HBITMAP fail;		//show when game fail
-	HBITMAP success;	//show when game success
-	HBITMAP current;	//remember current using bitmap
+typedef struct _ResetButtonHBitmaps {
+    HBITMAP normal;     //default bitmap
+    HBITMAP click;      //show when click on map
+    HBITMAP fail;       //show when game fail
+    HBITMAP success;    //show when game success
+    HBITMAP current;    //remember current using bitmap
 } RBHBM, * PRBHBM;
 
 
@@ -162,7 +162,11 @@ void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, i
 void showClickedMapUnits(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, Neighbor indexes);
 
 
-/* save(config) file management */
+/* config(save) file management */
+
+//Make a full path to the config file.
+//Make sure the buffer has enough space.
+void getConfPath(LPTSTR Path, DWORD size_ch);
 
 //Load infomation from a config file, including GameInfo, ScoreInfo and a POINT struct
 //which contains left-top position where the window was last time.
@@ -174,4 +178,7 @@ void saveGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos);
 
 
 /* get program version information */
-void getProperty(LPTSTR property, size_t size_in_ch);
+void loadProperty(LPTSTR prop, DWORD size_ch);
+
+/* load license resource and convert */
+void loadLicense(LPTSTR lic, DWORD size_ch);
