@@ -1,13 +1,15 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2023 Gee W.
+ *  Copyright (C) 2020-2023 Gee Wang
  *
- *  This program is free software: you can redistribute it and/or modify
+ *  This file is part of My Minesweeper.
+ *
+ *  My Minesweeper is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
+ *  My Minesweeper is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
@@ -29,7 +31,7 @@
 
 #pragma once
 
-#include "stdincludes.h"
+#include "stdafx.h"
 
 
 /*         Main Client Area
@@ -45,14 +47,14 @@
  * |                             | |
  * +-----------------------------+---
  * |------------width------------|
- *
- * the Main Client Area is composed of Info Part and MapArea Part
  * 
- * NOTE: these two Parts have edges of their own
- * NOTE: there are edges around Main Client Area and between these two Parts
- *
- * 'Info_height' is static
- * 'MapArea_height' and 'width' are flexible
+ * The Main Client Area is composed of Info Part and MapArea Part.
+ * 
+ * NOTE: These two Parts have edges of their own.
+ * NOTE: There are edges around Main Client Area and between these two Parts.
+ * 
+ * 'Info_height' is static.
+ * 'MapArea_height' and 'width' are flexible.
  */
 
 /*                    Info
@@ -64,30 +66,30 @@
  * +----------------------------------------+---
  * |--|------|------|------|------|------|--|
  *  A    B      C      D      E      F    G
- * A:left_dist	B:inums_width	C:mid_dist	D:reset_button_size
- * E:mid_dist	F:inums_width	G:right_dist
- *
- * the Info Part contains Mine Part, Time Part and ResetButton
+ * A:left_dist  B:inums_width   C:mid_dist  D:reset_button_size
+ * E:mid_dist   F:inums_width   G:right_dist
+ * 
+ * The Info Part contains Mine Part, Time Part and ResetButton.
  * 
  * static: top_dist, bottom_dist, nums_height, left_dist, right_dist,
  *         nums_width, reset_button_size
  * flexible: mid_dist
  * 
- * NOTE: ResetButton is NOT a "BUTTON" Window
- * NOTE: ResetButton is a Square, Mine Part and Time Part are Rectangles
- * NOTE: the 'reset_button_size' is different from 'inums_height' and 'inums_width',
- *       i.e. the 'bottom_dist' can be varied, but the 'top_dist' is static
+ * NOTE: ResetButton is NOT a "BUTTON" Window.
+ * NOTE: ResetButton is a Square, Mine Part and Time Part are Rectangles.
+ * NOTE: 'reset_button_size' is different from 'inums_height' and 'inums_width',
+ *       i.e. 'bottom_dist' can be varied, but 'top_dist' is constant.
  * NOTE: Mine Part and Time Part have edges of their own,
- *       but ResetButton have no edges
- *
+ *       but ResetButton have no edges.
+ * 
  * Mine Part, Time Part and ResetButton have static size, and ResetButton is
  * always center aligned and Mine Part/Time Part is always close to the edge,
  * but Info Part has flexible width, so that it's necessary to recalculate
- * the position when GameMode is changed
+ * the position when GameMode is changed.
  * 
- * PS: although we say that ResetButton has NO edge, we still regard it as
+ * PS: Although we say that ResetButton has NO edge, we still regard it as a
  *     edge+inner structure because it also has a 3D outlook(button like),
- *     so as the MapUnit in MapArea Part
+ *     so as the MapUnit in MapArea Part.
  */
 
 /*     Mine            Time
@@ -97,17 +99,36 @@
  * |   |   |   |   |   |   |   |
  * +---+---+---+   +---+---+---+
  * 
- * N: a one-digit number from 0 to 9
+ * N: A one-digit number from 0 to 9.
  * 
- * the Mine Part and Time Part are both called Num Part, which means
- * they have same UI structure, and the Num Part is composed of
- * three same one-digit number, which is called InfoNum
+ * The Mine Part and Time Part are both called Num Part, which means
+ * they have same UI structure; and the Num Part is composed of
+ * three same one-digit number, which is called InfoNum.
  * 
- * for convenient, we call the combination of InfoNum as INums, and relevantly,
- * we call the INums in Mine Part and Time Part as MNums and TNums, respectively
+ * For convenience, we call the combination of InfoNum as INums; and relevantly,
+ * we call the INums in Mine Part and Time Part as MNums and TNums, respectively.
  * 
- * NOTE: InfoNum has static size so that INums has static size
- * NOTE: the INums has no edges
+ * NOTE: InfoNum has static size so that INums has static size.
+ * NOTE: INums has no edges.
+ */
+
+/*                MapArea
+ * +-----------------------------------+---
+ * | U | U | U |      ... ...      | U |mapunit_size
+ * |---+---+---+ ----------------- +---|---
+ * | U |  ... ...                      |
+ * |---+ ----------------------------- |
+ * |  ... ...                          |
+ * +-----------------------------------+
+ * 
+ * U: MapUnit
+ * 
+ * The MapArea Part is composed of MapUnits, and each MapUnit has a fixed size.
+ * The MapArea Part contains MxN MapUnits in M rows and N columns, where M and
+ * N are defined by current GameMode, which means that the size of MapArea Part
+ * varies while the GameMode varies.
+ * 
+ * PS: MapUnit also has a 3D outlook(button like) but it has NO edges.
  */
 
 /*       LEFT           RIGHT
@@ -120,10 +141,10 @@
  * BOTTOM->+--------------+
  *             Part/Area
  * 
- * a Part have edges, and can have another Part in its Content
- * there are edges between Main Client Area and two main Parts
+ * A Part usually have edges, and can have another Part inside its Content.
+ * There are edges around Main Client Area and two main Parts.
  * 
- * NOTE: the child Part may not fully fill the parent Part's Content
+ * NOTE: The child Part may not totally fill up the parent Part's Content.
  */
 
 /*         px
@@ -137,142 +158,142 @@
  *      |<w>|
  *              Map
  * 
- * 'px' and 'py' means positon in pixel on window
- * 'x' and 'y' means position in unit on GameMap
+ * 'px' and 'py' means positon in pixel on window.
+ * 'x' and 'y' means position in unit on GameMap.
  * px = x * w, py = y * h, ppos = (px, py)
  * 
- * NOTE: 'px' and 'py' indicate the left-top of one MapUnit
+ * NOTE: 'px' and 'py' indicate the left-top of a MapUnit.
  */
 
 
-#define MU_SIZE			24
-#define AREA_EDGE		6
-#define PART_EDGE		2
-#define COLOR_DEFBG		RGB(240,240,240)
-#define COLOR_DEFDARK	RGB(192,192,192)
-#define COLOR_DEFLIGHT	RGB(255,255,255)
-#define COLOR_DEFSEMIL	RGB(227,227,227)
-#define COLOR_DEFSHADOW	RGB(128,128,128)
-#define COLOR_DEFSEMIS	RGB(160,160,160)
+#define MU_SIZE         24
+#define AREA_EDGE       6
+#define PART_EDGE       2
+#define COLOR_DEFBG     RGB(240,240,240)
+#define COLOR_DEFDARK   RGB(192,192,192)
+#define COLOR_DEFLIGHT  RGB(255,255,255)
+#define COLOR_DEFSEMIL  RGB(227,227,227)
+#define COLOR_DEFSHADOW RGB(128,128,128)
+#define COLOR_DEFSEMIS  RGB(160,160,160)
 
-#define MAPUNITS_WIDTH(w)	((w) * MU_SIZE)
-#define MAPUNITS_HEIGHT(h)	((h) * MU_SIZE)
+#define MAPUNITS_WIDTH(w)   ((w) * MU_SIZE)
+#define MAPUNITS_HEIGHT(h)  ((h) * MU_SIZE)
 
 //Info Part
-#define INFO_WIDTH(w)	(PART_EDGE + MAPUNITS_WIDTH(w) + PART_EDGE)
-#define INFO_HEIGHT		(PART_EDGE + 36 + PART_EDGE)
-#define INFO_LEFT		AREA_EDGE
-#define INFO_TOP		AREA_EDGE
+#define INFO_WIDTH(w)   (PART_EDGE + MAPUNITS_WIDTH(w) + PART_EDGE)
+#define INFO_HEIGHT     (PART_EDGE + 36 + PART_EDGE)
+#define INFO_LEFT       AREA_EDGE
+#define INFO_TOP        AREA_EDGE
 
-#define COLOR_INFO		COLOR_DEFBG
-#define COLOR_INFOL		COLOR_DEFLIGHT
-#define COLOR_INFOS		COLOR_DEFSHADOW
+#define COLOR_INFO      COLOR_DEFBG
+#define COLOR_INFOL     COLOR_DEFLIGHT
+#define COLOR_INFOS     COLOR_DEFSHADOW
 //end Info Part
 
 //Mine Part, Time Part and ResetButton
-#define LEFT_DIST		(PART_EDGE + 6)
-#define RIGHT_DIST		LEFT_DIST
-#define INFONUM_WIDTH	15
-#define INFONUM_HEIGHT	27
-#define INUMS_WIDTH		(INFONUM_WIDTH * 3)
-#define INUMS_HEIGHT	INFONUM_HEIGHT
-#define INUMS_EDGE		1
-#define NUM_WIDTH		(INUMS_EDGE + INUMS_WIDTH + INUMS_EDGE)
-#define NUM_HEIGHT		(INUMS_EDGE + INUMS_HEIGHT + INUMS_EDGE)
+#define LEFT_DIST       (PART_EDGE + 6)
+#define RIGHT_DIST      LEFT_DIST
+#define INFONUM_WIDTH   15
+#define INFONUM_HEIGHT  27
+#define INUMS_WIDTH     (INFONUM_WIDTH * 3)
+#define INUMS_HEIGHT    INFONUM_HEIGHT
+#define INUMS_EDGE      1
+#define NUM_WIDTH       (INUMS_EDGE + INUMS_WIDTH + INUMS_EDGE)
+#define NUM_HEIGHT      (INUMS_EDGE + INUMS_HEIGHT + INUMS_EDGE)
 
-#define COLOR_INFONUMBG	RGB(0,0,0)
-#define COLOR_INFONUMBT	RGB(255,0,0)
-#define COLOR_INFONUMDK	RGB(128,0,0)
-#define COLOR_NUM		COLOR_DEFBG
-#define COLOR_NUML		COLOR_DEFLIGHT
-#define COLOR_NUMS		COLOR_DEFSHADOW
+#define COLOR_INFONUMBG RGB(0,0,0)
+#define COLOR_INFONUMBT RGB(255,0,0)
+#define COLOR_INFONUMDK RGB(128,0,0)
+#define COLOR_NUM       COLOR_DEFBG
+#define COLOR_NUML      COLOR_DEFLIGHT
+#define COLOR_NUMS      COLOR_DEFSHADOW
 
-#define MINE_WIDTH		NUM_WIDTH
-#define MINE_HEIGHT		NUM_HEIGHT
-#define MINE_LEFT		(INFO_LEFT + LEFT_DIST)
-#define MINE_TOP		(INFO_TOP + PART_EDGE + 3)
-#define MNUMS_WIDTH		INUMS_WIDTH
-#define MNUMS_HEIGHT	INUMS_HEIGHT
-#define MNUMS_LEFT		(MINE_LEFT + INUMS_EDGE)
-#define MNUMS_TOP		(MINE_TOP + INUMS_EDGE)
+#define MINE_WIDTH      NUM_WIDTH
+#define MINE_HEIGHT     NUM_HEIGHT
+#define MINE_LEFT       (INFO_LEFT + LEFT_DIST)
+#define MINE_TOP        (INFO_TOP + PART_EDGE + 3)
+#define MNUMS_WIDTH     INUMS_WIDTH
+#define MNUMS_HEIGHT    INUMS_HEIGHT
+#define MNUMS_LEFT      (MINE_LEFT + INUMS_EDGE)
+#define MNUMS_TOP       (MINE_TOP + INUMS_EDGE)
 
-#define COLOR_MINE		COLOR_NUM
-#define COLOR_MINEL		COLOR_NUML
-#define COLOR_MINES		COLOR_NUMS
+#define COLOR_MINE      COLOR_NUM
+#define COLOR_MINEL     COLOR_NUML
+#define COLOR_MINES     COLOR_NUMS
 
-#define TIME_WIDTH		NUM_WIDTH
-#define TIME_HEIGHT		NUM_HEIGHT
-#define TIME_LEFT(w)	(INFO_LEFT + INFO_WIDTH(w) - RIGHT_DIST - TIME_WIDTH)
-#define TIME_TOP		MINE_TOP
-#define TNUMS_WIDTH		INUMS_WIDTH
-#define TNUMS_HEIGHT	INUMS_HEIGHT
-#define TNUMS_LEFT(w)	(TIME_LEFT(w) + INUMS_EDGE)
-#define TNUMS_TOP		(TIME_TOP + INUMS_EDGE)
+#define TIME_WIDTH      NUM_WIDTH
+#define TIME_HEIGHT     NUM_HEIGHT
+#define TIME_LEFT(w)    (INFO_LEFT + INFO_WIDTH(w) - RIGHT_DIST - TIME_WIDTH)
+#define TIME_TOP        MINE_TOP
+#define TNUMS_WIDTH     INUMS_WIDTH
+#define TNUMS_HEIGHT    INUMS_HEIGHT
+#define TNUMS_LEFT(w)   (TIME_LEFT(w) + INUMS_EDGE)
+#define TNUMS_TOP       (TIME_TOP + INUMS_EDGE)
 
-#define COLOR_TIME		COLOR_NUM
-#define COLOR_TIMEL		COLOR_NUML
-#define COLOR_TIMES		COLOR_NUMS
+#define COLOR_TIME      COLOR_NUM
+#define COLOR_TIMEL     COLOR_NUML
+#define COLOR_TIMES     COLOR_NUMS
 
-#define RB_SIZE			32
-#define RB_LEFT(w)		(INFO_LEFT + (INFO_WIDTH(w) - RB_SIZE) / 2)
-#define RB_TOP			(INFO_TOP + PART_EDGE + 2)
-#define BMP_SIZE		28
-#define BMP_LEFT(w)		(RB_LEFT(w) + 2)
-#define BMP_TOP			(RB_TOP + 2)
+#define RB_SIZE         32
+#define RB_LEFT(w)      (INFO_LEFT + (INFO_WIDTH(w) - RB_SIZE) / 2)
+#define RB_TOP          (INFO_TOP + PART_EDGE + 2)
+#define BMP_SIZE        28
+#define BMP_LEFT(w)     (RB_LEFT(w) + 2)
+#define BMP_TOP         (RB_TOP + 2)
 
-#define COLOR_RB		COLOR_DEFBG
-#define COLOR_RBL		COLOR_DEFLIGHT
-#define COLOR_RBS		COLOR_DEFSHADOW
-#define COLOR_RBSL		COLOR_DEFSEMIL
-#define COLOR_RBSS		COLOR_DEFSEMIS
+#define COLOR_RB        COLOR_DEFBG
+#define COLOR_RBL       COLOR_DEFLIGHT
+#define COLOR_RBS       COLOR_DEFSHADOW
+#define COLOR_RBSL      COLOR_DEFSEMIL
+#define COLOR_RBSS      COLOR_DEFSEMIS
 //end Mine Part, Time Part and ResetButton
 
 //MapArea
-#define MAPAREA_WIDTH(w)	INFO_WIDTH(w)
-#define MAPAREA_HEIGHT(h)	(PART_EDGE + MAPUNITS_HEIGHT(h) + PART_EDGE)
-#define MAPAREA_LEFT		AREA_EDGE
-#define MAPAREA_TOP			(AREA_EDGE + INFO_HEIGHT + AREA_EDGE)
+#define MAPAREA_WIDTH(w)    INFO_WIDTH(w)
+#define MAPAREA_HEIGHT(h)   (PART_EDGE + MAPUNITS_HEIGHT(h) + PART_EDGE)
+#define MAPAREA_LEFT        AREA_EDGE
+#define MAPAREA_TOP         (AREA_EDGE + INFO_HEIGHT + AREA_EDGE)
 
-#define MAP_WIDTH(w)	MAPUNITS_WIDTH(w)
-#define MAP_HEIGHT(h)	MAPUNITS_HEIGHT(h)
-#define MAP_LEFT		(MAPAREA_LEFT + PART_EDGE)
-#define MAP_TOP			(MAPAREA_TOP + PART_EDGE)
+#define MAP_WIDTH(w)    MAPUNITS_WIDTH(w)
+#define MAP_HEIGHT(h)   MAPUNITS_HEIGHT(h)
+#define MAP_LEFT        (MAPAREA_LEFT + PART_EDGE)
+#define MAP_TOP         (MAPAREA_TOP + PART_EDGE)
 
-#define COLOR_MAPAREA	COLOR_DEFBG
-#define COLOR_MAPAREAL	COLOR_DEFLIGHT
-#define COLOR_MAPAREAS	COLOR_DEFSHADOW
+#define COLOR_MAPAREA   COLOR_DEFBG
+#define COLOR_MAPAREAL  COLOR_DEFLIGHT
+#define COLOR_MAPAREAS  COLOR_DEFSHADOW
 
-#define COLOR_MUCOVER	COLOR_DEFDARK
-#define COLOR_MUCOVERL	COLOR_DEFLIGHT
-#define COLOR_MUCOVERS	COLOR_DEFSHADOW
-#define COLOR_MUUNCOV	COLOR_DEFBG
-#define COLOR_MUUNCOVE	COLOR_DEFSHADOW
-#define COLOR_MUUNCOVB	RGB(237,28,36)
-#define COLOR_MUMINE	RGB(0,0,0)
-#define COLOR_MUMINEL	RGB(255,255,255)
-#define COLOR_MUFLAGF	RGB(255,0,0)
-#define COLOR_MUFLAGB	RGB(0,0,0)
-#define COLOR_MUMARK	RGB(0,0,0)
-#define COLOR_MUCROSS	RGB(255,0,0)
-#define COLOR_MUNUM1	RGB(0,0,255)
-#define COLOR_MUNUM2	RGB(0,128,0)
-#define COLOR_MUNUM3	RGB(255,0,0)
-#define COLOR_MUNUM4	RGB(0,0,128)
-#define COLOR_MUNUM5	RGB(128,0,0)
-#define COLOR_MUNUM6	RGB(0,128,128)
-#define COLOR_MUNUM7	RGB(0,0,0)
-#define COLOR_MUNUM8	RGB(128,128,128)
+#define COLOR_MUCOVER   COLOR_DEFDARK
+#define COLOR_MUCOVERL  COLOR_DEFLIGHT
+#define COLOR_MUCOVERS  COLOR_DEFSHADOW
+#define COLOR_MUUNCOV   COLOR_DEFBG
+#define COLOR_MUUNCOVE  COLOR_DEFSHADOW
+#define COLOR_MUUNCOVB  RGB(237,28,36)
+#define COLOR_MUMINE    RGB(0,0,0)
+#define COLOR_MUMINEL   RGB(255,255,255)
+#define COLOR_MUFLAGF   RGB(255,0,0)
+#define COLOR_MUFLAGB   RGB(0,0,0)
+#define COLOR_MUMARK    RGB(0,0,0)
+#define COLOR_MUCROSS   RGB(255,0,0)
+#define COLOR_MUNUM1    RGB(0,0,255)
+#define COLOR_MUNUM2    RGB(0,128,0)
+#define COLOR_MUNUM3    RGB(255,0,0)
+#define COLOR_MUNUM4    RGB(0,0,128)
+#define COLOR_MUNUM5    RGB(128,0,0)
+#define COLOR_MUNUM6    RGB(0,128,128)
+#define COLOR_MUNUM7    RGB(0,0,0)
+#define COLOR_MUNUM8    RGB(128,128,128)
 //end MapArea
 
 //Client Area
-#define CLIENT_WIDTH(w)		(AREA_EDGE + INFO_WIDTH(w) + AREA_EDGE)
-#define CLIENT_HEIGHT(h)	(AREA_EDGE + INFO_HEIGHT + AREA_EDGE + MAPAREA_HEIGHT(h) + AREA_EDGE)
-#define CLIENT_LEFT			0
-#define CLIENT_TOP			0
+#define CLIENT_WIDTH(w)     (AREA_EDGE + INFO_WIDTH(w) + AREA_EDGE)
+#define CLIENT_HEIGHT(h)    (AREA_EDGE + INFO_HEIGHT + AREA_EDGE + MAPAREA_HEIGHT(h) + AREA_EDGE)
+#define CLIENT_LEFT         0
+#define CLIENT_TOP          0
 
-#define COLOR_CLIENT	COLOR_DEFBG
-#define COLOR_CLIENTL	COLOR_DEFLIGHT
-#define COLOR_CLIENTS	COLOR_DEFSHADOW
+#define COLOR_CLIENT    COLOR_DEFBG
+#define COLOR_CLIENTL   COLOR_DEFLIGHT
+#define COLOR_CLIENTS   COLOR_DEFSHADOW
 //end Client Area
 
 
@@ -293,51 +314,51 @@ const bool InfoNumBG[INFONUM_WIDTH][INFONUM_HEIGHT];
 //Draw 2 pixel edge concave background,
 //exchange 'light' and 'shadow' to draw a convex background.
 static void drawthickedgebg(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ int width,
-	_In_ int height,
-	_In_ COLORREF inner,
-	_In_ COLORREF light,
-	_In_ COLORREF shadow
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int width,
+    _In_ int height,
+    _In_ COLORREF inner,
+    _In_ COLORREF light,
+    _In_ COLORREF shadow
 );
 //Draw 2 pixel edge concave background with 2 layers of color,
 //exchange colors to draw a convex background.
 static void drawdualedgebg(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ int width,
-	_In_ int height,
-	_In_ COLORREF inner,
-	_In_ COLORREF light,
-	_In_ COLORREF semilight,
-	_In_ COLORREF shadow,
-	_In_ COLORREF semishadow
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int width,
+    _In_ int height,
+    _In_ COLORREF inner,
+    _In_ COLORREF light,
+    _In_ COLORREF semilight,
+    _In_ COLORREF shadow,
+    _In_ COLORREF semishadow
 );
 //Draw 1 pixel edge concave background,
 //exchange 'light' and 'shadow' to draw a convex background.
 static void drawthinedgebg(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ int width,
-	_In_ int height,
-	_In_ COLORREF inner,
-	_In_ COLORREF light,
-	_In_ COLORREF shadow
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int width,
+    _In_ int height,
+    _In_ COLORREF inner,
+    _In_ COLORREF light,
+    _In_ COLORREF shadow
 );
 //Draw 1 pixel half edge 2D like background,
 //draw left edge and top edge only.
 static void drawhalfedgebg(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ int width,
-	_In_ int height,
-	_In_ COLORREF inner,
-	_In_ COLORREF edge
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int width,
+    _In_ int height,
+    _In_ COLORREF inner,
+    _In_ COLORREF edge
 );
 */
 
@@ -413,39 +434,39 @@ int y2py(int y);
 
 //w:CLIENT_WIDTH, h:CLIENT_HEIGHT
 void drawDCClientBg(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ int map_width,
-	_In_ int map_height
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int map_width,
+    _In_ int map_height
 );
 
 //w:INFO_WIDTH, h:INFO_HEIGHT
 void drawDCInfoBg(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ int map_width
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int map_width
 );
 
 //w:MAPAREA_WIDTH, h:MAPAREA_HEIGHT
 void drawDCMapAreaBg(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ int map_width,
-	_In_ int map_height
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int map_width,
+    _In_ int map_height
 );
 
 //w:NUM_WIDTH, h:NUM_HEIGHT
 void drawDCNumBg(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top
 );
 
 
-/* These functions draw specfic numbers inside Num Part
+/* these functions draw specfic numbers inside Num Part
  * with predefined color and size, check relative macros.
  */
 
@@ -454,10 +475,10 @@ void drawDCNumBg(
 //(-100 < num < 1000)
 //w:INUMS_WIDTH, h:INUMS_HEIGHT
 void drawDCINums(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ int num
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int num
 );
 
 //Draw a single InfoNum directly on DC.
@@ -466,10 +487,10 @@ void drawDCINums(
 //otherwise, it draws nothing.
 //w:INFONUM_WIDTH, h:INFONUM_HEIGHT
 void drawDCInfoNum(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ int num
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int num
 );
 
 
@@ -480,32 +501,32 @@ void drawDCInfoNum(
 //Draw ResetButton background directly on DC.
 //w:RB_SIZE, h:RB_SIZE
 void drawDCResetButtonBg(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ bool clicked
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ bool clicked
 );
 
 //Draw a bitmap on ResetButton directly.
 //it will do nothing if the hbm is NULL
 //w:BMP_SIZE, h:BMP_SIZE
 void drawDCResetButtonBmp(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ HBITMAP hbm,
-	_In_ bool clicked
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ HBITMAP hbm,
+    _In_ bool clicked
 );
 
 //Draw a ResetButton with specified bitmap.
 //Use NULL if no bitmap to be drawn.
 //w:RB_SIZE, h:RB_SIZE
 void drawDCResetButton(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ HBITMAP hbm,
-	_In_ bool clicked
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ HBITMAP hbm,
+    _In_ bool clicked
 );
 
 
@@ -515,52 +536,52 @@ void drawDCResetButton(
 
 //w:MU_SIZE, h:MU_SIZE
 void drawDCMUCover(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top
 );
 
 //w:MU_SIZE, h:MU_SIZE
 void drawDCMUUncov(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top
 );
 
 //w:MU_SIZE, h:MU_SIZE
 void drawDCMUFlag(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top
 );
 
 //w:MU_SIZE, h:MU_SIZE
 void drawDCMUMark(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ bool clicked
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ bool clicked
 );
 
 //w:MU_SIZE, h:MU_SIZE
 void drawDCMUMine(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ bool bomb
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ bool bomb
 );
 
 //w:MU_SIZE, h:MU_SIZE
 void drawDCMUWrong(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top
 );
 
 //w:MU_SIZE, h:MU_SIZE
 void drawDCMUNum(
-	_In_ HDC hdestdc,
-	_In_ int left,
-	_In_ int top,
-	_In_ int num
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int num
 );

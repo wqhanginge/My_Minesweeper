@@ -1,10 +1,18 @@
 # My_Minesweeper
 
-This repository is a rebuild of the classical game `winmine.exe` with a higher resolution to satisfy a 1080p screen. The rebuild has a similar operation logic to the original game. This program is **NOT** cross-platform supported and can **ONLY** be run on **Windows**.
+This repository is a **rebuild** of the classical minesweeper game `winmine.exe` with a higher resolution to satisfy a 1080p screen. This program runs on **Windows** and does **NOT** support cross-platform.
 
-This repository is a project of **VS**, and the solution file `My_Minesweeper.sln` can be opened in **Visual Studio 2022** directly.
+This repository is a project of **Visual Studio 2022**. To open this project in **VS**, just double click on the solution file `My_Minesweeper.sln`.
 
 Uses emojis from Baidu Tieba.
+
+![example](./example.png)
+
+## Features
+
+- Larger window size for 1080p screen.
+- Same UI design and operations as `winmine.exe`.
+- Support **Windows 10** by default.
 
 ## Directory Structure
 

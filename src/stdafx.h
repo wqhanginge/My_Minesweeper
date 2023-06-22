@@ -1,13 +1,15 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2023 Gee W.
+ *  Copyright (C) 2020-2023 Gee Wang
  *
- *  This program is free software: you can redistribute it and/or modify
+ *  This file is part of My Minesweeper.
+ *
+ *  My Minesweeper is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
+ *  My Minesweeper is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
@@ -16,22 +18,25 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \*****************************************************************************/
 /*****************************************************************************\
- * stdincludes.h
+ * stdafx.h
  *****************************************************************************
- * This file is a overall include of std-libs used in program,
- * and global type and variable defines as well.
+ * This file is a precompile header, including common used std libs.
 \*****************************************************************************/
 
 
 #pragma once
 
-//use unicode in program
+//Use unicode in program.
 #ifndef UNICODE
 #define UNICODE
 #endif
-//disable uncommonly used APIs to reduce program size
+//Disable uncommonly used APIs to reduce program size.
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
+//Allow only character count functions.
+#ifndef STRSAFE_NO_CB_FUNCTIONS
+#define STRSAFE_NO_CB_FUNCTIONS
 #endif
 //This is needed to workaround C preprocessor errors when using legacy versions of the Windows SDK. (dmex)
 #ifndef MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS
@@ -41,7 +46,7 @@
 #include <Windows.h>
 #include <stdlib.h>
 #include <tchar.h>
-#include <time.h>
 #include <stdbool.h>
+#include <strsafe.h>
 #include "../res/resource.h"
 #pragma comment(lib, "Version.lib")
