@@ -1,9 +1,23 @@
 # My_Minesweeper
-Win32 minesweeper
 
-This program is trying to rebuild the classical winmine.exe, which is a minesweeper game on Windows XP.  
-This program can ONLY run on Windows platform and does NOT support other operating systems.  
-This program uses emojis from Baidu Tieba.  
-The release version of this program is compiled by VS 2022 on Windows 10 by default.  
+This repository is a rebuild of the classical game `winmine.exe` with a higher resolution to satisfy a 1080p screen and a similar operation logic to the original game. It is **NOT** cross-platform supported and can **ONLY** be run on **Windows**.
 
-Just for entertainment.  
+This repository is a project of **VS**, and the project file `My_Minesweeper.sln` can be opened in **Visual Studio 2022** directly.
+
+Uses emojis from Baidu Tieba.
+
+## Directory Structure
+
+- `res/`:
+    Contains resources that are used in the program.
+
+- `src/`:
+    Contains source codes of the program.
+
+- `VSproject/`:
+    Contains project files of **VS**.
+
+## License
+
+Copyright (C) 2020 Gee Wang.  
+Licensed under the [GNU GPL](./LICENSE) license.
