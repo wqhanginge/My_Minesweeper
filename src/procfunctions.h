@@ -15,31 +15,37 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \*****************************************************************************/
+/*****************************************************************************\
+ * procfunctions.h
+ *****************************************************************************
+ * this file contains Win32 Window Proc Functions and definations for Window
+ * and Message Queue
+ * each function is aim to handle a particular Window Message or is a Child
+ * Window's Procedure Function
+ * 
+ * NOTE:most functions have no arg check, use with care
+\*****************************************************************************/
+
 
 #pragma once
-
-/* procfunctions.h
- * this file contains Win32 Window Proc Functions
- * NOTE:most functions have no arg check, use with care
- */
 
 #include "stdincludes.h"
 #include "encapsulations.h"
 
 
-/* Game private window messages */
+/* Game's private window messages */
 
 #define WMAPP_GAMERESET		(WM_APP + 0)		//send when game needs reset
 #define WMAPP_GAMESUCCESS	(WM_APP + 1)		//send when game is succeed
 #define WMAPP_GAMEFAIL		(WM_APP + 2)		//send when game is failed
-#define WMAPP_GAMESTART		(WM_APP + 3)		//send when game needs start, use lparam as start index on GameMap
+#define WMAPP_GAMESTART		(WM_APP + 3)		//send when game is going to start, use lparam as start index on GameMap
 
  /* send when game mode is changed,
   * use wparam as new GameMode,
   * use lparam as a combination of new width, height and mines
-  * ignore lparam if new GameMode is a standard Mode
+  * ignore lparam if new GameMode is a standard Mode(not CUSTOM)
   * call MAKECHGLAPRAM to create a lparam
-  * call GETCHG-family to unpack a lparam
+  * call GETCHG*** family to unpack a lparam
   */
 #define WMAPP_GAMEMODECHG	(WM_APP + 4)
 
@@ -55,21 +61,21 @@
 /* Dialog defines */
 
 //Custom Dialog
-#define CUSTOM_EDIT_LEN	8
+#define CUSTOM_EDIT_LEN		8
 //end Custom Dialog
 
 //GetName Dialog
-#define NAME_EDIT_LEN	SCORE_NAME_LEN
+#define NAME_EDIT_LEN		SCORE_NAME_LEN
 //end GetName Dialog
 
 //Record Dialog
-#define TIME_STRLEN		10
-#define DEF_TIMEUNIT_EN	"Sec"
-#define DEF_TIMEUNIT_CH	"√Î"
+#define TIME_STRBUFFERLEN	10
+#define DEF_TIMEUNIT_EN		"Sec"
+#define DEF_TIMEUNIT_CH		"√Î"
 //end Record Dialog
 
 //About Dialog
-#define ABOUT_INFO_LEN	500
+#define ABOUT_INFO_LEN		500
 //end About Dialog
 
 
@@ -82,15 +88,11 @@
 
 
 
-extern HINSTANCE hInst;	//program instance handle
-extern HWND hWnd;		//main window handle
-extern HMENU hMenu;		//main menu handle
-
 /* following arguments are private, they can not be seen external */
 /*
-TCHAR save_path[MAX_PATH];	//save file path
-bool last_dbclick;		//if last mouse event was double click
-bool rb_capture;		//indicate if ResetButton get the capture
+TCHAR conf_path[MAX_PATH];	//conf file path
+bool last_dbclick;			//indicate if last mouse event was a double click
+bool rb_capture;			//indicate if ResetButton get the capture
 */
 
 
