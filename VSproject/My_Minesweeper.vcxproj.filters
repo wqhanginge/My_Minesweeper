@@ -18,26 +18,18 @@
     <ClInclude Include="..\res\resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\minesweeper_defines.h">
+    <ClInclude Include="..\src\defines.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\minesweeper_game.h">
+    <ClInclude Include="..\src\gamecore.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\minesweeper_support.h">
+    <ClInclude Include="..\src\interface.h">
       <Filter>头文件</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\src\minesweeper_game.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\minesweeper_main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\minesweeper_support.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
+    <ClInclude Include="..\src\userinterface.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\res\Click.bmp">
@@ -46,97 +38,33 @@
     <Image Include="..\res\Fail.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\res\num0.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\num1.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\num2.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\num3.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\num4.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\num5.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\num6.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\num7.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\num8.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\num9.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\numminus.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="..\res\ResetButton.bmp">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="..\res\Success.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\res\unit.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unit1.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unit2.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unit3.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unit4.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unit5.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unit6.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unit7.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unit8.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unitbomb.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unitflag.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unitmark.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unitmarkdown.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unitmine.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unitnull.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\unitwrong.bmp">
+    <Image Include="..\res\Icon.ico">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\res\Minesweeper_Resource.rc">
+    <ResourceCompile Include="..\res\Resource.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\gamecore.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\interface.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\userinterface.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
