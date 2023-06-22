@@ -292,6 +292,6 @@ typedef unsigned dword;
 #define GAMETIMERELAPSE	1000
 #define DEFWNDLEFT		128
 #define DEFWNDTOP		128
-//this use for generate probability, value = [2,3,4,5,6,7,8,9,10,11] = 2*2*2*3*3*5*7*11
-//mines: [0,2)->p=1/(x+1)	[2,4)->p=1/(x+2)	[4,8)->p=1/(x+3)
-#define MINEPRONE		27720
+//this use for generate probability, generation function: P = 1 / 2^x, x = mines
+//value = 1 << 8
+#define MINEPRONE		256

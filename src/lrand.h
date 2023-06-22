@@ -8,8 +8,7 @@
 
 
 #define LRAND_MAX	0xFFFFFFFF
-#define LRAND_MODN	0x100000000
-#define LRAND_MODA	9
+#define LRAND_MODA	25214903917
 #define LRAND_MODB	11
 
 unsigned lrand();

@@ -136,17 +136,13 @@ void createmap(int x, int y)
 		if (p >= 9 && !MUISMINE(Game.map[index])) {
 			//generate probability P, define L as probability 1, n as neighbors' count
 			//xi as suitable mines for each neighbor
-			//nPL = L/x1 + L/x2 + ... + L/xn
+			//nPL = L/2^x1 + L/2^x2 + ... + L/2^xn
 			getneighbors(neipos, index);
 			dword neicount = 0, prsum = 0;
 			for (word i = 1; i < 9; i++) {
 				if (neipos[i] != -1) {
 					neicount++;
-					dword ppr = GETMUMINES(Game.map[neipos[i]]);
-					if (ppr < 2) ppr += 1;	//0 <= ppr < 2
-					else if (ppr < 4) ppr += 2;	//2 <= ppr < 4
-					else ppr += 3;	//4 <= ppr
-					prsum += MINEPRONE / ppr;
+					prsum += MINEPRONE >> GETMUMINES(Game.map[neipos[i]]);
 				}
 			}
 			if (lrand() % (MINEPRONE * neicount) < prsum) {
