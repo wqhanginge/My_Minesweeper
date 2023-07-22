@@ -180,40 +180,41 @@ void paintMap(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame)
     DeleteObject(hbmbuffer);
 }
 
-void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, int index)
+void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, int index, int last_index, bool area)
 {
     if (!isidxinmap(pGame, index)) return;
 
     HDC hdcbuffer = CreateCompatibleDC(hdestdc);
     HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height));
 
+    //get current map content
     SelectObject(hdcbuffer, hbmbuffer);
-    paintDCMap(hdcbuffer, 0, 0, pGame);
-    if (GETMUSTATE(pGame->map[index]) == MUS_COVER)
-        drawDCMUUncov(hdcbuffer, index2px(pGame, index), index2py(pGame, index));
-    else if (GETMUSTATE(pGame->map[index]) == MUS_MARK)
-        drawDCMUMark(hdcbuffer, index2px(pGame, index), index2py(pGame, index), true);
-    BitBlt(hdestdc, mapleft, maptop, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdcbuffer, 0, 0, SRCCOPY);
+    BitBlt(hdcbuffer, 0, 0, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdestdc, mapleft, maptop, SRCCOPY);
 
-    DeleteDC(hdcbuffer);
-    DeleteObject(hbmbuffer);
-}
-
-void showClickedMapUnits(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, Neighbor indexes)
-{
-    HDC hdcbuffer = CreateCompatibleDC(hdestdc);
-    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height));
-
-    SelectObject(hdcbuffer, hbmbuffer);
-    paintDCMap(hdcbuffer, 0, 0, pGame);
-    for (WORD i = 0; i < 9; i++) {
-        int index = indexes[i];
-        if (!isidxinmap(pGame, index)) continue;
-        if (GETMUSTATE(pGame->map[index]) == MUS_COVER)
-            drawDCMUUncov(hdcbuffer, index2px(pGame, index), index2py(pGame, index));
-        else if (GETMUSTATE(pGame->map[index]) == MUS_MARK)
-            drawDCMUMark(hdcbuffer, index2px(pGame, index), index2py(pGame, index), true);
+    //reverse last selected state
+    if (isidxinmap(pGame, last_index)) {
+        Neighbor idxes;
+        getNeighbors(pGame, idxes, index2x(pGame, last_index), index2y(pGame, last_index));
+        for (int i = 0; i < 9; i++) {
+            int idx = idxes[i];
+            if (idx == -1) continue;
+            paintDCMapUnit(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx), pGame->map[idx]);
+        }
     }
+
+    //draw current selected state
+    Neighbor idxes;
+    getNeighbors(pGame, idxes, index2x(pGame, index), index2y(pGame, index));
+    int cnt = (area) ? 9 : 1;
+    for (int i = 0; i < cnt; i++) {
+        int idx = idxes[i];
+        BYTE mapunit_state = GETMUSTATE(pGame->map[idx]);
+        if (mapunit_state == MUS_COVER)
+            drawDCMUUncov(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx));
+        else if (mapunit_state == MUS_MARK)
+            drawDCMUMark(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx), true);
+    }
+
     BitBlt(hdestdc, mapleft, maptop, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdcbuffer, 0, 0, SRCCOPY);
 
     DeleteDC(hdcbuffer);
