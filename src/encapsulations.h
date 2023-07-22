@@ -151,15 +151,10 @@ void paintMapUnit(HDC hdestdc, int muleft, int mutop, BYTE mapunit);
 void paintMap(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame);
 
 
-//Show clicked state when a MapUnit is clicked down.
+//Show selected state when a MapUnit or a group of MapUnits are clicked down.
 //It will do nothing if the index is out of GameMap range.
 //NOTE: Use the whole Map's left and top position instead of a MapUnit's.
-void showClickedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, int index);
-
-//Show clicked state when a group of MapUnits are clicked down.
-//It jumps MapUnit whose index is out of GameMap range.
-//NOTE: Use the whole Map's left and top position instead of a MapUnit's.
-void showClickedMapUnits(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, Neighbor indexes);
+void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, int index, int last_index, bool area);
 
 
 /* config(save) file management */

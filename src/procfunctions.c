@@ -458,7 +458,6 @@ LRESULT onGameFail(HWND hwnd, WPARAM wparam, LPARAM lparam)
     KillTimer(hwnd, GAME_TIMER_ID);
     setCurrBitmap(&RBhbm, RBhbm.fail);
     paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
-    paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
     ReleaseDC(hwnd, hdc);
     return 0;
 }
@@ -470,7 +469,6 @@ LRESULT onGameSuccess(HWND hwnd, WPARAM wparam, LPARAM lparam)
     setCurrBitmap(&RBhbm, RBhbm.success);
     paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
     paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, 0);
-    paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
 
     //if break record
     if (isNewRecord(&Game, &Score)) {
@@ -511,23 +509,15 @@ LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam)
         rb_capture = true;  //set ResetButton capture
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, true);
     }
-    else if (!ISGAMESET(Game.state)){   //won't work after game finished
+    else if (!ISGAMESET(Game.state)){   //won't work after game is finished
         setCurrBitmap(&RBhbm, RBhbm.click);
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
 
         //if in the map area
         if (lparamIsInMap(lparam, Game.width, Game.height)) {
             int index = lparam2index(&Game, lparam);
-            if (wparam & MK_RBUTTON) {  //double buttons down
-                last_dbclick = true;
-                Neighbor indexes;
-                getNeighbors(&Game, indexes, index2x(&Game, index), index2y(&Game, index));
-                showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &Game, indexes);
-            }
-            else {  //single button
-                last_dbclick = false;
-                showClickedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index);
-            }
+            bool double_buttons = wparam & MK_RBUTTON;
+            showSelectedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index, -1, double_buttons);
         }
     }
     ReleaseDC(hwnd, hdc);
@@ -545,7 +535,7 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
         rb_capture = false; //release ResetButton capture
     }
-    else if (!ISGAMESET(Game.state)) {  //won't work after game finished
+    else if (!ISGAMESET(Game.state)) {  //won't work after game is finished
         setCurrBitmap(&RBhbm, RBhbm.normal);
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
 
@@ -561,9 +551,7 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 else if (ret == -2) {
                     PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
                 }
-                else {
-                    paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
-                }
+                paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
             }
             else if (!last_dbclick) {   //single button and last was not double button
                 last_dbclick = false;
@@ -578,9 +566,7 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 else if (ret == -2) {
                     PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
                 }
-                else {
-                    paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
-                }
+                paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
             }
             else {  //single button and last was double button
                 last_dbclick = false;
@@ -595,19 +581,15 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     HDC hdc = GetDC(hwnd);
-    //won't work after game finished or the mouse is not in the map area or ResetButton got capture
+    //won't work after game is finished or the mouse is not in the Map area or ResetButton got capture
     if (!rb_capture && !ISGAMESET(Game.state) && lparamIsInMap(lparam, Game.width, Game.height)) {
         int index = lparam2index(&Game, lparam);
         if (wparam & MK_LBUTTON) {  //double buttons
-            last_dbclick = true;
             setCurrBitmap(&RBhbm, RBhbm.click);
             paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
-            Neighbor indexes;
-            getNeighbors(&Game, indexes, index2x(&Game, index), index2y(&Game, index));
-            showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &Game, indexes);
+            showSelectedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index, -1, true);
         }
         else {  //single button, flag a unit or mark a unit
-            last_dbclick = false;
             int ret = rightClick(&Game, index);
             if (ret == 0) { //if mapunit state is changed
                 paintMapUnit(hdc, MAP_LEFT + index2px(&Game, index), MAP_TOP + index2py(&Game, index), Game.map[index]);
@@ -623,12 +605,12 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     HDC hdc = GetDC(hwnd);
     ReleaseCapture();
-    //won't work after game finishing or ResetButton got capture
+    //won't work after game is finished or ResetButton got capture
     if (!rb_capture && !ISGAMESET(Game.state)) {
         setCurrBitmap(&RBhbm, RBhbm.normal);
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
 
-        //if in the map area
+        //if in the Map area
         if (lparamIsInMap(lparam, Game.width, Game.height)) {
             int index = lparam2index(&Game, lparam);
             if (wparam & MK_LBUTTON) {  //double buttons
@@ -640,9 +622,7 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 else if (ret == -2) {
                     PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
                 }
-                else {
-                    paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
-                }
+                paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
             }
             else {  //single button
                 last_dbclick = false;
@@ -657,26 +637,29 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     HDC hdc = GetDC(hwnd);
     if (rb_capture && (wparam & MK_LBUTTON)) {  //if ResetButton got capture
-        paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, lparamIsInRB(lparam, Game.width));
+        static bool last_in_rb = true;
+        bool in_rb = lparamIsInRB(lparam, Game.width);
+        if (last_in_rb != in_rb) {
+            paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, in_rb);
+            last_in_rb = in_rb;
+        }
     }
-    else if (!ISGAMESET(Game.state)) {  //won't work after game finishing
-        if (!lparamIsInMap(lparam, Game.width, Game.height)) {  //if not in the map area
-            paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
+    else if (!ISGAMESET(Game.state)) {  //won't work after game is finished
+        static int last_index = -1;
+        if (!lparamIsInMap(lparam, Game.width, Game.height)) {  //if not in the Map area
+            if (isidxinmap(&Game, last_index)) {    //update once
+                paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
+                last_index = -1;
+            }
         }
         else {  //if in the map area
             int index = lparam2index(&Game, lparam);
-            if (wparam & MK_LBUTTON) {  //with left button down
-                if (wparam & MK_RBUTTON) {  //double buttons
-                    Neighbor indexes;
-                    getNeighbors(&Game, indexes, index2x(&Game, index), index2y(&Game, index));
-                    showClickedMapUnits(hdc, MAP_LEFT, MAP_TOP, &Game, indexes);
+            if (last_index != index) {
+                if (wparam & MK_LBUTTON) {  //with left button down
+                    bool double_buttons = wparam & MK_RBUTTON;
+                    showSelectedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index, last_index, double_buttons);
                 }
-                else {  //single button
-                    showClickedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index);
-                }
-            }
-            else {  //without mouse button down
-                paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
+                last_index = index;
             }
         }
     }
