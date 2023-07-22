@@ -324,13 +324,12 @@ int clickAround(PGameInfo pGame, int index)
         if (pos[i] != -1 && GETMUSTATE(pGame->map[pos[i]]) == MUS_FLAG) flags++;
     if (GETMUMINES(pGame->map[pos[0]]) != flags) return -3;
 
-    Neighbor info;
     flags = 0;  //WARNING:the meaning of flags has been changed
     //open neighbors
     for (int i = 1; i < 9; i++) {
-        info[i] = clickOne(pGame, pos[i]);
-        if (info[i] == 0) openBlanks(pGame, pos[i]);
-        if (info[i] == -1) flags = -1;  //if bombed
+        int ret = clickOne(pGame, pos[i]);
+        if (ret == 0) openBlanks(pGame, pos[i]);
+        if (ret == -1) flags = -1;  //if bombed
     }
 
     //after open
