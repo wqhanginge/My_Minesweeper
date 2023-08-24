@@ -39,6 +39,7 @@
 
 #define DEF_WND_LEFT    128
 #define DEF_WND_TOP     128
+#define DEF_WND_RESERVE 20
 #define CONF_FNAME      "MyMinesweeper.ini"
 #define CONF_PATHENV    "LOCALAPPDATA"
 #define MAX_APPPATH     480

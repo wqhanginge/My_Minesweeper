@@ -175,7 +175,7 @@ int createGameMap(PGameInfo pGame, int index)
     memset(pGame->map, 0, sizeof(BYTE) * pGame->size);  //clear the whole map
     memset(pGame->map, MU_MINE, sizeof(BYTE) * pGame->mines);   //generate mines
     DWORD neicount = 0;
-    for (int i = 0; i < 9; i++) neicount += (safepos[i] != -1); //remember how many safe positions needed
+    for (int i = 0; i < NEI_TOTAL; i++) neicount += (safepos[i] != -1); //remember how many safe positions needed
     for (DWORD k = 0; k < pGame->mines; k++) {  //shuffle algorithm, ignore reserved tail
         DWORD index = rand() % (pGame->size - neicount - k) + k;
         BYTE temp = pGame->map[index];
@@ -184,14 +184,14 @@ int createGameMap(PGameInfo pGame, int index)
     }
 
     //shift the safe area center unit index to the middle of Neighbor list
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < NEI_TOTAL / 2; i++) {
         int temp = safepos[i];
         safepos[i] = safepos[i + 1];
         safepos[i + 1] = temp;
     }
 
     //move safe area to where it is
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < NEI_TOTAL; i++) {
         if (safepos[i] != -1) {
             BYTE temp = pGame->map[pGame->size - neicount];
             pGame->map[pGame->size - neicount] = pGame->map[safepos[i]];
@@ -206,7 +206,7 @@ int createGameMap(PGameInfo pGame, int index)
         int m = 0;
         Neighbor neipos;
         getNeighbors(pGame, neipos, index2x(pGame, i), index2y(pGame, i));
-        for (int j = 1; j < 9; j++)
+        for (int j = 1; j < NEI_TOTAL; j++)
             if (neipos[j] != -1 && MUISMINE(pGame->map[neipos[j]])) m++;
         SETMUMINES(m, pGame->map[i]);
     }
@@ -239,7 +239,7 @@ int openBlanks(PGameInfo pGame, int index)
 
     Neighbor pos;
     getNeighbors(pGame, pos, index2x(pGame, index), index2y(pGame, index));
-    for (int i = 1; i < 9; i++) {
+    for (int i = 1; i < NEI_TOTAL; i++) {
         int ret = clickOne(pGame, pos[i]);
         if (ret == 0) openBlanks(pGame, pos[i]);    //do in a recursive manner
     }
@@ -320,13 +320,13 @@ int clickAround(PGameInfo pGame, int index)
 
     //you can open neighbors only when flags EQ mines around neighbors
     int flags = 0;
-    for (int i = 1; i < 9; i++)
+    for (int i = 1; i < NEI_TOTAL; i++)
         if (pos[i] != -1 && GETMUSTATE(pGame->map[pos[i]]) == MUS_FLAG) flags++;
     if (GETMUMINES(pGame->map[pos[0]]) != flags) return -3;
 
     flags = 0;  //WARNING:the meaning of flags has been changed
     //open neighbors
-    for (int i = 1; i < 9; i++) {
+    for (int i = 1; i < NEI_TOTAL; i++) {
         int ret = clickOne(pGame, pos[i]);
         if (ret == 0) openBlanks(pGame, pos[i]);
         if (ret == -1) flags = -1;  //if bombed
