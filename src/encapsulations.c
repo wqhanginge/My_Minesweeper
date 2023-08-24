@@ -195,7 +195,7 @@ void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, 
     if (isidxinmap(pGame, last_index)) {
         Neighbor idxes;
         getNeighbors(pGame, idxes, index2x(pGame, last_index), index2y(pGame, last_index));
-        for (int i = 0; i < 9; i++) {
+        for (int i = 0; i < NEI_TOTAL; i++) {
             int idx = idxes[i];
             if (idx == -1) continue;
             paintDCMapUnit(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx), pGame->map[idx]);
@@ -205,7 +205,7 @@ void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, 
     //draw current selected state
     Neighbor idxes;
     getNeighbors(pGame, idxes, index2x(pGame, index), index2y(pGame, index));
-    int cnt = (area) ? 9 : 1;
+    int cnt = (area) ? NEI_TOTAL : 1;
     for (int i = 0; i < cnt; i++) {
         int idx = idxes[i];
         BYTE mapunit_state = GETMUSTATE(pGame->map[idx]);
@@ -236,8 +236,8 @@ void initGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT plastwndp
     plastwndpos->y = GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_YPOS), DEF_WND_TOP, Path);
     RECT desktop_rect;
     SystemParametersInfo(SPI_GETWORKAREA, 0, &desktop_rect, 0);
-    if ((DWORD)(plastwndpos->x - desktop_rect.left) > (DWORD)(desktop_rect.right - desktop_rect.left)
-        || (DWORD)(plastwndpos->y - desktop_rect.top) > (DWORD)(desktop_rect.bottom - desktop_rect.top))
+    if ((DWORD)(plastwndpos->x - desktop_rect.left) >= (DWORD)(desktop_rect.right - desktop_rect.left - DEF_WND_RESERVE)
+        || (DWORD)(plastwndpos->y - desktop_rect.top) >= (DWORD)(desktop_rect.bottom - desktop_rect.top - DEF_WND_RESERVE))
         *plastwndpos = (POINT){ DEF_WND_LEFT,DEF_WND_TOP };
 
     //load Game information, use JUNIOR if config data error
@@ -264,33 +264,34 @@ void saveGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
     //conver number into string
     const int size_ch = 8;  //buff size for each number
     const int cnt = 10;     //numbers in total
-    TCHAR str[8 * 10] = { 0 };
+    TCHAR str[10][8] = { 0 };
+    LPTSTR lstr = (LPTSTR)str;
     LPCTSTR fmt = TEXT("%-7d %-7d %-7d %-7d %-7d %-7d %-7d %-7d %-7d %-7d");
 
     //the order of arguments is important
-    StringCchPrintf(str, size_ch * cnt, fmt,
+    StringCchPrintf(lstr, size_ch * cnt, fmt,
         pwndpos->x, pwndpos->y,
         pGame->mode, pGame->width, pGame->height, pGame->mines, pGame->mark,
         pScore->junior_time, pScore->middle_time, pScore->senior_time
     );
     for (int i = 0; i < size_ch * cnt; i++)
-        str[i] *= (str[i] != TEXT(' '));
+        lstr[i] *= (lstr[i] != TEXT(' '));
 
     //save window position
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_XPOS), str + size_ch * 0, Path);
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_YPOS), str + size_ch * 1, Path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_XPOS), str[0], Path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_YPOS), str[1], Path);
 
     //save Game information
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MODE), str + size_ch * 2, Path);
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_WIDTH), str + size_ch * 3, Path);
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_HEIGHT), str + size_ch * 4, Path);
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MINES), str + size_ch * 5, Path);
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MARK), str + size_ch * 6, Path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MODE), str[2], Path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_WIDTH), str[3], Path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_HEIGHT), str[4], Path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MINES), str[5], Path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MARK), str[6], Path);
 
     //save Record information
-    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JTIME), str + size_ch * 7, Path);
-    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MTIME), str + size_ch * 8, Path);
-    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_STIME), str + size_ch * 9, Path);
+    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JTIME), str[7], Path);
+    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MTIME), str[8], Path);
+    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_STIME), str[9], Path);
     WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JNAME), pScore->junior_name, Path);
     WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MNAME), pScore->middle_name, Path);
     WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_SNAME), pScore->senior_name, Path);

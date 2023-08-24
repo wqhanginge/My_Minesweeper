@@ -137,6 +137,7 @@ typedef struct _GameScore {
     TCHAR senior_name[SCORE_NAME_LEN];
 } GameScore, * PGameScore;
 
+
 /* order in 2D:
  * +---+---+---+
  * | 1 | 2 | 3 |           transform to arrary:
@@ -147,7 +148,8 @@ typedef struct _GameScore {
  * +---+---+---+
  * Stores index of each neighbor, -1 means no such neighbor.
  */
-typedef int Neighbor[9];
+#define NEI_TOTAL   9
+typedef int Neighbor[NEI_TOTAL];
 
 
 
