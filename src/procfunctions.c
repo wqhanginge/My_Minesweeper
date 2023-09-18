@@ -380,7 +380,7 @@ LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam)
     GetClientRect(hwnd, &cltrect);
     edgew = (wndrect.right - wndrect.left) - cltrect.right;
     edgeh = (wndrect.bottom - wndrect.top) - cltrect.bottom;
-    wndrect = (RECT){ wndpos.x,wndpos.y,wndpos.x + CLIENT_WIDTH(Game.width) + edgew,wndpos.y + CLIENT_HEIGHT(Game.height) + edgeh};
+    wndrect = (RECT){ wndpos.x, wndpos.y, wndpos.x + CLIENT_WIDTH(Game.width) + edgew, wndpos.y + CLIENT_HEIGHT(Game.height) + edgeh };
     MoveWindow(hwnd, wndrect.left, wndrect.top, wndrect.right - wndrect.left, wndrect.bottom - wndrect.top, FALSE);
 
     //init double button click state and capture state
@@ -399,7 +399,7 @@ LRESULT onDestroy(HWND hwnd, WPARAM wparam, LPARAM lparam)
     freeBitmaps(&RBhbm);
     //save game info
     GetWindowRect(hwnd, &wndrect);
-    wndpos = (POINT){ wndrect.left,wndrect.top };
+    wndpos = (POINT){ wndrect.left, wndrect.top };
     getConfPath(conf_path, MAX_CONFPATH);
     saveGame(conf_path, &Game, &Score, &wndpos);
 
@@ -517,7 +517,7 @@ LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam)
         if (lparamIsInMap(lparam, Game.width, Game.height)) {
             int index = lparam2index(&Game, lparam);
             bool double_buttons = wparam & MK_RBUTTON;
-            showSelectedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index, -1, double_buttons);
+            showSelectedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index, INV_INDEX, double_buttons);
         }
     }
     ReleaseDC(hwnd, hdc);
@@ -545,10 +545,10 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if (wparam & MK_RBUTTON) {  //double buttons
                 last_dbclick = true;
                 int ret = clickAround(&Game, index);
-                if (ret == -1) {
+                if (ret == RETVAL_GAMEFAIL) {
                     PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
                 }
-                else if (ret == -2) {
+                else if (ret == RETVAL_GAMESUCCESS) {
                     PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
                 }
                 paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
@@ -560,10 +560,10 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
                     paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, Game.mines); //reset the MinePart
                 }
                 int ret = leftClick(&Game, index);  //click, then judge success
-                if (ret == -1) {
+                if (ret == RETVAL_GAMEFAIL) {
                     PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
                 }
-                else if (ret == -2) {
+                else if (ret == RETVAL_GAMESUCCESS) {
                     PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
                 }
                 paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
@@ -587,11 +587,11 @@ LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
         if (wparam & MK_LBUTTON) {  //double buttons
             setCurrBitmap(&RBhbm, RBhbm.click);
             paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
-            showSelectedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index, -1, true);
+            showSelectedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index, INV_INDEX, true);
         }
         else {  //single button, flag a unit or mark a unit
             int ret = rightClick(&Game, index);
-            if (ret == 0) { //if mapunit state is changed
+            if (ret == RETVAL_NOERROR) {    //if mapunit state is changed
                 paintMapUnit(hdc, MAP_LEFT + index2px(&Game, index), MAP_TOP + index2py(&Game, index), Game.map[index]);
                 paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains);
             }
@@ -616,10 +616,10 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if (wparam & MK_LBUTTON) {  //double buttons
                 last_dbclick = true;
                 int ret = clickAround(&Game, index);
-                if (ret == -1) {
+                if (ret == RETVAL_GAMEFAIL) {
                     PostMessage(hwnd, WMAPP_GAMEFAIL, 0, 0);
                 }
-                else if (ret == -2) {
+                else if (ret == RETVAL_GAMESUCCESS) {
                     PostMessage(hwnd, WMAPP_GAMESUCCESS, 0, 0);
                 }
                 paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
@@ -645,11 +645,11 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
     }
     else if (!ISGAMESET(Game.state)) {  //won't work after game is finished
-        static int last_index = -1;
+        static int last_index = INV_INDEX;
         if (!lparamIsInMap(lparam, Game.width, Game.height)) {  //if not in the Map area
             if (isidxinmap(&Game, last_index)) {    //update once
                 paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
-                last_index = -1;
+                last_index = INV_INDEX;
             }
         }
         else {  //if in the map area

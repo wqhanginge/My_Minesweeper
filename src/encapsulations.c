@@ -47,18 +47,18 @@ int index2py(PGameInfo pGame, int index)
     return y2py(index2y(pGame, index));
 }
 
-bool lparamIsInRB(LPARAM lparam, BYTE map_width)
+bool lparamIsInRB(LPARAM lparam, BYTE n_map_width)
 {
     POINTS p = MAKEPOINTS(lparam);
-    p = (POINTS){ p.x - RB_LEFT(map_width),p.y - RB_TOP };
+    p = (POINTS){ p.x - RB_LEFT(n_map_width), p.y - RB_TOP };
     return (p.x >= 0 && p.x < RB_SIZE && p.y >= 0 && p.y < RB_SIZE);
 }
 
-bool lparamIsInMap(LPARAM lparam, BYTE map_width, BYTE map_height)
+bool lparamIsInMap(LPARAM lparam, BYTE n_map_width, BYTE n_map_height)
 {
     POINTS p = MAKEPOINTS(lparam);
-    p = (POINTS){ p.x - MAP_LEFT,p.y - MAP_TOP };
-    return (p.x >= 0 && p.x < x2px(map_width) && p.y >= 0 && p.y < y2py(map_height));
+    p = (POINTS){ p.x - MAP_LEFT, p.y - MAP_TOP };
+    return (p.x >= 0 && p.x < x2px(n_map_width) && p.y >= 0 && p.y < y2py(n_map_height));
 }
 
 int lparam2index(PGameInfo pGame, LPARAM lparam)
@@ -197,7 +197,7 @@ void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, 
         getNeighbors(pGame, idxes, index2x(pGame, last_index), index2y(pGame, last_index));
         for (int i = 0; i < NEI_TOTAL; i++) {
             int idx = idxes[i];
-            if (idx == -1) continue;
+            if (idx == INV_INDEX) continue;
             paintDCMapUnit(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx), pGame->map[idx]);
         }
     }
@@ -208,6 +208,7 @@ void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, 
     int cnt = (area) ? NEI_TOTAL : 1;
     for (int i = 0; i < cnt; i++) {
         int idx = idxes[i];
+        if (idx == INV_INDEX) continue;
         BYTE mapunit_state = GETMUSTATE(pGame->map[idx]);
         if (mapunit_state == MUS_COVER)
             drawDCMUUncov(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx));
@@ -238,7 +239,7 @@ void initGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT plastwndp
     SystemParametersInfo(SPI_GETWORKAREA, 0, &desktop_rect, 0);
     if ((DWORD)(plastwndpos->x - desktop_rect.left) >= (DWORD)(desktop_rect.right - desktop_rect.left - DEF_WND_RESERVE)
         || (DWORD)(plastwndpos->y - desktop_rect.top) >= (DWORD)(desktop_rect.bottom - desktop_rect.top - DEF_WND_RESERVE))
-        *plastwndpos = (POINT){ DEF_WND_LEFT,DEF_WND_TOP };
+        *plastwndpos = (POINT){ DEF_WND_LEFT, DEF_WND_TOP };
 
     //load Game information, use JUNIOR if config data error
     int mode, width, height, mines, mark;

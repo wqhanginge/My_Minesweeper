@@ -176,11 +176,11 @@
 #define COLOR_DEFSHADOW RGB(128,128,128)
 #define COLOR_DEFSEMIS  RGB(160,160,160)
 
-#define MAPUNITS_WIDTH(w)   ((w) * MU_SIZE)
-#define MAPUNITS_HEIGHT(h)  ((h) * MU_SIZE)
+#define MAPUNITS_WIDTH(nw)  ((nw) * MU_SIZE)
+#define MAPUNITS_HEIGHT(nh) ((nh) * MU_SIZE)
 
 //Info Part
-#define INFO_WIDTH(w)   (PART_EDGE + MAPUNITS_WIDTH(w) + PART_EDGE)
+#define INFO_WIDTH(nw)  (PART_EDGE + MAPUNITS_WIDTH(nw) + PART_EDGE)
 #define INFO_HEIGHT     (PART_EDGE + 36 + PART_EDGE)
 #define INFO_LEFT       AREA_EDGE
 #define INFO_TOP        AREA_EDGE
@@ -223,11 +223,11 @@
 
 #define TIME_WIDTH      NUM_WIDTH
 #define TIME_HEIGHT     NUM_HEIGHT
-#define TIME_LEFT(w)    (INFO_LEFT + INFO_WIDTH(w) - RIGHT_DIST - TIME_WIDTH)
+#define TIME_LEFT(nw)   (INFO_LEFT + INFO_WIDTH(nw) - RIGHT_DIST - TIME_WIDTH)
 #define TIME_TOP        MINE_TOP
 #define TNUMS_WIDTH     INUMS_WIDTH
 #define TNUMS_HEIGHT    INUMS_HEIGHT
-#define TNUMS_LEFT(w)   (TIME_LEFT(w) + INUMS_EDGE)
+#define TNUMS_LEFT(nw)  (TIME_LEFT(nw) + INUMS_EDGE)
 #define TNUMS_TOP       (TIME_TOP + INUMS_EDGE)
 
 #define COLOR_TIME      COLOR_NUM
@@ -235,10 +235,10 @@
 #define COLOR_TIMES     COLOR_NUMS
 
 #define RB_SIZE         32
-#define RB_LEFT(w)      (INFO_LEFT + (INFO_WIDTH(w) - RB_SIZE) / 2)
+#define RB_LEFT(nw)     (INFO_LEFT + (INFO_WIDTH(nw) - RB_SIZE) / 2)
 #define RB_TOP          (INFO_TOP + PART_EDGE + 2)
 #define BMP_SIZE        28
-#define BMP_LEFT(w)     (RB_LEFT(w) + 2)
+#define BMP_LEFT(nw)    (RB_LEFT(nw) + 2)
 #define BMP_TOP         (RB_TOP + 2)
 
 #define COLOR_RB        COLOR_DEFBG
@@ -249,13 +249,13 @@
 //end Mine Part, Time Part and ResetButton
 
 //MapArea
-#define MAPAREA_WIDTH(w)    INFO_WIDTH(w)
-#define MAPAREA_HEIGHT(h)   (PART_EDGE + MAPUNITS_HEIGHT(h) + PART_EDGE)
+#define MAPAREA_WIDTH(nw)   INFO_WIDTH(nw)
+#define MAPAREA_HEIGHT(nh)  (PART_EDGE + MAPUNITS_HEIGHT(nh) + PART_EDGE)
 #define MAPAREA_LEFT        AREA_EDGE
 #define MAPAREA_TOP         (AREA_EDGE + INFO_HEIGHT + AREA_EDGE)
 
-#define MAP_WIDTH(w)    MAPUNITS_WIDTH(w)
-#define MAP_HEIGHT(h)   MAPUNITS_HEIGHT(h)
+#define MAP_WIDTH(nw)   MAPUNITS_WIDTH(nw)
+#define MAP_HEIGHT(nh)  MAPUNITS_HEIGHT(nh)
 #define MAP_LEFT        (MAPAREA_LEFT + PART_EDGE)
 #define MAP_TOP         (MAPAREA_TOP + PART_EDGE)
 
@@ -286,8 +286,8 @@
 //end MapArea
 
 //Client Area
-#define CLIENT_WIDTH(w)     (AREA_EDGE + INFO_WIDTH(w) + AREA_EDGE)
-#define CLIENT_HEIGHT(h)    (AREA_EDGE + INFO_HEIGHT + AREA_EDGE + MAPAREA_HEIGHT(h) + AREA_EDGE)
+#define CLIENT_WIDTH(nw)    (AREA_EDGE + INFO_WIDTH(nw) + AREA_EDGE)
+#define CLIENT_HEIGHT(nh)   (AREA_EDGE + INFO_HEIGHT + AREA_EDGE + MAPAREA_HEIGHT(nh) + AREA_EDGE)
 #define CLIENT_LEFT         0
 #define CLIENT_TOP          0
 
@@ -311,6 +311,29 @@ const bool InfoNumBG[INFONUM_WIDTH][INFONUM_HEIGHT];
 
 /* These functions draw a concave or convex like area with different type of edges.
 /**********************************************************************************
+//Draw 1 pixel half edge 2D like background,
+//draw left edge and top edge only.
+static void drawhalfedgebg(
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int width,
+    _In_ int height,
+    _In_ COLORREF inner,
+    _In_ COLORREF edge
+);
+//Draw 1 pixel edge concave background,
+//exchange 'light' and 'shadow' to draw a convex background.
+static void drawfulledgebg(
+    _In_ HDC hdestdc,
+    _In_ int left,
+    _In_ int top,
+    _In_ int width,
+    _In_ int height,
+    _In_ COLORREF inner,
+    _In_ COLORREF light,
+    _In_ COLORREF shadow
+);
 //Draw 2 pixel edge concave background,
 //exchange 'light' and 'shadow' to draw a convex background.
 static void drawthickedgebg(
@@ -336,29 +359,6 @@ static void drawdualedgebg(
     _In_ COLORREF semilight,
     _In_ COLORREF shadow,
     _In_ COLORREF semishadow
-);
-//Draw 1 pixel edge concave background,
-//exchange 'light' and 'shadow' to draw a convex background.
-static void drawthinedgebg(
-    _In_ HDC hdestdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ int width,
-    _In_ int height,
-    _In_ COLORREF inner,
-    _In_ COLORREF light,
-    _In_ COLORREF shadow
-);
-//Draw 1 pixel half edge 2D like background,
-//draw left edge and top edge only.
-static void drawhalfedgebg(
-    _In_ HDC hdestdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ int width,
-    _In_ int height,
-    _In_ COLORREF inner,
-    _In_ COLORREF edge
 );
 */
 
@@ -437,8 +437,8 @@ void drawDCClientBg(
     _In_ HDC hdestdc,
     _In_ int left,
     _In_ int top,
-    _In_ int map_width,
-    _In_ int map_height
+    _In_ int n_map_width,
+    _In_ int n_map_height
 );
 
 //w:INFO_WIDTH, h:INFO_HEIGHT
@@ -446,7 +446,7 @@ void drawDCInfoBg(
     _In_ HDC hdestdc,
     _In_ int left,
     _In_ int top,
-    _In_ int map_width
+    _In_ int n_map_width
 );
 
 //w:MAPAREA_WIDTH, h:MAPAREA_HEIGHT
@@ -454,8 +454,8 @@ void drawDCMapAreaBg(
     _In_ HDC hdestdc,
     _In_ int left,
     _In_ int top,
-    _In_ int map_width,
-    _In_ int map_height
+    _In_ int n_map_width,
+    _In_ int n_map_height
 );
 
 //w:NUM_WIDTH, h:NUM_HEIGHT
