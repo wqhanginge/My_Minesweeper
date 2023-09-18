@@ -72,11 +72,11 @@
 //Game States
 #define INIT                0
 #define RUNNING             1
-#define SUCCESS             2
-#define FAIL                3
+#define FAIL                2
+#define SUCCESS             3
 #define UNKNOW              4
 #define ISBADSTATE(State)   ((BYTE)(State) >= UNKNOW)
-#define ISGAMESET(State)    ((BYTE)(State) > RUNNING)
+#define ISGAMESET(State)    ((BYTE)(State) > RUNNING && (BYTE)(State) < UNKNOW)
 //end Game States
 
 //Game Map Unit
@@ -105,18 +105,48 @@
 #define MUISCLICKABLE(unit)     (GETMUSTATE(unit) <= MUS_MARK)
 //end Game Map Unit
 
+//Game Map Position
+#define INV_INDEX   (-1)
+#define NEI_TOTAL   9
+//end Game Map Position
+
 //Game Score
 #define SCORE_NAME_LEN      20
 #define DEF_SCORE_NAME_EN   "anonymous"
 
+#define INV_TIME    ((WORD)-1)
 #define MAX_TIME    999
 //end Game Score
 
+//Function Returns
+#define RETVAL_NOERROR          0
+#define RETVAL_INDEXOOR         (-1)
+#define RETVAL_BADGAMEMODE      (-2)
+#define RETVAL_BADGAMESTATE     (-3)
+#define RETVAL_BADMUSTATE       (-4)
+#define RETVAL_BADFLAGNUM       (-5)
+#define RETVAL_GAMEFAIL         (-6)
+#define RETVAL_GAMESUCCESS      (-7)
+//end Function Returns
 
+
+
+/* order in 2D:
+ * +---+---+---+
+ * | 1 | 2 | 3 |           transform to arrary:
+ * +---+---+---+      +---+---+---+---+---+---+---+---+---+
+ * | 4 | 0 | 5 | ---> | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+ * +---+---+---+      +---+---+---+---+---+---+---+---+---+
+ * | 6 | 7 | 8 |
+ * +---+---+---+
+ * Stores index of each neighbor in a list with NEI_TOTAL elements,
+ * value INV_INDEX means no such neighbor.
+ */
+typedef int Neighbor[NEI_TOTAL];
 
 typedef struct _GameInfo {
     BYTE mode;          //[junior, middle, senior, custom]
-    BYTE state;         //[init, running, success, fail]
+    BYTE state;         //[init, running, fail, success]
     bool mark;          //if the QuestionMark is used
     BYTE width;         //GameMap width: map_units per line
     BYTE height;        //GameMap height: map_units per column
@@ -136,20 +166,6 @@ typedef struct _GameScore {
     TCHAR middle_name[SCORE_NAME_LEN];
     TCHAR senior_name[SCORE_NAME_LEN];
 } GameScore, * PGameScore;
-
-
-/* order in 2D:
- * +---+---+---+
- * | 1 | 2 | 3 |           transform to arrary:
- * +---+---+---+      +---+---+---+---+---+---+---+---+---+
- * | 4 | 0 | 5 | ---> | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
- * +---+---+---+      +---+---+---+---+---+---+---+---+---+
- * | 6 | 7 | 8 |
- * +---+---+---+
- * Stores index of each neighbor, -1 means no such neighbor.
- */
-#define NEI_TOTAL   9
-typedef int Neighbor[NEI_TOTAL];
 
 
 
@@ -176,9 +192,10 @@ int xy2index(PGameInfo pGame, int x, int y);
 bool isxyinmap(PGameInfo pGame, int x, int y);
 bool isidxinmap(PGameInfo pGame, int index);
 
-//Get all neighbors' index which around given unit.
-//See detail in Type Neighbor's description.
-//Return -1 if error.
+//Get all neighbors' index which around the given unit, INV_INDEX means no such neighbor.
+//See the description of Type Neighbor for details.
+//Return RETVAL_NOERROR if the call succeeded,
+//or RETVAL_INDEXOOR if the given unit is out of range.
 int getNeighbors(PGameInfo pGame, Neighbor neighbor, int x, int y);
 
 
@@ -190,44 +207,58 @@ int getNeighbors(PGameInfo pGame, Neighbor neighbor, int x, int y);
 //This function will set GameState to INIT and erase the whole GameMap.
 void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines);
 
-//Change GameState to specified state.
-//Return -1 if 'state' is illegal.
-int setGameState(PGameInfo pGame, BYTE state);
-
 //Enable or disable QuestionMark mode.
 void setMark(PGameInfo pGame, bool enable);
 
 //Set GameTime with specified time.
-//Return -1 if 'time' is over MAX_TIME.
-int setGameTime(PGameInfo pGame, WORD time);
+//The time value will be limited to MAX_TIME automatically.
+void setGameTime(PGameInfo pGame, WORD time);
 
 //Step in time.
 void stepGameTime(PGameInfo pGame);
 
 
-/* Game running basic functions */
+/* Game runtime basic functions */
 
 //Erase the GameMap and reset Game infomation.
 void resetGame(PGameInfo pGame);
 
 //Create a new GameMap with a safe area at given position.
-//Return -1 if the GameState is not INIT or index out of range.
+//Return RETVAL_NOERROR if the call succeeded,
+//or RETVAL_INDEXOOR if the index is out of range,
+//or RETVAL_BADGAMESTATE if the GameState is not INIT.
 int createGameMap(PGameInfo pGame, int index);
 
 
 //Click a unit in GameMap.
-//Return mines around neighbor,
-//or return -1 if this unit is mine,
-//or return -2 if this unit can't be clicked.
+//Return the number of mines around neighbor,
+//or RETVAL_GAMEFIAL if this unit is a mine,
+//or RETVAL_INDEXOOR if the index is out of range,
+//or RETVAL_BADGAMESTATE if the GameState is not RUNING,
+//or RETVAL_BADMUSTATE if this unit can't be clicked.
 int clickOne(PGameInfo pGame, int index);
 
-//Open all neighbors around a uncovered unit which has mines-value 0.
-//Return -1 if error.
+//Open all neighbors around an uncovered unit which has mines-value 0.
+//Return RETVAL_NOERROR if the call succeeded,
+//or RETVAL_INDEXOOR if the index is out of range,
+//or RETVAL_BADGAMESTATE if the GameState is not RUNING,
+//or RETVAL_BADMUSTATE if this unit does not satisfied with requirements.
 int openBlanks(PGameInfo pGame, int index);
+
+//Set or remove the flag of a coverd unit in GameMap.
+//This function changes the state of given unit in cycle:[covered -> flagged -> covered],
+//if the QuestionMark mode is enabled, this will be:[covered -> flagged -> marked -> covered].
+//Return RETVAL_NOERROR if the call succeeded,
+//or RETVAL_INDEXOOR if the index is out of range,
+//or RETVAL_BADGAMESTATE if the Game is already finished,
+//or RETVAL_BADMUSTATE if this unit does not satisfied with requirements.
+int flagOne(PGameInfo pGame, int index);
 
 
 //Show all mines' positions after GameSet.
-void showAllMines(PGameInfo pGame);
+//Return RETVAL_NOERROR if the call succeeded,
+//or RETVAL_BADGAMESTATE if the Game is not finishend.
+int showAllMines(PGameInfo pGame);
 
 //Check if all the non-mine unit is open.
 bool isMapFullyOpen(PGameInfo pGame);
@@ -236,31 +267,37 @@ bool isMapFullyOpen(PGameInfo pGame);
 bool isFirstClick(PGameInfo pGame, int index);
 
 
-/* Game running functions */
+/* Game runtime high-level functions */
 
 //Click the given unit and open all blanks if it is blank,
 //or open the given unit only if it is not blank.
 //This function will start a new Game then click if it is the first click.
-//Return mines around neighbor,
-//or return -1 if this unit is mine(GameFail),
-//or return -2 if GameSuccess,
-//or return -3 if this unit can't be clicked.
+//Return the number of mines around neighbor,
+//or RETVAL_GAMEFIAL if this unit is a mine,
+//or RETVAL_GAMESUCCESS if GameSuccess,
+//or RETVAL_INDEXOOR if the index is out of range,
+//or RETVAL_BADGAMESTATE if the GameState is not RUNING,
+//or RETVAL_BADMUSTATE if this unit can't be clicked.
 int leftClick(PGameInfo pGame, int index);
 
 
 //Open all neighbors around the uncovered unit.
 //This function represents double click operation in Game.
-//Return 0 if no error,
-//or -1 if digged mine(GameFail),
-//or -2 if GameSuccess,
-//or -3 if error.
+//Return RETVAL_NOERROR if the call succeeded,
+//or RETVAL_GAMEFIAL if clicked a mine,
+//or RETVAL_GAMESUCCESS if GameSuccess,
+//or RETVAL_INDEXOOR if the index is out of range,
+//or RETVAL_BADGAMESTATE if the GameState is not RUNING,
+//or RETVAL_BADMUSTATE if this unit is not uncovered,
+//or RETVAL_BADFLAGNUM if the number of flags around is not equal to mines-value.
 int clickAround(PGameInfo pGame, int index);
 
 
-//Change the MapUnitState and remained mines when right clicked on a unit.
-//Return 0 if changed,
-//or -1 if not changed,
-//or -2 if error.
+//Flag, mark or remove flag on the unit.
+//Return RETVAL_NOERROR if the call succeeded,
+//or RETVAL_INDEXOOR if the index is out of range,
+//or RETVAL_BADGAMESTATE if the Game is already finished,
+//or RETVAL_BADMUSTATE if this unit can not be changed.
 int rightClick(PGameInfo pGame, int index);
 
 
@@ -270,18 +307,19 @@ int rightClick(PGameInfo pGame, int index);
 void resetRecord(PGameScore pScore);
 
 //Get the best time under given GameMode.
-//Return -1 if error.
+//Return INV_TIME if the given GameMode is not supported.
 WORD getRecordTime(PGameScore pScore, BYTE gamemode);
 
 //Get the player name under given GameMode.
 //This function returns the head address of TCHAR[SCORE_NAME_LEN],
 //you can directly edit Record content by this pointer but must
 //be careful with array bound.
-//Return NULL if error.
+//Return NULL if the given GameMode is not supported.
 LPTSTR getpRecordName(PGameScore pScore, BYTE gamemode);
 
 //Update the best time under given GameMode.
-//Return -1 if 'gamemode' is illegal or 'besttime' is over MAX_TIME.
+//The time value will be limited to MAX_TIME automatically.
+//Return RETVAL_BADGAMEMODE if the given GameMode is not supported.
 int setRecordTime(PGameScore pScore, BYTE gamemode, WORD besttime);
 
 
