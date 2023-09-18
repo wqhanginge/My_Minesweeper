@@ -99,10 +99,10 @@ int index2px(PGameInfo pGame, int index);
 int index2py(PGameInfo pGame, int index);
 
 //Check if a mouse position is inside the ResetButton area.
-bool lparamIsInRB(LPARAM lparam, BYTE map_width);
+bool lparamIsInRB(LPARAM lparam, BYTE n_map_width);
 
 //Check if a mouse position is inside the GameMap area.
-bool lparamIsInMap(LPARAM laparm, BYTE map_width, BYTE map_height);
+bool lparamIsInMap(LPARAM laparm, BYTE n_map_width, BYTE n_map_height);
 
 //Change a mouse position to GameMap index.
 //The input should be the LPARAM of WM_MOUSEMOVE message or something similarly
@@ -153,7 +153,7 @@ void paintMap(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame);
 
 
 //Show selected state when a MapUnit or a group of MapUnits are clicked down.
-//It will do nothing if the index is out of GameMap range.
+//It will do nothing if the index is out of GameMap range(INV_INDEX).
 //NOTE: Use the whole Map's left and top position instead of a MapUnit's.
 void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, int index, int last_index, bool area);
 

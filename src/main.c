@@ -79,7 +79,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR lpCmdLi
     wndc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPICON));
     wndc.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPICON));
-    wndc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wndc.hbrBackground = NULL;
     wndc.lpfnWndProc = WndProc;
     wndc.lpszClassName = TEXT(WNDCLS_NAME);
     wndc.lpszMenuName = NULL;
