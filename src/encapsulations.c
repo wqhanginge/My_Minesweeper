@@ -47,18 +47,18 @@ int index2py(PGameInfo pGame, int index)
     return y2py(index2y(pGame, index));
 }
 
-bool lparamIsInRB(LPARAM lparam, BYTE n_map_width)
+bool isLparamInRB(LPARAM lparam, BYTE n_map_width)
 {
     POINTS p = MAKEPOINTS(lparam);
     p = (POINTS){ p.x - RB_LEFT(n_map_width), p.y - RB_TOP };
     return (p.x >= 0 && p.x < RB_SIZE && p.y >= 0 && p.y < RB_SIZE);
 }
 
-bool lparamIsInMap(LPARAM lparam, BYTE n_map_width, BYTE n_map_height)
+bool isLparamInMap(LPARAM lparam, BYTE n_map_width, BYTE n_map_height)
 {
     POINTS p = MAKEPOINTS(lparam);
     p = (POINTS){ p.x - MAP_LEFT, p.y - MAP_TOP };
-    return (p.x >= 0 && p.x < x2px(n_map_width) && p.y >= 0 && p.y < y2py(n_map_height));
+    return (p.x >= 0 && p.x < MAP_WIDTH(n_map_width) && p.y >= 0 && p.y < MAP_HEIGHT(n_map_height));
 }
 
 int lparam2index(PGameInfo pGame, LPARAM lparam)
@@ -84,7 +84,7 @@ void freeBitmaps(PRBHBM pRBhbm)
     DeleteObject(pRBhbm->success);
     DeleteObject(pRBhbm->fail);
     DeleteObject(pRBhbm->current);
-    *pRBhbm = (RBHBM){ 0 };
+    memset(pRBhbm, 0, sizeof(RBHBM));
 }
 
 void setCurrBitmap(PRBHBM pRBhbm, HBITMAP hbm)
@@ -99,7 +99,7 @@ void paintINums(HDC hdestdc, int left, int top, int num)
     HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, INUMS_WIDTH, INUMS_HEIGHT);
 
     SelectObject(hdcbuffer, hbmbuffer);
-    drawDCINums(hdcbuffer, 0, 0, num);
+    drawDCINums(hdcbuffer, 0, 0, num, INUMSF_SHOWALL);
     BitBlt(hdestdc, left, top, INUMS_WIDTH, INUMS_HEIGHT, hdcbuffer, 0, 0, SRCCOPY);
 
     DeleteDC(hdcbuffer);
@@ -132,8 +132,8 @@ void paintDCMapUnit(HDC hdestdc, int left, int top, BYTE mapunit)
         drawDCMUMark(hdestdc, left, top, false);
         break;
     case MUS_UNCOV:
-        if (MUISMINE(mapunit)) drawDCMUMine(hdestdc, left, top, false);
-        else drawDCMUNum(hdestdc, left, top, GETMUMINES(mapunit));
+        if (ISMUMINE(mapunit)) drawDCMUMine(hdestdc, left, top, false);
+        else drawDCMUNum(hdestdc, left, top, GETMUNUMBER(mapunit));
         break;
     case MUS_BOMB:
         drawDCMUMine(hdestdc, left, top, true);
@@ -147,34 +147,38 @@ void paintDCMapUnit(HDC hdestdc, int left, int top, BYTE mapunit)
     }
 }
 
-void paintDCMap(HDC hdestdc, int left, int top, PGameInfo pGame)
+void paintDCMap(HDC hdestdc, int left, int top, PGameInfo pGame, PRECT pxyrect)
 {
-    for (WORD i = 0; i < pGame->size; i++) {
-        paintDCMapUnit(hdestdc, left + index2px(pGame, i), top + index2py(pGame, i), pGame->map[i]);
+    RECT irect = { 0, 0, pGame->width, pGame->height };
+    if (pxyrect) IntersectRect(&irect, &irect, pxyrect);
+    for (int x = irect.left; x < irect.right; x++) {
+        for (int y = irect.top; y < irect.bottom; y++) {
+            paintDCMapUnit(hdestdc, left + x2px(x), top + y2py(y), pGame->map[xy2index(pGame, x, y)]);
+        }
     }
 }
 
-void paintMapUnit(HDC hdestdc, int muleft, int mutop, BYTE mapunit)
+void paintMapUnit(HDC hdestdc, int left, int top, BYTE mapunit)
 {
     HDC hdcbuffer = CreateCompatibleDC(hdestdc);
-    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MU_SIZE, MU_SIZE);
+    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MUP_SIZE, MUP_SIZE);
 
     SelectObject(hdcbuffer, hbmbuffer);
     paintDCMapUnit(hdcbuffer, 0, 0, mapunit);
-    BitBlt(hdestdc, muleft, mutop, MU_SIZE, MU_SIZE, hdcbuffer, 0, 0, SRCCOPY);
+    BitBlt(hdestdc, left, top, MUP_SIZE, MUP_SIZE, hdcbuffer, 0, 0, SRCCOPY);
 
     DeleteDC(hdcbuffer);
     DeleteObject(hbmbuffer);
 }
 
-void paintMap(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame)
+void paintMap(HDC hdestdc, int left, int top, PGameInfo pGame)
 {
     HDC hdcbuffer = CreateCompatibleDC(hdestdc);
     HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height));
 
     SelectObject(hdcbuffer, hbmbuffer);
-    paintDCMap(hdcbuffer, 0, 0, pGame);
-    BitBlt(hdestdc, mapleft, maptop, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdcbuffer, 0, 0, SRCCOPY);
+    paintDCMap(hdcbuffer, 0, 0, pGame, NULL);
+    BitBlt(hdestdc, left, top, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdcbuffer, 0, 0, SRCCOPY);
 
     DeleteDC(hdcbuffer);
     DeleteObject(hbmbuffer);
@@ -211,7 +215,7 @@ void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, 
         if (idx == INV_INDEX) continue;
         BYTE mapunit_state = GETMUSTATE(pGame->map[idx]);
         if (mapunit_state == MUS_COVER)
-            drawDCMUUncov(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx));
+            drawDCMUUncov(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx), false);
         else if (mapunit_state == MUS_MARK)
             drawDCMUMark(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx), true);
     }
@@ -230,18 +234,20 @@ void getConfPath(LPTSTR Path, DWORD size_ch)
     StringCchCat(Path, size_ch, TEXT(CONF_FNAME));
 }
 
-void initGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT plastwndpos)
+void loadGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
 {
-    //load last window position, use default position if config data error or out of desktop
-    plastwndpos->x = GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_XPOS), DEF_WND_LEFT, Path);
-    plastwndpos->y = GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_YPOS), DEF_WND_TOP, Path);
-    RECT desktop_rect;
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &desktop_rect, 0);
-    if ((DWORD)(plastwndpos->x - desktop_rect.left) >= (DWORD)(desktop_rect.right - desktop_rect.left - DEF_WND_RESERVE)
-        || (DWORD)(plastwndpos->y - desktop_rect.top) >= (DWORD)(desktop_rect.bottom - desktop_rect.top - DEF_WND_RESERVE))
-        *plastwndpos = (POINT){ DEF_WND_LEFT, DEF_WND_TOP };
+    //try to load last window position
+    POINT pt;
+    pt.x = GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_XPOS), LONG_MAX, Path);
+    pt.y = GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_YPOS), LONG_MAX, Path);
+    HMONITOR hmon = MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
+    if (hmon) {
+        MONITORINFO moni = { sizeof(MONITORINFO) };
+        GetMonitorInfo(hmon, &moni);
+        if (PtInRect(&moni.rcWork, pt)) *pwndpos = pt;
+    }
 
-    //load Game information, use JUNIOR if config data error
+    //try to load Game information, use JUNIOR if config data error
     int mode, width, height, mines, mark;
     mode = (BYTE)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MODE), CRUSH, Path);
     width = (BYTE)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_WIDTH), 0, Path);
@@ -251,7 +257,7 @@ void initGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT plastwndp
     setGameMode(pGame, mode, width, height, mines);
     setMark(pGame, mark);
 
-    //load Record information, use default if config data error
+    //try to load Record information, use default if config data error
     pScore->junior_time = (WORD)GetPrivateProfileInt(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JTIME), MAX_TIME, Path);
     pScore->middle_time = (WORD)GetPrivateProfileInt(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MTIME), MAX_TIME, Path);
     pScore->senior_time = (WORD)GetPrivateProfileInt(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_STIME), MAX_TIME, Path);

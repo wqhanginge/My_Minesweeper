@@ -43,7 +43,7 @@ bool last_dbclick;  //indicate if last mouse event was a double button click
 bool rb_capture;    //indicate if ResetButton get the capture
 
 
-void setMenuChecked(BYTE GameMode)
+void setMenuChecked(HMENU hmenu, BYTE GameMode)
 {
     MENUITEMINFO mii = { sizeof(MENUITEMINFO) };
 
@@ -51,48 +51,48 @@ void setMenuChecked(BYTE GameMode)
     case JUNIOR:
         mii.fMask = MIIM_STATE;
         mii.fState = MFS_CHECKED;
-        SetMenuItemInfo(hMenu, ID_GAME_JUNIOR, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_JUNIOR, FALSE, &mii);
         mii.fState = MFS_UNCHECKED;
-        SetMenuItemInfo(hMenu, ID_GAME_MIDDLE, FALSE, &mii);
-        SetMenuItemInfo(hMenu, ID_GAME_SENIOR, FALSE, &mii);
-        SetMenuItemInfo(hMenu, ID_GAME_CUSTOM, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_MIDDLE, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_SENIOR, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_CUSTOM, FALSE, &mii);
         break;
     case MIDDLE:
         mii.fMask = MIIM_STATE;
         mii.fState = MFS_CHECKED;
-        SetMenuItemInfo(hMenu, ID_GAME_MIDDLE, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_MIDDLE, FALSE, &mii);
         mii.fState = MFS_UNCHECKED;
-        SetMenuItemInfo(hMenu, ID_GAME_JUNIOR, FALSE, &mii);
-        SetMenuItemInfo(hMenu, ID_GAME_SENIOR, FALSE, &mii);
-        SetMenuItemInfo(hMenu, ID_GAME_CUSTOM, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_JUNIOR, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_SENIOR, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_CUSTOM, FALSE, &mii);
         break;
     case SENIOR:
         mii.fMask = MIIM_STATE;
         mii.fState = MFS_CHECKED;
-        SetMenuItemInfo(hMenu, ID_GAME_SENIOR, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_SENIOR, FALSE, &mii);
         mii.fState = MFS_UNCHECKED;
-        SetMenuItemInfo(hMenu, ID_GAME_JUNIOR, FALSE, &mii);
-        SetMenuItemInfo(hMenu, ID_GAME_MIDDLE, FALSE, &mii);
-        SetMenuItemInfo(hMenu, ID_GAME_CUSTOM, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_JUNIOR, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_MIDDLE, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_CUSTOM, FALSE, &mii);
         break;
     case CUSTOM:
         mii.fMask = MIIM_STATE;
         mii.fState = MFS_CHECKED;
-        SetMenuItemInfo(hMenu, ID_GAME_CUSTOM, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_CUSTOM, FALSE, &mii);
         mii.fState = MFS_UNCHECKED;
-        SetMenuItemInfo(hMenu, ID_GAME_JUNIOR, FALSE, &mii);
-        SetMenuItemInfo(hMenu, ID_GAME_MIDDLE, FALSE, &mii);
-        SetMenuItemInfo(hMenu, ID_GAME_SENIOR, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_JUNIOR, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_MIDDLE, FALSE, &mii);
+        SetMenuItemInfo(hmenu, ID_GAME_SENIOR, FALSE, &mii);
         break;
     }
 }
 
-void setQMarkChecked(bool Mark)
+void setQMarkChecked(HMENU hmenu, bool Mark)
 {
     MENUITEMINFO mii = { sizeof(MENUITEMINFO) };
     mii.fMask = MIIM_STATE;
     mii.fState = (Mark) ? MFS_CHECKED : MFS_UNCHECKED;
-    SetMenuItemInfo(hMenu, ID_GAME_MARK, FALSE, &mii);
+    SetMenuItemInfo(hmenu, ID_GAME_MARK, FALSE, &mii);
 }
 
 void updateRecordContent(HWND hrecord)
@@ -180,9 +180,8 @@ INT_PTR CALLBACK AboutProc(HWND habout, UINT msg, WPARAM wparam, LPARAM lparam)
     }
     case WM_COMMAND: {
         switch (LOWORD(wparam)) {
-        case IDLICENSE:
-            //open license dialog
-            DialogBox(hInst, MAKEINTRESOURCE(IDD_LICENSE), habout, LicenseProc);
+        case IDLICENSE: //open license dialog
+            DialogBox((HINSTANCE)GetWindowLongPtr(habout, GWLP_HINSTANCE), MAKEINTRESOURCE(IDD_LICENSE), habout, LicenseProc);
             break;
         case IDOK:
             EndDialog(habout, 0);
@@ -234,8 +233,7 @@ INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam
     }
     case WM_COMMAND: {
         switch (LOWORD(wparam)) {
-        case IDRESET:
-            //reset the record
+        case IDRESET:   //reset the record
             resetRecord(&Score);
             updateRecordContent(hrecord);
             break;
@@ -290,13 +288,12 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
     }
     case WM_DESTROY: {
         //set game mode when exit dialog
-        PostMessage(hWnd, WMAPP_GAMEMODECHG, CUSTOM, whm);
+        PostMessage(GetParent(hcustom), WMAPP_GAMEMODECHG, CUSTOM, whm);
         return TRUE;
     }
     case WM_COMMAND: {
         switch (LOWORD(wparam)) {
-        case IDOK:
-            //get what in edit control when click OK
+        case IDOK:  //get what in edit control when click OK
             whm = getCustomContent(hcustom);
             EndDialog(hcustom, 0);
             break;
@@ -311,44 +308,43 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
 }
 
 
-LRESULT onMenu(WPARAM wparam)
+LRESULT onMenu(HWND hwnd, WPARAM wparam)
 {
+    HINSTANCE hinst = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
+    HMENU hmenu = GetMenu(hwnd);
+
     switch (LOWORD(wparam)) {
-    case ID_GAME_START:
-        PostMessage(hWnd, WMAPP_GAMERESET, 0, 0);
+    case ID_GAME_START: //start a new game
+        PostMessage(hwnd, WMAPP_GAMERESET, 0, 0);
         break;
-    case ID_GAME_JUNIOR:
-        //change game mode
-        setMenuChecked(JUNIOR);
-        PostMessage(hWnd, WMAPP_GAMEMODECHG, JUNIOR, 0);
+    case ID_GAME_JUNIOR:    //change game mode
+        setMenuChecked(hmenu, JUNIOR);
+        PostMessage(hwnd, WMAPP_GAMEMODECHG, JUNIOR, 0);
         break;
     case ID_GAME_MIDDLE:
-        setMenuChecked(MIDDLE);
-        PostMessage(hWnd, WMAPP_GAMEMODECHG, MIDDLE, 0);
+        setMenuChecked(hmenu, MIDDLE);
+        PostMessage(hwnd, WMAPP_GAMEMODECHG, MIDDLE, 0);
         break;
     case ID_GAME_SENIOR:
-        setMenuChecked(SENIOR);
-        PostMessage(hWnd, WMAPP_GAMEMODECHG, SENIOR, 0);
+        setMenuChecked(hmenu, SENIOR);
+        PostMessage(hwnd, WMAPP_GAMEMODECHG, SENIOR, 0);
         break;
     case ID_GAME_CUSTOM:
-        setMenuChecked(CUSTOM);
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_CUSTOM), hWnd, CustomProc);
+        setMenuChecked(hmenu, CUSTOM);
+        DialogBox(hinst, MAKEINTRESOURCE(IDD_CUSTOM), hwnd, CustomProc);
         break;
-    case ID_GAME_MARK:
-        //enable or disable Question Mark mode
+    case ID_GAME_MARK:  //enable or disable Question Mark mode
         setMark(&Game, !Game.mark);
-        setQMarkChecked(Game.mark);
+        setQMarkChecked(hmenu, Game.mark);
         break;
-    case ID_GAME_RECORD:
-        //show records
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_RECORD), hWnd, RecordProc);
+    case ID_GAME_RECORD:    //show records
+        DialogBox(hinst, MAKEINTRESOURCE(IDD_RECORD), hwnd, RecordProc);
         break;
     case ID_GAME_EXIT:
-        PostMessage(hWnd, WM_CLOSE, 0, 0);
+        PostMessage(hwnd, WM_CLOSE, 0, 0);
         break;
-    case ID_ABOUT:
-        //show about infomation
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUT), hWnd, AboutProc);
+    case ID_ABOUT:  //show about infomation
+        DialogBox(hinst, MAKEINTRESOURCE(IDD_ABOUT), hwnd, AboutProc);
         break;
     }
     return 0;
@@ -356,32 +352,30 @@ LRESULT onMenu(WPARAM wparam)
 
 LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
-    POINT wndpos;
-    RECT wndrect, cltrect;
-    FILETIME systime;
-    TCHAR conf_path[MAX_CONFPATH];
-    int edgew, edgeh;
-
-    //load bitmaps
-    loadBitmaps(&RBhbm, hInst);
+    LPCREATESTRUCT lpcs = (LPCREATESTRUCT)lparam;
 
     //init game from file
+    POINT wndpos = { lpcs->x, lpcs->y };
+    TCHAR conf_path[MAX_CONFPATH];
     getConfPath(conf_path, MAX_CONFPATH);
-    initGame(conf_path, &Game, &Score, &wndpos);
+    loadGame(conf_path, &Game, &Score, &wndpos);
+
+    //set random seed
+    FILETIME systime;
     GetSystemTimeAsFileTime(&systime);
     srand(((systime.dwHighDateTime << 16) | (systime.dwLowDateTime >> 16)));
 
+    //load bitmaps
+    loadBitmaps(&RBhbm, lpcs->hInstance);
+
     //init menu info
-    setMenuChecked(Game.mode);
-    setQMarkChecked(Game.mark);
+    setMenuChecked(lpcs->hMenu, Game.mode);
+    setQMarkChecked(lpcs->hMenu, Game.mark);
 
     //adjust window size
-    GetWindowRect(hwnd, &wndrect);
-    GetClientRect(hwnd, &cltrect);
-    edgew = (wndrect.right - wndrect.left) - cltrect.right;
-    edgeh = (wndrect.bottom - wndrect.top) - cltrect.bottom;
-    wndrect = (RECT){ wndpos.x, wndpos.y, wndpos.x + CLIENT_WIDTH(Game.width) + edgew, wndpos.y + CLIENT_HEIGHT(Game.height) + edgeh };
-    MoveWindow(hwnd, wndrect.left, wndrect.top, wndrect.right - wndrect.left, wndrect.bottom - wndrect.top, FALSE);
+    RECT wndrect = { 0, 0, CLIENT_WIDTH(Game.width), CLIENT_HEIGHT(Game.height) };
+    AdjustWindowRectEx(&wndrect, lpcs->style, TRUE, lpcs->dwExStyle);
+    MoveWindow(hwnd, wndpos.x, wndpos.y, wndrect.right - wndrect.left, wndrect.bottom - wndrect.top, FALSE);
 
     //init double button click state and capture state
     last_dbclick = false;
@@ -391,17 +385,17 @@ LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 LRESULT onDestroy(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
-    POINT wndpos;
     RECT wndrect;
+    GetWindowRect(hwnd, &wndrect);
+    POINT wndpos = { wndrect.left, wndrect.top };
+
+    //save game info
     TCHAR conf_path[MAX_CONFPATH];
+    getConfPath(conf_path, MAX_CONFPATH);
+    saveGame(conf_path, &Game, &Score, &wndpos);
 
     //release bitmaps
     freeBitmaps(&RBhbm);
-    //save game info
-    GetWindowRect(hwnd, &wndrect);
-    wndpos = (POINT){ wndrect.left, wndrect.top };
-    getConfPath(conf_path, MAX_CONFPATH);
-    saveGame(conf_path, &Game, &Score, &wndpos);
 
     PostQuitMessage(0);
     return 0;
@@ -418,14 +412,14 @@ LRESULT onPaint(HWND hwnd, WPARAM wparam, LPARAM lparam)
     SelectObject(hdcbuffer, hbmbuffer);
 
     drawDCClientBg(hdcbuffer, 0, 0, Game.width, Game.height);
-    drawDCInfoBg(hdcbuffer, INFO_LEFT, INFO_TOP, Game.width);
+    drawDCHeadAreaBg(hdcbuffer, HEADAREA_LEFT, HEADAREA_TOP, Game.width);
     drawDCMapAreaBg(hdcbuffer, MAPAREA_LEFT, MAPAREA_TOP, Game.width, Game.height);
-    drawDCNumBg(hdcbuffer, MINE_LEFT, MINE_TOP);
-    drawDCNumBg(hdcbuffer, TIME_LEFT(Game.width), TIME_TOP);
-    drawDCINums(hdcbuffer, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains);
-    drawDCINums(hdcbuffer, TNUMS_LEFT(Game.width), TNUMS_TOP, Game.time);
+    drawDCInfoBg(hdcbuffer, MINE_LEFT, MINE_TOP);
+    drawDCInfoBg(hdcbuffer, TIME_LEFT(Game.width), TIME_TOP);
+    drawDCINums(hdcbuffer, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains, INUMSF_SHOWALL);
+    drawDCINums(hdcbuffer, TNUMS_LEFT(Game.width), TNUMS_TOP, Game.time, INUMSF_SHOWALL);
     drawDCResetButton(hdcbuffer, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
-    paintDCMap(hdcbuffer, MAP_LEFT, MAP_TOP, &Game);
+    paintDCMap(hdcbuffer, MAP_LEFT, MAP_TOP, &Game, NULL);
 
     BitBlt(hpaintdc, 0, 0, CLIENT_WIDTH(Game.width), CLIENT_HEIGHT(Game.height), hdcbuffer, 0, 0, SRCCOPY);
     DeleteDC(hdcbuffer);
@@ -438,7 +432,7 @@ LRESULT onPaint(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onCommand(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     if (lparam == 0 && HIWORD(wparam) == 0)
-        return onMenu(wparam);
+        return onMenu(hwnd, wparam);
     return 0;
 }
 
@@ -472,9 +466,10 @@ LRESULT onGameSuccess(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
     //if break record
     if (isNewRecord(&Game, &Score)) {
+        HINSTANCE hinst = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
         setRecordTime(&Score, Game.mode, Game.time);
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_GETNAME), hwnd, GetNameProc);
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_RECORD), hwnd, RecordProc);
+        DialogBox(hinst, MAKEINTRESOURCE(IDD_GETNAME), hwnd, GetNameProc);
+        DialogBox(hinst, MAKEINTRESOURCE(IDD_RECORD), hwnd, RecordProc);
     }
     ReleaseDC(hwnd, hdc);
     return 0;
@@ -482,22 +477,19 @@ LRESULT onGameSuccess(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 LRESULT onGameModeChg(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
-    RECT wndrect, cltrect;
-
     KillTimer(hwnd, GAME_TIMER_ID);
     setGameMode(&Game, (BYTE)wparam, GETCHGWIDTH(lparam), GETCHGHEIGHT(lparam), GETCHGMINES(lparam));
+    setCurrBitmap(&RBhbm, RBhbm.normal);
     last_dbclick = false;
 
     //change window size for new game map size, no need to reset Game again
-    //and invalidate the whole client area for repaint
+    RECT wndrect, cltrect;
     GetWindowRect(hwnd, &wndrect);
     GetClientRect(hwnd, &cltrect);
-    wndrect.right = CLIENT_WIDTH(Game.width) + ((wndrect.right - wndrect.left) - cltrect.right) + wndrect.left;
-    wndrect.bottom = CLIENT_HEIGHT(Game.height) + ((wndrect.bottom - wndrect.top) - cltrect.bottom) + wndrect.top;
-    MoveWindow(hwnd, wndrect.left, wndrect.top, wndrect.right - wndrect.left, wndrect.bottom - wndrect.top, TRUE);
 
-    setCurrBitmap(&RBhbm, RBhbm.normal);
-    InvalidateRect(hwnd, NULL, FALSE);
+    int wndw = CLIENT_WIDTH(Game.width) + ((wndrect.right - wndrect.left) - cltrect.right);
+    int wndh = CLIENT_HEIGHT(Game.height) + ((wndrect.bottom - wndrect.top) - cltrect.bottom);
+    MoveWindow(hwnd, wndrect.left, wndrect.top, wndw, wndh, TRUE);
     return 0;
 }
 
@@ -505,7 +497,7 @@ LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     HDC hdc = GetDC(hwnd);
     SetCapture(hwnd);
-    if (lparamIsInRB(lparam, Game.width)) { //click on ResetButton
+    if (isLparamInRB(lparam, Game.width)) { //click on ResetButton
         rb_capture = true;  //set ResetButton capture
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, true);
     }
@@ -514,7 +506,7 @@ LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam)
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
 
         //if in the map area
-        if (lparamIsInMap(lparam, Game.width, Game.height)) {
+        if (isLparamInMap(lparam, Game.width, Game.height)) {
             int index = lparam2index(&Game, lparam);
             bool double_buttons = wparam & MK_RBUTTON;
             showSelectedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index, INV_INDEX, double_buttons);
@@ -529,7 +521,7 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
     HDC hdc = GetDC(hwnd);
     ReleaseCapture();
     if (rb_capture) {   //if ResetButton got capture
-        if (lparamIsInRB(lparam, Game.width)) { //click up
+        if (isLparamInRB(lparam, Game.width)) { //click up
             paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
             PostMessage(hwnd, WMAPP_GAMERESET, 0, 0);
         }
@@ -540,7 +532,7 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
 
         //if in the map area
-        if (lparamIsInMap(lparam, Game.width, Game.height)) {
+        if (isLparamInMap(lparam, Game.width, Game.height)) {
             int index = lparam2index(&Game, lparam);
             if (wparam & MK_RBUTTON) {  //double buttons
                 last_dbclick = true;
@@ -581,8 +573,8 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     HDC hdc = GetDC(hwnd);
-    //won't work after game is finished or the mouse is not in the Map area or ResetButton got capture
-    if (!rb_capture && !ISGAMESET(Game.state) && lparamIsInMap(lparam, Game.width, Game.height)) {
+    //won't work after game is finished or the mouse is not in the map area or ResetButton got capture
+    if (!rb_capture && !ISGAMESET(Game.state) && isLparamInMap(lparam, Game.width, Game.height)) {
         int index = lparam2index(&Game, lparam);
         if (wparam & MK_LBUTTON) {  //double buttons
             setCurrBitmap(&RBhbm, RBhbm.click);
@@ -610,8 +602,8 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
         setCurrBitmap(&RBhbm, RBhbm.normal);
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
 
-        //if in the Map area
-        if (lparamIsInMap(lparam, Game.width, Game.height)) {
+        //if in the map area
+        if (isLparamInMap(lparam, Game.width, Game.height)) {
             int index = lparam2index(&Game, lparam);
             if (wparam & MK_LBUTTON) {  //double buttons
                 last_dbclick = true;
@@ -638,7 +630,7 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
     HDC hdc = GetDC(hwnd);
     if (rb_capture && (wparam & MK_LBUTTON)) {  //if ResetButton got capture
         static bool last_in_rb = true;
-        bool in_rb = lparamIsInRB(lparam, Game.width);
+        bool in_rb = isLparamInRB(lparam, Game.width);
         if (last_in_rb != in_rb) {
             paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, in_rb);
             last_in_rb = in_rb;
@@ -646,7 +638,7 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
     }
     else if (!ISGAMESET(Game.state)) {  //won't work after game is finished
         static int last_index = INV_INDEX;
-        if (!lparamIsInMap(lparam, Game.width, Game.height)) {  //if not in the Map area
+        if (!isLparamInMap(lparam, Game.width, Game.height)) {  //if not in the map area
             if (isidxinmap(&Game, last_index)) {    //update once
                 paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
                 last_index = INV_INDEX;

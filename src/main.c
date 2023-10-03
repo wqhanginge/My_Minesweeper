@@ -30,13 +30,6 @@
 #include "procfunctions.h"
 
 
-/* global handles */
-
-HINSTANCE hInst;    //program instance handle
-HWND hWnd;          //main window handle
-HMENU hMenu;        //main menu handle
-
-
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     switch (msg) {
     case WM_CREATE:
@@ -87,22 +80,20 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR lpCmdLi
 
     RegisterClassEx(&wndc);
 
-    hInst = hInstance;
-    hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINMENU));
-    hWnd = CreateWindow(
+    HWND hwnd = CreateWindow(
         wndc.lpszClassName,
         TEXT(WND_NAME),
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-        DEF_WND_LEFT, DEF_WND_TOP,
+        CW_USEDEFAULT, CW_USEDEFAULT,
         CW_USEDEFAULT, CW_USEDEFAULT,
         NULL,
-        hMenu,
+        LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINMENU)),
         hInstance,
         NULL
     );
 
-    ShowWindow(hWnd, nCmdShow);
-    UpdateWindow(hWnd);
+    ShowWindow(hwnd, nCmdShow);
+    UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {

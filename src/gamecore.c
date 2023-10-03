@@ -161,7 +161,7 @@ int createGameMap(PGameInfo pGame, int index)
     //generate mines, 8 units around where clicked won't have mines
     //use shuffle algorithm
     memset(pGame->map, 0, sizeof(BYTE) * pGame->size);  //clear the whole map
-    memset(pGame->map, MU_MINE, sizeof(BYTE) * pGame->mines);   //generate mines
+    memset(pGame->map, MUF_MINE, sizeof(BYTE) * pGame->mines);  //generate mines
     DWORD neicount = 0;
     for (int i = 0; i < NEI_TOTAL; i++) neicount += (safepos[i] != INV_INDEX);  //remember how many safe positions needed
     for (DWORD k = 0; k < pGame->size - neicount; k++) {    //shuffle algorithm, ignore reserved tail
@@ -190,13 +190,13 @@ int createGameMap(PGameInfo pGame, int index)
 
     //calculate mines around each unit
     for (DWORD i = 0; i < pGame->size; i++) {
-        if (MUISMINE(pGame->map[i])) continue;
+        if (ISMUMINE(pGame->map[i])) continue;
         int m = 0;
         Neighbor neipos;
         getNeighbors(pGame, neipos, index2x(pGame, i), index2y(pGame, i));
         for (int j = 1; j < NEI_TOTAL; j++)
-            if (neipos[j] != INV_INDEX && MUISMINE(pGame->map[neipos[j]])) m++;
-        SETMUMINES(m, pGame->map[i]);
+            if (neipos[j] != INV_INDEX && ISMUMINE(pGame->map[neipos[j]])) m++;
+        SETMUNUMBER(m, pGame->map[i]);
     }
     return RETVAL_NOERROR;
 }
@@ -205,16 +205,16 @@ int clickOne(PGameInfo pGame, int index)
 {
     if (pGame->state != RUNNING) return RETVAL_BADGAMESTATE;
     if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
-    if (!MUISCLICKABLE(pGame->map[index])) return RETVAL_BADMUSTATE;
+    if (!ISMUCLICKABLE(pGame->map[index])) return RETVAL_BADMUSTATE;
 
     pGame->uncov_units++;
-    if (MUISMINE(pGame->map[index])) {  //bomb
+    if (ISMUMINE(pGame->map[index])) {  //bomb
         SETMUSTATE(MUS_BOMB, pGame->map[index]);
         return RETVAL_GAMEFAIL;
     }
     else {  //safe
         SETMUSTATE(MUS_UNCOV, pGame->map[index]);
-        return GETMUMINES(pGame->map[index]);
+        return GETMUNUMBER(pGame->map[index]);
     }
 }
 
@@ -223,11 +223,11 @@ int openBlanks(PGameInfo pGame, int index)
     if (pGame->state != RUNNING) return RETVAL_BADGAMESTATE;
     if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
     if (GETMUSTATE(pGame->map[index]) != MUS_UNCOV) return RETVAL_BADMUSTATE;
-    if (GETMUMINES(pGame->map[index]) != 0) return RETVAL_BADMUSTATE;
+    if (GETMUNUMBER(pGame->map[index]) != 0) return RETVAL_BADMUSTATE;
 
     Neighbor pos;
     getNeighbors(pGame, pos, index2x(pGame, index), index2y(pGame, index));
-    for (int i = 1; i < NEI_TOTAL; i++) {   //no need to take care of INV_INDEX
+    for (int i = 1; i < NEI_TOTAL; i++) {   //no need to take care of INV_INDEX here
         int ret = clickOne(pGame, pos[i]);
         if (ret == 0) openBlanks(pGame, pos[i]);    //do in a recursive manner
     }
@@ -266,11 +266,11 @@ int showAllMines(PGameInfo pGame)
     if (!ISGAMESET(pGame->state)) return RETVAL_BADGAMESTATE;
     for (WORD i = 0; i < pGame->size; i++) {
         BYTE mapunit = pGame->map[i];
-        if (MUISMINE(mapunit) && MUISCLICKABLE(mapunit)) {
+        if (ISMUMINE(mapunit) && ISMUCLICKABLE(mapunit)) {
             BYTE mustate = (pGame->state == SUCCESS) ? MUS_FLAG : MUS_UNCOV;
             SETMUSTATE(mustate, pGame->map[i]);
         }
-        else if (!MUISMINE(mapunit) && GETMUSTATE(mapunit) == MUS_FLAG) {
+        else if (!ISMUMINE(mapunit) && GETMUSTATE(mapunit) == MUS_FLAG) {
             SETMUSTATE(MUS_WRONG, pGame->map[i]);
         }
     }
@@ -284,7 +284,7 @@ bool isMapFullyOpen(PGameInfo pGame)
 
 bool isFirstClick(PGameInfo pGame, int index)
 {
-    return (pGame->state == INIT && MUISCLICKABLE(pGame->map[index]));
+    return (pGame->state == INIT && ISMUCLICKABLE(pGame->map[index]));
 }
 
 int leftClick(PGameInfo pGame, int index)
@@ -329,7 +329,7 @@ int clickAround(PGameInfo pGame, int index)
     int flags = 0;
     for (int i = 1; i < NEI_TOTAL; i++)
         if (pos[i] != INV_INDEX && GETMUSTATE(pGame->map[pos[i]]) == MUS_FLAG) flags++;
-    if (GETMUMINES(pGame->map[pos[0]]) != flags) return RETVAL_BADFLAGNUM;
+    if (GETMUNUMBER(pGame->map[pos[0]]) != flags) return RETVAL_BADFLAGNUM;
 
     flags = RETVAL_NOERROR; //WARNING:the meaning of flags has been changed
     //open neighbors

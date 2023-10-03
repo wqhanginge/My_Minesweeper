@@ -90,19 +90,19 @@
  * N:   Contains the number of mines in neighbors, from 0x0 to 0x8.
  */
 
-#define MU_MINE         0x80
+#define MUF_MINE        0x80
 #define MUS_COVER       0x00
 #define MUS_MARK        0x10
 #define MUS_FLAG        0x20
 #define MUS_UNCOV       0x30
 #define MUS_BOMB        0x40
 #define MUS_WRONG       0x50
-#define GETMUMINES(unit)        ((BYTE)((unit) & 0x0F))
+#define GETMUNUMBER(unit)       ((BYTE)((unit) & 0x0F))
 #define GETMUSTATE(unit)        ((BYTE)((unit) & 0x70))
-#define SETMUMINES(m, unit)     (unit = ((BYTE)((BYTE)((m) & 0x0F) | (BYTE)((unit) & 0xF0))))
+#define SETMUNUMBER(n, unit)    (unit = ((BYTE)((BYTE)((n) & 0x0F) | (BYTE)((unit) & 0xF0))))
 #define SETMUSTATE(S, unit)     (unit = ((BYTE)((BYTE)((S) & 0x70) | (BYTE)((unit) & 0x8F))))
-#define MUISMINE(unit)          ((unit) & MU_MINE)
-#define MUISCLICKABLE(unit)     (GETMUSTATE(unit) <= MUS_MARK)
+#define ISMUMINE(unit)          ((unit) & MUF_MINE)
+#define ISMUCLICKABLE(unit)     (GETMUSTATE(unit) <= MUS_MARK)
 //end Game Map Unit
 
 //Game Map Position
@@ -145,15 +145,15 @@
 typedef int Neighbor[NEI_TOTAL];
 
 typedef struct _GameInfo {
-    BYTE mode;          //[junior, middle, senior, custom]
-    BYTE state;         //[init, running, fail, success]
+    BYTE mode;          //GameMode:[junior, middle, senior, custom]
+    BYTE state;         //GameState:[init, running, fail, success]
     bool mark;          //if the QuestionMark is used
     BYTE width;         //GameMap width: map_units per line
     BYTE height;        //GameMap height: map_units per column
     WORD size;          //GameMap size: width x height
     WORD mines;         //counts of mines in GameMap
     short mine_remains; //counts of mines that haven't been flagged
-    WORD uncov_units;   //counts of map_units that have been uncovered
+    WORD uncov_units;   //counts of MapUnits that have been uncovered
     WORD time;          //GameTime
     BYTE map[MAX_SIZE]; //GameMap data, avaliable area depends on GameMode
 } GameInfo, * PGameInfo;
@@ -188,7 +188,7 @@ int index2x(PGameInfo pGame, int index);
 int index2y(PGameInfo pGame, int index);
 int xy2index(PGameInfo pGame, int x, int y);
 
-//Check if the unit index is in the map area.
+//Check if the unit index is valid.
 bool isxyinmap(PGameInfo pGame, int x, int y);
 bool isidxinmap(PGameInfo pGame, int index);
 
@@ -203,8 +203,8 @@ int getNeighbors(PGameInfo pGame, Neighbor neighbor, int x, int y);
 
 //Set GameMode with JUNIOR by default if 'mode' is an undefined value.
 //If 'mode' is a standard value(not CUSTOM), 'width', 'height' and 'mines' will be ignored.
-//CUSTOM is limited by MAX_WIDTH, MAX_HEIGHT, MAX_MINES and MIN_***.
-//This function will set GameState to INIT and erase the whole GameMap.
+//CUSTOM is limited by MAX_WIDTH, MAX_HEIGHT, MAX_MINES and MIN***.
+//This function will set GameState to INIT and clear the whole GameMap.
 void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines);
 
 //Enable or disable QuestionMark mode.

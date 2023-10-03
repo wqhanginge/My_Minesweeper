@@ -66,8 +66,8 @@
 
 /* miscellaneous defines */
 
+#define WNDCLS_NAME         "MYMINESWEEPER"
 #define WND_NAME            "My Minesweeper"
-#define WNDCLS_NAME         "My_Minesweeper"
 #define GAME_TIMER_ID       1
 #define GAME_TIMER_ELAPSE   1000
 
@@ -84,23 +84,14 @@ bool rb_capture;    //indicate if ResetButton get the capture
 */
 
 
-/* Followings are global handles for program and window,
- * they are defined in main.c but need to be accessed in this file.
- */
-
-extern HINSTANCE hInst; //program instance handle
-extern HWND hWnd;       //main window handle
-extern HMENU hMenu;     //main menu handle
-
-
 
 /* sub functions for specific use */
 
 //Change GameMode checked in Menu, do nothing if GameMode is illegal.
-void setMenuChecked(BYTE GameMode);
+void setMenuChecked(HMENU hmenu, BYTE GameMode);
 
 //Check or uncheck QuestionMark in Menu.
-void setQMarkChecked(bool Mark);
+void setQMarkChecked(HMENU hmenu, bool Mark);
 
 //update the information on Record Dialog with current score data
 void updateRecordContent(HWND hrecord);
@@ -133,7 +124,7 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
 /* following functions are encapsulations of operations in WndProc */
 
 //response menu message
-LRESULT onMenu(WPARAM wparam);
+LRESULT onMenu(HWND hwnd, WPARAM wparam);
 
 //WM_CREATE
 LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam);

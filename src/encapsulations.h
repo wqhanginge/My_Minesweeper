@@ -37,9 +37,6 @@
 
 /* IO defines and game init defines */
 
-#define DEF_WND_LEFT    128
-#define DEF_WND_TOP     128
-#define DEF_WND_RESERVE 20
 #define CONF_FNAME      "MyMinesweeper.ini"
 #define CONF_PATHENV    "LOCALAPPDATA"
 #define MAX_APPPATH     480
@@ -82,7 +79,7 @@ Click \"License\" to consult the GNU General Public License version 3 for more d
 //Bitmap handles structure, these bitmaps are used to draw ResetButton.
 typedef struct _ResetButtonHBitmaps {
     HBITMAP normal;     //default bitmap
-    HBITMAP click;      //show when click on map
+    HBITMAP click;      //show when click on window
     HBITMAP fail;       //show when game fail
     HBITMAP success;    //show when game success
     HBITMAP current;    //remember current using bitmap
@@ -92,21 +89,21 @@ typedef struct _ResetButtonHBitmaps {
 
 /* position relative functions */
 
-//Transform between pixel position on MapArea and GameMap index.
+//Transform between pixel position on window and GameMap index.
 //Assume the whole Map's left-top as position 0.
 int ppos2index(PGameInfo pGame, int px, int py);
 int index2px(PGameInfo pGame, int index);
 int index2py(PGameInfo pGame, int index);
 
-//Check if a mouse position is inside the ResetButton area.
-bool lparamIsInRB(LPARAM lparam, BYTE n_map_width);
+//Check if a mouse position is inside the ResetButton region.
+bool isLparamInRB(LPARAM lparam, BYTE n_map_width);
 
-//Check if a mouse position is inside the GameMap area.
-bool lparamIsInMap(LPARAM laparm, BYTE n_map_width, BYTE n_map_height);
+//Check if a mouse position is inside the Map region.
+bool isLparamInMap(LPARAM laparm, BYTE n_map_width, BYTE n_map_height);
 
 //Change a mouse position to GameMap index.
 //The input should be the LPARAM of WM_MOUSEMOVE message or something similarly
-//that can be unpacked using MAKEPOINTS() macro.
+//that can be unpacked using MAKEPOINTS macro.
 int lparam2index(PGameInfo pGame, LPARAM lparam);
 
 
@@ -115,16 +112,15 @@ int lparam2index(PGameInfo pGame, LPARAM lparam);
 void loadBitmaps(PRBHBM pRBhbm, HINSTANCE hinst);
 void freeBitmaps(PRBHBM pRBhbm);
 
-//Change current ResetButton bitmap pointer to specified bitmap.
-//NOTE: This function ONLY changes the pointer and do NOT affect the ResetButton.
+//Change current ResetButton bitmap handle to specified bitmap.
+//NOTE: This function ONLY changes the handle and do NOT affect the ResetButton.
 void setCurrBitmap(PRBHBM pRBhbm, HBITMAP hbm);
 
 
 /* UI functions */
 
-//Paint specific numbers on Num Part with default color.
-//If num is out of range, it draws '---'.
-//(-100 < num < 1000)
+//Paint the specific number for INums with default color.
+//Available range:[INUMS_MIN, INUMS_MAX], otherwise, it draws symbol '---'.
 void paintINums(HDC hdestdc, int left, int top, int num);
 
 
@@ -132,24 +128,25 @@ void paintINums(HDC hdestdc, int left, int top, int num);
 void paintResetButton(HDC hdestdc, int left, int top, HBITMAP hbm, bool clicked);
 
 
-//Draw a MapUnit depends on MapUnitState with default color.
-//Draw a covered MapUnit by default.
-//w:MU_SIZE, h:MU_SIZE
+//Paint a MapUnit depends on MapUnitState with default color directly on DC.
+//Paint a covered MapUnit by default.
+//w:MUP_SIZE, h:MUP_SIZE
 //no DC-buffer
 void paintDCMapUnit(HDC hdestdc, int left, int top, BYTE mapunit);
 
-//Draw GameMap directly on DC.
+//Paint GameMap directly on DC.
+//Specify the draw rect, or NULL that representing the whole GameMap;
+//the left and top are included while the right and bottom are excluded.
 //w:MAP_WIDTH, h:MAP_HEIGHT
 //no DC-Buffer
-void paintDCMap(HDC hdestdc, int left, int top, PGameInfo pGame);
+void paintDCMap(HDC hdestdc, int left, int top, PGameInfo pGame, PRECT pxyrect);
 
-//Draw a MapUnit depends on MapUnit data with default color.
-//Draw a covered MapUnit by default.
-void paintMapUnit(HDC hdestdc, int muleft, int mutop, BYTE mapunit);
+//Paint a MapUnit depends on MapUnit data with default color.
+//Paint a covered MapUnit by default.
+void paintMapUnit(HDC hdestdc, int left, int top, BYTE mapunit);
 
-//Paint GameMap, the left-top is position 0.
-//This function redraws the whole MapArea content.
-void paintMap(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame);
+//Paint GameMap.
+void paintMap(HDC hdestdc, int left, int top, PGameInfo pGame);
 
 
 //Show selected state when a MapUnit or a group of MapUnits are clicked down.
@@ -164,10 +161,10 @@ void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, 
 //Make sure the buffer has enough space.
 void getConfPath(LPTSTR Path, DWORD size_ch);
 
-//Load infomation from a config file, including GameInfo, ScoreInfo and a POINT struct
-//which contains left-top position where the window was last time.
-//Use default settings to init if error.
-void initGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT plastwndpos);
+//Load infomation from a config file.
+//Load and init GameInfo and ScoreInfo, or init by default settings if load fail.
+//Load last window position to POINT struct, or do nothing if load fail.
+void loadGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos);
 
 //Save infomation into a config file, including GameInfo, ScoreInfo and window position.
 void saveGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos);
