@@ -114,17 +114,18 @@ INT_PTR CALLBACK LicenseProc(HWND hlicense, UINT msg, WPARAM wparam, LPARAM lpar
 //Record Dialog, show record on child modal window
 INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam);
 
-//GetName Dialog, provide an edit box to get RecordName after breaking Record
+//GetName Dialog, provide an edit box to get the player name after breaking Record
 INT_PTR CALLBACK GetNameProc(HWND hgetname, UINT msg, WPARAM wparam, LPARAM lparam);
 
-//Custom Dialog, use to customize GameMap
+//Custom Dialog, get customized GameMap information and return it through the EndDialog function
+//provide the dufault GameMap information through the DialogBoxParam function
 INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam);
 
 
 /* following functions are encapsulations of operations in WndProc */
 
 //response menu message
-LRESULT onMenu(HWND hwnd, WPARAM wparam);
+LRESULT onMenu(HWND hwnd, UINT miid);
 
 //WM_CREATE
 LRESULT onCreate(HWND hwnd, WPARAM wparam, LPARAM lparam);

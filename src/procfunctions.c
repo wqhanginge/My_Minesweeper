@@ -45,46 +45,15 @@ bool rb_capture;    //indicate if ResetButton get the capture
 
 void setMenuChecked(HMENU hmenu, BYTE GameMode)
 {
-    MENUITEMINFO mii = { sizeof(MENUITEMINFO) };
-
+    UINT miid;
     switch (GameMode) {
-    case JUNIOR:
-        mii.fMask = MIIM_STATE;
-        mii.fState = MFS_CHECKED;
-        SetMenuItemInfo(hmenu, ID_GAME_JUNIOR, FALSE, &mii);
-        mii.fState = MFS_UNCHECKED;
-        SetMenuItemInfo(hmenu, ID_GAME_MIDDLE, FALSE, &mii);
-        SetMenuItemInfo(hmenu, ID_GAME_SENIOR, FALSE, &mii);
-        SetMenuItemInfo(hmenu, ID_GAME_CUSTOM, FALSE, &mii);
-        break;
-    case MIDDLE:
-        mii.fMask = MIIM_STATE;
-        mii.fState = MFS_CHECKED;
-        SetMenuItemInfo(hmenu, ID_GAME_MIDDLE, FALSE, &mii);
-        mii.fState = MFS_UNCHECKED;
-        SetMenuItemInfo(hmenu, ID_GAME_JUNIOR, FALSE, &mii);
-        SetMenuItemInfo(hmenu, ID_GAME_SENIOR, FALSE, &mii);
-        SetMenuItemInfo(hmenu, ID_GAME_CUSTOM, FALSE, &mii);
-        break;
-    case SENIOR:
-        mii.fMask = MIIM_STATE;
-        mii.fState = MFS_CHECKED;
-        SetMenuItemInfo(hmenu, ID_GAME_SENIOR, FALSE, &mii);
-        mii.fState = MFS_UNCHECKED;
-        SetMenuItemInfo(hmenu, ID_GAME_JUNIOR, FALSE, &mii);
-        SetMenuItemInfo(hmenu, ID_GAME_MIDDLE, FALSE, &mii);
-        SetMenuItemInfo(hmenu, ID_GAME_CUSTOM, FALSE, &mii);
-        break;
-    case CUSTOM:
-        mii.fMask = MIIM_STATE;
-        mii.fState = MFS_CHECKED;
-        SetMenuItemInfo(hmenu, ID_GAME_CUSTOM, FALSE, &mii);
-        mii.fState = MFS_UNCHECKED;
-        SetMenuItemInfo(hmenu, ID_GAME_JUNIOR, FALSE, &mii);
-        SetMenuItemInfo(hmenu, ID_GAME_MIDDLE, FALSE, &mii);
-        SetMenuItemInfo(hmenu, ID_GAME_SENIOR, FALSE, &mii);
-        break;
+    case JUNIOR: miid = ID_GAME_JUNIOR; break;
+    case MIDDLE: miid = ID_GAME_MIDDLE; break;
+    case SENIOR: miid = ID_GAME_SENIOR; break;
+    case CUSTOM: miid = ID_GAME_CUSTOM; break;
+    default: return;
     }
+    CheckMenuRadioItem(hmenu, ID_GAME_JUNIOR, ID_GAME_CUSTOM, miid, MF_BYCOMMAND);
 }
 
 void setQMarkChecked(HMENU hmenu, bool Mark)
@@ -278,27 +247,20 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
     switch (msg) {
     case WM_INITDIALOG: {
         //init edit control show
-        whm = MAKECHGLPARAM(Game.width, Game.height, Game.mines);
+        whm = lparam;
         updateCustomContent(hcustom, whm);
         return TRUE;
     }
     case WM_CLOSE: {
-        EndDialog(hcustom, 0);
-        return TRUE;
-    }
-    case WM_DESTROY: {
-        //set game mode when exit dialog
-        PostMessage(GetParent(hcustom), WMAPP_GAMEMODECHG, CUSTOM, whm);
+        EndDialog(hcustom, whm);
         return TRUE;
     }
     case WM_COMMAND: {
         switch (LOWORD(wparam)) {
-        case IDOK:  //get what in edit control when click OK
+        case IDOK:  //get content and exit when click OK
             whm = getCustomContent(hcustom);
-            EndDialog(hcustom, 0);
-            break;
         case IDCANCEL:
-            EndDialog(hcustom, 0);
+            EndDialog(hcustom, whm);
             break;
         }
         return TRUE;
@@ -308,30 +270,32 @@ INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam
 }
 
 
-LRESULT onMenu(HWND hwnd, WPARAM wparam)
+LRESULT onMenu(HWND hwnd, UINT miid)
 {
     HINSTANCE hinst = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
     HMENU hmenu = GetMenu(hwnd);
 
-    switch (LOWORD(wparam)) {
+    switch (miid) {
     case ID_GAME_START: //start a new game
         PostMessage(hwnd, WMAPP_GAMERESET, 0, 0);
         break;
     case ID_GAME_JUNIOR:    //change game mode
-        setMenuChecked(hmenu, JUNIOR);
+        CheckMenuRadioItem(hmenu, ID_GAME_JUNIOR, ID_GAME_CUSTOM, ID_GAME_JUNIOR, MF_BYCOMMAND);
         PostMessage(hwnd, WMAPP_GAMEMODECHG, JUNIOR, 0);
         break;
     case ID_GAME_MIDDLE:
-        setMenuChecked(hmenu, MIDDLE);
+        CheckMenuRadioItem(hmenu, ID_GAME_JUNIOR, ID_GAME_CUSTOM, ID_GAME_MIDDLE, MF_BYCOMMAND);
         PostMessage(hwnd, WMAPP_GAMEMODECHG, MIDDLE, 0);
         break;
     case ID_GAME_SENIOR:
-        setMenuChecked(hmenu, SENIOR);
+        CheckMenuRadioItem(hmenu, ID_GAME_JUNIOR, ID_GAME_CUSTOM, ID_GAME_SENIOR, MF_BYCOMMAND);
         PostMessage(hwnd, WMAPP_GAMEMODECHG, SENIOR, 0);
         break;
     case ID_GAME_CUSTOM:
-        setMenuChecked(hmenu, CUSTOM);
-        DialogBox(hinst, MAKEINTRESOURCE(IDD_CUSTOM), hwnd, CustomProc);
+        CheckMenuRadioItem(hmenu, ID_GAME_JUNIOR, ID_GAME_CUSTOM, ID_GAME_CUSTOM, MF_BYCOMMAND);
+        LPARAM whm = MAKECHGLPARAM(Game.width, Game.height, Game.mines);
+        whm = DialogBoxParam(hinst, MAKEINTRESOURCE(IDD_CUSTOM), hwnd, CustomProc, whm);
+        PostMessage(hwnd, WMAPP_GAMEMODECHG, CUSTOM, whm);
         break;
     case ID_GAME_MARK:  //enable or disable Question Mark mode
         setMark(&Game, !Game.mark);
@@ -403,7 +367,7 @@ LRESULT onDestroy(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 LRESULT onPaint(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
-    //redraw the whole client area
+    //always redraw the whole client area
     PAINTSTRUCT ps;
     HDC hpaintdc = BeginPaint(hwnd, &ps);
 
@@ -431,8 +395,8 @@ LRESULT onPaint(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 LRESULT onCommand(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
-    if (lparam == 0 && HIWORD(wparam) == 0)
-        return onMenu(hwnd, wparam);
+    if (HIWORD(wparam) == 0)    //menu message
+        return onMenu(hwnd, LOWORD(wparam));
     return 0;
 }
 
@@ -482,14 +446,15 @@ LRESULT onGameModeChg(HWND hwnd, WPARAM wparam, LPARAM lparam)
     setCurrBitmap(&RBhbm, RBhbm.normal);
     last_dbclick = false;
 
-    //change window size for new game map size, no need to reset Game again
+    //change window size for new game map size, no need to call resetGame() again
     RECT wndrect, cltrect;
     GetWindowRect(hwnd, &wndrect);
     GetClientRect(hwnd, &cltrect);
 
     int wndw = CLIENT_WIDTH(Game.width) + ((wndrect.right - wndrect.left) - cltrect.right);
     int wndh = CLIENT_HEIGHT(Game.height) + ((wndrect.bottom - wndrect.top) - cltrect.bottom);
-    MoveWindow(hwnd, wndrect.left, wndrect.top, wndw, wndh, TRUE);
+    MoveWindow(hwnd, wndrect.left, wndrect.top, wndw, wndh, FALSE); //never repaint when window size is not changed
+    InvalidateRect(hwnd, NULL, FALSE);  //use this instead of setting 'bRepaint' to TRUE in MoveWindow
     return 0;
 }
 
