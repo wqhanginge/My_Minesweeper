@@ -220,7 +220,7 @@ void stepGameTime(PGameInfo pGame);
 
 /* Game runtime basic functions */
 
-//Erase the GameMap and reset Game infomation.
+//Erase the GameMap and reset Game to INIT without changing the GameMode.
 void resetGame(PGameInfo pGame);
 
 //Create a new GameMap with a safe area at given position.
