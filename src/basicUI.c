@@ -123,8 +123,8 @@ static void drawfulledgebg(
     rect = (RECT){ left + 1, top + 1, left + width - 1, top + height - 1 };
     FillRect(hdestdc, &rect, hdcbrush);
 
-    SetPixel(hdestdc, left + width - 1, top, inner);
-    SetPixel(hdestdc, left, top + height - 1, inner);
+    SetPixelV(hdestdc, left + width - 1, top, inner);
+    SetPixelV(hdestdc, left, top + height - 1, inner);
 }
 
 //Draw 2 pixel edge concave background,
@@ -177,8 +177,8 @@ static inline void draw7sdbg(_In_ HDC hdestdc, _In_ int left, _In_ int top)
 {
     for (int i = 0; i < INFONUM_WIDTH; i++) {
         for (int j = 0; j < INFONUM_HEIGHT; j++) {
-            if (InfoNumBG[i][j]) SetPixel(hdestdc, left + i, top + j, INCOL_SEGOFF);
-            else SetPixel(hdestdc, left + i, top + j, INCOL_BLANK);
+            if (InfoNumBG[i][j]) SetPixelV(hdestdc, left + i, top + j, INCOL_SEGOFF);
+            else SetPixelV(hdestdc, left + i, top + j, INCOL_BLANK);
         }
     }
 }
@@ -271,10 +271,10 @@ static void drawmuitemmine(_In_ HDC hdestdc, _In_ int left, _In_ int top)
     rect = (RECT){ left + 9, top + 9, left + 12, top + 12 };
     FillRect(hdestdc, &rect, hdcbrush);
 
-    SetPixel(hdestdc, left + 6, top + 6, MUCOL_MINESF);
-    SetPixel(hdestdc, left + 6, top + 18, MUCOL_MINESF);
-    SetPixel(hdestdc, left + 18, top + 6, MUCOL_MINESF);
-    SetPixel(hdestdc, left + 18, top + 18, MUCOL_MINESF);
+    SetPixelV(hdestdc, left + 6, top + 6, MUCOL_MINESF);
+    SetPixelV(hdestdc, left + 6, top + 18, MUCOL_MINESF);
+    SetPixelV(hdestdc, left + 18, top + 6, MUCOL_MINESF);
+    SetPixelV(hdestdc, left + 18, top + 18, MUCOL_MINESF);
 }
 
 //Draw a question mark icon.
@@ -387,8 +387,8 @@ static void drawmuitemnum2(_In_ HDC hdestdc, _In_ int left, _In_ int top)
     rect = (RECT){ left + 5, top + 17, left + 20, top + 20 };
     FillRect(hdestdc, &rect, hdcbrush);
 
-    SetPixel(hdestdc, left + 6, top + 6, MUCOL_NUMBER2);
-    SetPixel(hdestdc, left + 18, top + 6, MUCOL_NUMBER2);
+    SetPixelV(hdestdc, left + 6, top + 6, MUCOL_NUMBER2);
+    SetPixelV(hdestdc, left + 18, top + 6, MUCOL_NUMBER2);
 }
 
 //Draw a number 3 icon.
