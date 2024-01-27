@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2023 Gee Wang
+ *  Copyright (C) 2020-2024 Gee Wang
  *
  *  This file is part of My Minesweeper.
  *
@@ -594,7 +594,7 @@ void drawDCINums(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ int num, _I
 {
     /* assert INUMS_MIN == -99 && INUMS_MAX == 999 */
     bool valid = (num >= INUMS_MIN && num <= INUMS_MAX);
-    int a = abs(num) / 100 % 10 - (!valid * (num < 0) * 10);    //let A show '-' when num < 0
+    int a = abs(num) / 100 % 10 - ((!valid + (num < 0)) * 10);  //let A show '-' when num < 0
     int b = abs(num) / 10 % 10 - (!valid * 10);
     int c = abs(num) % 10 - (!valid * 10);
 
