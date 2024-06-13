@@ -76,7 +76,8 @@
 #define SUCCESS             3
 #define UNKNOW              4
 #define ISBADSTATE(State)   ((BYTE)(State) >= UNKNOW)
-#define ISGAMESET(State)    ((BYTE)(State) > RUNNING && (BYTE)(State) < UNKNOW)
+#define ISINPROGRESS(State) ((BYTE)(State) <= RUNNING)
+#define ISGAMESET(State)    ((BYTE)(State) >= FAIL && (BYTE)(State) <= SUCCESS)
 //end Game States
 
 //Game Map Unit
@@ -146,12 +147,12 @@ typedef int Neighbor[NEI_TOTAL];
 
 typedef struct _GameInfo {
     BYTE mode;          //GameMode:[junior, middle, senior, custom]
-    BYTE state;         //GameState:[init, running, fail, success]
-    bool mark;          //if the QuestionMark is used
     BYTE width;         //GameMap width: map_units per line
     BYTE height;        //GameMap height: map_units per column
     WORD size;          //GameMap size: width x height
     WORD mines;         //counts of mines in GameMap
+    bool mark;          //if the QuestionMark is used
+    BYTE state;         //GameState:[init, running, fail, success]
     short mine_remains; //counts of mines that haven't been flagged
     WORD uncov_units;   //counts of MapUnits that have been uncovered
     WORD time;          //GameTime
@@ -204,7 +205,8 @@ int getNeighbors(PGameInfo pGame, Neighbor neighbor, int x, int y);
 //Set GameMode with JUNIOR by default if 'mode' is an undefined value.
 //If 'mode' is a standard value(not CUSTOM), 'width', 'height' and 'mines' will be ignored.
 //CUSTOM is limited by MAX_WIDTH, MAX_HEIGHT, MAX_MINES and MIN***.
-//This function will set GameState to INIT and clear the whole GameMap.
+//This function sets the GameState to UNKNOW.
+//Make sure to call resetGame right after calling this function to init Game properly.
 void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines);
 
 //Enable or disable QuestionMark mode.

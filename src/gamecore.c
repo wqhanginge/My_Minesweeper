@@ -74,51 +74,35 @@ void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines
     switch (mode) {
     case JUNIOR:
         pGame->mode = JUNIOR;
-        pGame->state = INIT;
         pGame->width = JUNIOR_WIDTH;
         pGame->height = JUNIOR_HEIGHT;
         pGame->size = JUNIOR_SIZE;
         pGame->mines = JUNIOR_MINES;
-        pGame->mine_remains = JUNIOR_MINES;
-        pGame->uncov_units = 0;
-        pGame->time = 0;
-        memset(pGame->map, 0, sizeof(BYTE) * pGame->size);
+        pGame->state = UNKNOW;
         break;
     case MIDDLE:
         pGame->mode = MIDDLE;
-        pGame->state = INIT;
         pGame->width = MIDDLE_WIDTH;
         pGame->height = MIDDLE_HEIGHT;
         pGame->size = MIDDLE_SIZE;
         pGame->mines = MIDDLE_MINES;
-        pGame->mine_remains = MIDDLE_MINES;
-        pGame->uncov_units = 0;
-        pGame->time = 0;
-        memset(pGame->map, 0, sizeof(BYTE) * pGame->size);
+        pGame->state = UNKNOW;
         break;
     case SENIOR:
         pGame->mode = SENIOR;
-        pGame->state = INIT;
         pGame->width = SENIOR_WIDTH;
         pGame->height = SENIOR_HEIGHT;
         pGame->size = SENIOR_SIZE;
         pGame->mines = SENIOR_MINES;
-        pGame->mine_remains = SENIOR_MINES;
-        pGame->uncov_units = 0;
-        pGame->time = 0;
-        memset(pGame->map, 0, sizeof(BYTE) * pGame->size);
+        pGame->state = UNKNOW;
         break;
     case CUSTOM:
         pGame->mode = CUSTOM;
-        pGame->state = INIT;
         pGame->width = min(max(width, MIN_WIDTH), MAX_WIDTH);
         pGame->height = min(max(height, MIN_HEIGHT), MAX_HEIGHT);
         pGame->size = pGame->width * pGame->height;
         pGame->mines = min(max(mines, MIN_MINES), MAX_MINES(pGame->size));
-        pGame->mine_remains = (short)pGame->mines;
-        pGame->uncov_units = 0;
-        pGame->time = 0;
-        memset(pGame->map, 0, sizeof(BYTE) * pGame->size);
+        pGame->state = UNKNOW;
         break;
     default:
         setGameMode(pGame, JUNIOR, 0, 0, 0);
@@ -144,7 +128,7 @@ void stepGameTime(PGameInfo pGame)
 void resetGame(PGameInfo pGame)
 {
     pGame->state = INIT;
-    pGame->mine_remains = pGame->mines;
+    pGame->mine_remains = (short)pGame->mines;
     pGame->uncov_units = 0;
     pGame->time = 0;
     memset(pGame->map, 0, sizeof(BYTE) * pGame->size);
@@ -236,7 +220,7 @@ int openBlanks(PGameInfo pGame, int index)
 
 int flagOne(PGameInfo pGame, int index)
 {
-    if (ISGAMESET(pGame->state)) return RETVAL_BADGAMESTATE;
+    if (!ISINPROGRESS(pGame->state)) return RETVAL_BADGAMESTATE;
     if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
 
     //take effect only on covered units
