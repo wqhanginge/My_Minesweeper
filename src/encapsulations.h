@@ -72,7 +72,7 @@
 #define LICNOTESTR      \
 "This program comes with ABSOLUTELY NO WARRANTY.\n\
 This is free software, and you are welcome to redistribute it under certain conditions.\n\n\
-Click \"License\" to consult the GNU General Public License version 3 for more details."
+This program is licensed under the GNU GPL v3. For more details, check <License>."
 
 
 
@@ -173,5 +173,5 @@ void saveGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos);
 /* get program version information */
 void loadProperty(LPTSTR prop, DWORD size_ch);
 
-/* load license resource and convert */
+/* load license resource and convert its encoding */
 void loadLicense(LPTSTR lic, DWORD size_ch);

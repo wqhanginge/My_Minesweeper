@@ -256,6 +256,7 @@ void loadGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
     mark = (bool)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MARK), 0, Path);
     setGameMode(pGame, mode, width, height, mines);
     setMark(pGame, mark);
+    resetGame(pGame);
 
     //try to load Record information, use default if config data error
     pScore->junior_time = (WORD)GetPrivateProfileInt(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JTIME), MAX_TIME, Path);
@@ -268,7 +269,7 @@ void loadGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
 
 void saveGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
 {
-    //conver number into string
+    //convert number into string
     const int size_ch = 8;  //buff size for each number
     const int cnt = 10;     //numbers in total
     TCHAR str[10][8] = { 0 };
@@ -353,8 +354,13 @@ void loadLicense(LPTSTR lic, DWORD size_ch)
             //convert license string to utf-16 encoding if use unicode
             MultiByteToWideChar(CP_UTF8, 0, pRes, dwResLen, lic, size_ch);
 #else
-            //simply copy license string to buffer if use multibyte
-            StringCchCopyN(lic, size_ch, pRes, dwResLen);
+            //convert license string to ANSI encoding if use multibyte
+            LPWSTR wclic = malloc(sizeof(WCHAR) * MAX_LICSTR);
+            if (wclic) {
+                DWORD dwCCh = MultiByteToWideChar(CP_UTF8, 0, pRes, dwResLen, wclic, MAX_LICSTR);
+                WideCharToMultiByte(CP_ACP, 0, wclic, dwCCh, lic, size_ch, NULL, NULL);
+                free(wclic);
+            }
 #endif
         }
     }
