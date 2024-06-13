@@ -297,7 +297,7 @@ LRESULT onMenu(HWND hwnd, UINT miid)
         whm = DialogBoxParam(hinst, MAKEINTRESOURCE(IDD_CUSTOM), hwnd, CustomProc, whm);
         PostMessage(hwnd, WMAPP_GAMEMODECHG, CUSTOM, whm);
         break;
-    case ID_GAME_MARK:  //enable or disable Question Mark mode
+    case ID_GAME_MARK:  //enable or disable QuestionMark
         setMark(&Game, !Game.mark);
         setQMarkChecked(hmenu, Game.mark);
         break;
@@ -443,18 +443,19 @@ LRESULT onGameModeChg(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     KillTimer(hwnd, GAME_TIMER_ID);
     setGameMode(&Game, (BYTE)wparam, GETCHGWIDTH(lparam), GETCHGHEIGHT(lparam), GETCHGMINES(lparam));
+    resetGame(&Game);
     setCurrBitmap(&RBhbm, RBhbm.normal);
     last_dbclick = false;
 
-    //change window size for new game map size, no need to call resetGame() again
+    //change window size for new GameMap size
     RECT wndrect, cltrect;
     GetWindowRect(hwnd, &wndrect);
     GetClientRect(hwnd, &cltrect);
 
     int wndw = CLIENT_WIDTH(Game.width) + ((wndrect.right - wndrect.left) - cltrect.right);
     int wndh = CLIENT_HEIGHT(Game.height) + ((wndrect.bottom - wndrect.top) - cltrect.bottom);
-    MoveWindow(hwnd, wndrect.left, wndrect.top, wndw, wndh, FALSE); //never repaint when window size is not changed
-    InvalidateRect(hwnd, NULL, FALSE);  //use this instead of setting 'bRepaint' to TRUE in MoveWindow
+    MoveWindow(hwnd, wndrect.left, wndrect.top, wndw, wndh, TRUE);  //TRUE for 'bRepaint' to repaint non-client part of window on demand
+    InvalidateRect(hwnd, NULL, FALSE);  //always repaint client part of window
     return 0;
 }
 
@@ -466,11 +467,11 @@ LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam)
         rb_capture = true;  //set ResetButton capture
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, true);
     }
-    else if (!ISGAMESET(Game.state)){   //won't work after game is finished
+    else if (ISINPROGRESS(Game.state)){ //work when game is in progress
         setCurrBitmap(&RBhbm, RBhbm.click);
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
 
-        //if in the map area
+        //if in Map
         if (isLparamInMap(lparam, Game.width, Game.height)) {
             int index = lparam2index(&Game, lparam);
             bool double_buttons = wparam & MK_RBUTTON;
@@ -492,11 +493,11 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
         rb_capture = false; //release ResetButton capture
     }
-    else if (!ISGAMESET(Game.state)) {  //won't work after game is finished
+    else if (ISINPROGRESS(Game.state)) {    //work when game is in progress
         setCurrBitmap(&RBhbm, RBhbm.normal);
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
 
-        //if in the map area
+        //if in Map
         if (isLparamInMap(lparam, Game.width, Game.height)) {
             int index = lparam2index(&Game, lparam);
             if (wparam & MK_RBUTTON) {  //double buttons
@@ -514,7 +515,7 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 last_dbclick = false;
                 if (isFirstClick(&Game, index)) {   //first click, should be done before calling leftClick()
                     SetTimer(hwnd, GAME_TIMER_ID, GAME_TIMER_ELAPSE, NULL);
-                    paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, Game.mines); //reset the MinePart
+                    paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, Game.mines); //reset the Mine SubArea
                 }
                 int ret = leftClick(&Game, index);  //click, then judge success
                 if (ret == RETVAL_GAMEFAIL) {
@@ -538,17 +539,17 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     HDC hdc = GetDC(hwnd);
-    //won't work after game is finished or the mouse is not in the map area or ResetButton got capture
-    if (!rb_capture && !ISGAMESET(Game.state) && isLparamInMap(lparam, Game.width, Game.height)) {
+    //work when game is in progress and mouse is in Map and ResetButton does not get capture
+    if (!rb_capture && ISINPROGRESS(Game.state) && isLparamInMap(lparam, Game.width, Game.height)) {
         int index = lparam2index(&Game, lparam);
         if (wparam & MK_LBUTTON) {  //double buttons
             setCurrBitmap(&RBhbm, RBhbm.click);
             paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
             showSelectedMapUnit(hdc, MAP_LEFT, MAP_TOP, &Game, index, INV_INDEX, true);
         }
-        else {  //single button, flag a unit or mark a unit
+        else {  //single button, flag a MapUnit or mark a MapUnit
             int ret = rightClick(&Game, index);
-            if (ret == RETVAL_NOERROR) {    //if mapunit state is changed
+            if (ret == RETVAL_NOERROR) {    //if the state of MapUnit is changed
                 paintMapUnit(hdc, MAP_LEFT + index2px(&Game, index), MAP_TOP + index2py(&Game, index), Game.map[index]);
                 paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains);
             }
@@ -561,13 +562,12 @@ LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
 LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     HDC hdc = GetDC(hwnd);
-    ReleaseCapture();
-    //won't work after game is finished or ResetButton got capture
-    if (!rb_capture && !ISGAMESET(Game.state)) {
+    //work when game is in progress and ResetButton does not get capture
+    if (!rb_capture && ISINPROGRESS(Game.state)) {
         setCurrBitmap(&RBhbm, RBhbm.normal);
         paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
 
-        //if in the map area
+        //if in Map
         if (isLparamInMap(lparam, Game.width, Game.height)) {
             int index = lparam2index(&Game, lparam);
             if (wparam & MK_LBUTTON) {  //double buttons
@@ -601,15 +601,15 @@ LRESULT onMouseMove(HWND hwnd, WPARAM wparam, LPARAM lparam)
             last_in_rb = in_rb;
         }
     }
-    else if (!ISGAMESET(Game.state)) {  //won't work after game is finished
+    else if (ISINPROGRESS(Game.state)) {    //work when game is in progress
         static int last_index = INV_INDEX;
-        if (!isLparamInMap(lparam, Game.width, Game.height)) {  //if not in the map area
+        if (!isLparamInMap(lparam, Game.width, Game.height)) {  //if not in Map
             if (isidxinmap(&Game, last_index)) {    //update once
                 paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
                 last_index = INV_INDEX;
             }
         }
-        else {  //if in the map area
+        else {  //if in Map
             int index = lparam2index(&Game, lparam);
             if (last_index != index) {
                 if (wparam & MK_LBUTTON) {  //with left button down
