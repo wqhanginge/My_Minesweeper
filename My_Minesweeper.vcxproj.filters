@@ -58,7 +58,7 @@
     <Image Include="res\Click.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\Fail.bmp">
+    <Image Include="res\Loss.bmp">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="res\Icon.ico">
@@ -67,7 +67,7 @@
     <Image Include="res\ResetButton.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\Success.bmp">
+    <Image Include="res\Win.bmp">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

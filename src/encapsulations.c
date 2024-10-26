@@ -20,17 +20,19 @@
 /*****************************************************************************\
  * encapsulations.c
  *****************************************************************************
- * This file contains encapsulations of UI operations and IO functions.
- * This file contains a struct and relative functions for bitmap management.
+ * This file contains encapsulations of UI functions and IO operations.
+ * This file contains bitmap management functions.
  * This file also contians some useful transform functions.
- * 
- * NOTE: Most functions do NOT have arg check process, use with care.
+ *
+ * NOTE: Most functions do NOT check arguments, use with care.
 \*****************************************************************************/
 
 
 #include "stdafx.h"
 #include "encapsulations.h"
 
+
+/* position related functions */
 
 int ppos2index(PGameInfo pGame, int px, int py)
 {
@@ -68,12 +70,14 @@ int lparam2index(PGameInfo pGame, LPARAM lparam)
 }
 
 
+/* bitmap management functions */
+
 void loadBitmaps(PRBHBM pRBhbm, HINSTANCE hinst)
 {
     pRBhbm->normal = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_RESET));
     pRBhbm->click = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_CLICK));
-    pRBhbm->success = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_SUCCESS));
-    pRBhbm->fail = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_FAIL));
+    pRBhbm->win = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_WIN));
+    pRBhbm->loss = LoadBitmap(hinst, MAKEINTRESOURCE(IDB_LOSS));
     pRBhbm->current = pRBhbm->normal;
 }
 
@@ -81,8 +85,8 @@ void freeBitmaps(PRBHBM pRBhbm)
 {
     DeleteObject(pRBhbm->normal);
     DeleteObject(pRBhbm->click);
-    DeleteObject(pRBhbm->success);
-    DeleteObject(pRBhbm->fail);
+    DeleteObject(pRBhbm->win);
+    DeleteObject(pRBhbm->loss);
     DeleteObject(pRBhbm->current);
     memset(pRBhbm, 0, sizeof(RBHBM));
 }
@@ -93,107 +97,109 @@ void setCurrBitmap(PRBHBM pRBhbm, HBITMAP hbm)
 }
 
 
-void paintINums(HDC hdestdc, int left, int top, int num)
+/* UI functions */
+
+void paintINums(HDC hdstdc, int left, int top, int num)
 {
-    HDC hdcbuffer = CreateCompatibleDC(hdestdc);
-    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, INUMS_WIDTH, INUMS_HEIGHT);
+    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdstdc, INUMS_WIDTH, INUMS_HEIGHT);
+    HDC hdcbuffer = CreateCompatibleDC(hdstdc);
 
     SelectObject(hdcbuffer, hbmbuffer);
     drawDCINums(hdcbuffer, 0, 0, num, INUMSF_SHOWALL);
-    BitBlt(hdestdc, left, top, INUMS_WIDTH, INUMS_HEIGHT, hdcbuffer, 0, 0, SRCCOPY);
+    BitBlt(hdstdc, left, top, INUMS_WIDTH, INUMS_HEIGHT, hdcbuffer, 0, 0, SRCCOPY);
 
     DeleteDC(hdcbuffer);
     DeleteObject(hbmbuffer);
 }
 
-void paintResetButton(HDC hdestdc, int left, int top, HBITMAP hbm, bool clicked)
+void paintResetButton(HDC hdstdc, int left, int top, HBITMAP hbm, bool clicked)
 {
-    HDC hdcbuffer = CreateCompatibleDC(hdestdc);
-    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, RB_SIZE, RB_SIZE);
+    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdstdc, RB_SIZE, RB_SIZE);
+    HDC hdcbuffer = CreateCompatibleDC(hdstdc);
 
     SelectObject(hdcbuffer, hbmbuffer);
     drawDCResetButton(hdcbuffer, 0, 0, hbm, clicked);
-    BitBlt(hdestdc, left, top, RB_SIZE, RB_SIZE, hdcbuffer, 0, 0, SRCCOPY);
+    BitBlt(hdstdc, left, top, RB_SIZE, RB_SIZE, hdcbuffer, 0, 0, SRCCOPY);
 
     DeleteDC(hdcbuffer);
     DeleteObject(hbmbuffer);
 }
 
-void paintDCMapUnit(HDC hdestdc, int left, int top, BYTE mapunit)
+void paintDCMapUnit(HDC hdstdc, int left, int top, BYTE mapunit)
 {
     switch (GETMUSTATE(mapunit)) {
     case MUS_COVER:
-        drawDCMUCover(hdestdc, left, top);
+        drawDCMUCover(hdstdc, left, top);
         break;
     case MUS_FLAG:
-        drawDCMUFlag(hdestdc, left, top);
+        drawDCMUFlag(hdstdc, left, top);
         break;
     case MUS_MARK:
-        drawDCMUMark(hdestdc, left, top, false);
+        drawDCMUMark(hdstdc, left, top, false);
         break;
     case MUS_UNCOV:
-        if (ISMUMINE(mapunit)) drawDCMUMine(hdestdc, left, top, false);
-        else drawDCMUNum(hdestdc, left, top, GETMUNUMBER(mapunit));
+        if (ISMUMINE(mapunit)) drawDCMUMine(hdstdc, left, top, false);
+        else drawDCMUNum(hdstdc, left, top, GETMUNUMBER(mapunit));
         break;
     case MUS_BOMB:
-        drawDCMUMine(hdestdc, left, top, true);
+        drawDCMUMine(hdstdc, left, top, true);
         break;
-    case MUS_WRONG:
-        drawDCMUWrong(hdestdc, left, top);
+    case MUS_FALSE:
+        drawDCMUWrong(hdstdc, left, top);
         break;
     default:
-        drawDCMUCover(hdestdc, left, top);
+        drawDCMUCover(hdstdc, left, top);
         break;
     }
 }
 
-void paintDCMap(HDC hdestdc, int left, int top, PGameInfo pGame, PRECT pxyrect)
+void paintDCMap(HDC hdstdc, int left, int top, PGameInfo pGame, PRECT pxyrect)
 {
     RECT irect = { 0, 0, pGame->width, pGame->height };
     if (pxyrect) IntersectRect(&irect, &irect, pxyrect);
     for (int x = irect.left; x < irect.right; x++) {
         for (int y = irect.top; y < irect.bottom; y++) {
-            paintDCMapUnit(hdestdc, left + x2px(x), top + y2py(y), pGame->map[xy2index(pGame, x, y)]);
+            paintDCMapUnit(hdstdc, left + x2px(x), top + y2py(y), pGame->map[xy2index(pGame, x, y)]);
         }
     }
 }
 
-void paintMapUnit(HDC hdestdc, int left, int top, BYTE mapunit)
+void paintMapUnit(HDC hdstdc, int left, int top, BYTE mapunit)
 {
-    HDC hdcbuffer = CreateCompatibleDC(hdestdc);
-    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MUP_SIZE, MUP_SIZE);
+    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdstdc, MUP_SIZE, MUP_SIZE);
+    HDC hdcbuffer = CreateCompatibleDC(hdstdc);
 
     SelectObject(hdcbuffer, hbmbuffer);
     paintDCMapUnit(hdcbuffer, 0, 0, mapunit);
-    BitBlt(hdestdc, left, top, MUP_SIZE, MUP_SIZE, hdcbuffer, 0, 0, SRCCOPY);
+    BitBlt(hdstdc, left, top, MUP_SIZE, MUP_SIZE, hdcbuffer, 0, 0, SRCCOPY);
 
     DeleteDC(hdcbuffer);
     DeleteObject(hbmbuffer);
 }
 
-void paintMap(HDC hdestdc, int left, int top, PGameInfo pGame)
+void paintMap(HDC hdstdc, int left, int top, PGameInfo pGame)
 {
-    HDC hdcbuffer = CreateCompatibleDC(hdestdc);
-    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height));
+    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdstdc, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height));
+    HDC hdcbuffer = CreateCompatibleDC(hdstdc);
 
     SelectObject(hdcbuffer, hbmbuffer);
     paintDCMap(hdcbuffer, 0, 0, pGame, NULL);
-    BitBlt(hdestdc, left, top, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdcbuffer, 0, 0, SRCCOPY);
+    BitBlt(hdstdc, left, top, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdcbuffer, 0, 0, SRCCOPY);
 
     DeleteDC(hdcbuffer);
     DeleteObject(hbmbuffer);
 }
 
-void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, int index, int last_index, bool area)
+void showSelectedMapUnit(HDC hdstdc, int mapleft, int maptop, PGameInfo pGame, int index, int last_index, bool area)
 {
     if (!isidxinmap(pGame, index)) return;
 
-    HDC hdcbuffer = CreateCompatibleDC(hdestdc);
-    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdestdc, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height));
+    HBITMAP hbmbuffer = CreateCompatibleBitmap(hdstdc, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height));
+    HDC hdcbuffer = CreateCompatibleDC(hdstdc);
 
-    //get current map content
+    //get current content
     SelectObject(hdcbuffer, hbmbuffer);
-    BitBlt(hdcbuffer, 0, 0, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdestdc, mapleft, maptop, SRCCOPY);
+    BitBlt(hdcbuffer, 0, 0, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdstdc, mapleft, maptop, SRCCOPY);
 
     //reverse last selected state
     if (isidxinmap(pGame, last_index)) {
@@ -206,7 +212,7 @@ void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, 
         }
     }
 
-    //draw current selected state
+    //draw new selected state
     Neighbor idxes;
     getNeighbors(pGame, idxes, index2x(pGame, index), index2y(pGame, index));
     int cnt = (area) ? NEI_TOTAL : 1;
@@ -220,26 +226,30 @@ void showSelectedMapUnit(HDC hdestdc, int mapleft, int maptop, PGameInfo pGame, 
             drawDCMUMark(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx), true);
     }
 
-    BitBlt(hdestdc, mapleft, maptop, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdcbuffer, 0, 0, SRCCOPY);
+    //paste back to window
+    BitBlt(hdstdc, mapleft, maptop, MAP_WIDTH(pGame->width), MAP_HEIGHT(pGame->height), hdcbuffer, 0, 0, SRCCOPY);
 
     DeleteDC(hdcbuffer);
     DeleteObject(hbmbuffer);
 }
 
 
-void getConfPath(LPTSTR Path, DWORD size_ch)
+/* config(save) file management */
+
+void getConfPath(LPTSTR path, DWORD size_ch)
 {
-    GetEnvironmentVariable(TEXT(CONF_PATHENV), Path, size_ch);
-    StringCchCat(Path, size_ch, TEXT("\\"));
-    StringCchCat(Path, size_ch, TEXT(CONF_FNAME));
+    GetEnvironmentVariable(TEXT(CONF_PATHENV), path, size_ch);
+    StringCchCat(path, size_ch, TEXT("\\"));
+    StringCchCat(path, size_ch, TEXT(CONF_FNAME));
 }
 
-void loadGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
+void loadGame(LPCTSTR path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
 {
     //try to load last window position
-    POINT pt;
-    pt.x = GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_XPOS), LONG_MAX, Path);
-    pt.y = GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_YPOS), LONG_MAX, Path);
+    POINT pt = {
+        GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_XPOS), LONG_MAX, path),
+        GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_YPOS), LONG_MAX, path)
+    };
     HMONITOR hmon = MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
     if (hmon) {
         MONITORINFO moni = { sizeof(MONITORINFO) };
@@ -247,27 +257,27 @@ void loadGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
         if (PtInRect(&moni.rcWork, pt)) *pwndpos = pt;
     }
 
-    //try to load Game information, use JUNIOR if config data error
+    //try to load Game information, set to CRUSH if config data error
     int mode, width, height, mines, mark;
-    mode = (BYTE)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MODE), CRUSH, Path);
-    width = (BYTE)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_WIDTH), 0, Path);
-    height = (BYTE)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_HEIGHT), 0, Path);
-    mines = (WORD)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MINES), 0, Path);
-    mark = (bool)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MARK), 0, Path);
+    mode = (BYTE)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MODE), CRUSH, path);
+    width = (BYTE)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_WIDTH), 0, path);
+    height = (BYTE)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_HEIGHT), 0, path);
+    mines = (WORD)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MINES), 0, path);
+    mark = (bool)GetPrivateProfileInt(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MARK), 0, path);
     setGameMode(pGame, mode, width, height, mines);
     setMark(pGame, mark);
     resetGame(pGame);
 
-    //try to load Record information, use default if config data error
-    pScore->junior_time = (WORD)GetPrivateProfileInt(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JTIME), MAX_TIME, Path);
-    pScore->middle_time = (WORD)GetPrivateProfileInt(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MTIME), MAX_TIME, Path);
-    pScore->senior_time = (WORD)GetPrivateProfileInt(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_STIME), MAX_TIME, Path);
-    GetPrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JNAME), TEXT(DEF_SCORE_NAME_EN), pScore->junior_name, SCORE_NAME_LEN, Path);
-    GetPrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MNAME), TEXT(DEF_SCORE_NAME_EN), pScore->middle_name, SCORE_NAME_LEN, Path);
-    GetPrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_SNAME), TEXT(DEF_SCORE_NAME_EN), pScore->senior_name, SCORE_NAME_LEN, Path);
+    //try to load Record information, set to default if config data error
+    pScore->junior_time = (WORD)GetPrivateProfileInt(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JTIME), MAX_TIME, path);
+    pScore->middle_time = (WORD)GetPrivateProfileInt(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MTIME), MAX_TIME, path);
+    pScore->senior_time = (WORD)GetPrivateProfileInt(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_STIME), MAX_TIME, path);
+    GetPrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JNAME), TEXT(DEF_SCORE_NAME_EN), pScore->junior_name, SCORE_NAME_LEN, path);
+    GetPrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MNAME), TEXT(DEF_SCORE_NAME_EN), pScore->middle_name, SCORE_NAME_LEN, path);
+    GetPrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_SNAME), TEXT(DEF_SCORE_NAME_EN), pScore->senior_name, SCORE_NAME_LEN, path);
 }
 
-void saveGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
+void saveGame(LPCTSTR path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
 {
     //convert number into string
     const int size_ch = 8;  //buff size for each number
@@ -286,24 +296,27 @@ void saveGame(LPCTSTR Path, PGameInfo pGame, PGameScore pScore, PPOINT pwndpos)
         lstr[i] *= (lstr[i] != TEXT(' '));
 
     //save window position
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_XPOS), str[0], Path);
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_YPOS), str[1], Path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_XPOS), str[0], path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_YPOS), str[1], path);
 
     //save Game information
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MODE), str[2], Path);
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_WIDTH), str[3], Path);
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_HEIGHT), str[4], Path);
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MINES), str[5], Path);
-    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MARK), str[6], Path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MODE), str[2], path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_WIDTH), str[3], path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_HEIGHT), str[4], path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MINES), str[5], path);
+    WritePrivateProfileString(TEXT(CKEY_INIT_ANAME), TEXT(CKEY_INIT_MARK), str[6], path);
 
     //save Record information
-    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JTIME), str[7], Path);
-    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MTIME), str[8], Path);
-    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_STIME), str[9], Path);
-    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JNAME), pScore->junior_name, Path);
-    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MNAME), pScore->middle_name, Path);
-    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_SNAME), pScore->senior_name, Path);
+    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JTIME), str[7], path);
+    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MTIME), str[8], path);
+    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_STIME), str[9], path);
+    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_JNAME), pScore->junior_name, path);
+    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_MNAME), pScore->middle_name, path);
+    WritePrivateProfileString(TEXT(CKEY_SCORE_ANAME), TEXT(CKEY_SCORE_SNAME), pScore->senior_name, path);
 }
+
+
+/* property related functions */
 
 void loadProperty(LPTSTR prop, DWORD size_ch)
 {
@@ -322,7 +335,7 @@ void loadProperty(LPTSTR prop, DWORD size_ch)
 
             UINT pnLen = 0, pvLen = 0, lcLen = 0;
             LPTSTR pProductName = NULL, pProductVersion = NULL, pLegalCopyright = NULL;
-            //get specific version information, substring do NOT need to free
+            //get specific version information, substrings do NOT need to free
             VerQueryValue(pszAppVersion, TEXT(PNQUERYSTR), (LPVOID*)&pProductName, &pnLen);
             VerQueryValue(pszAppVersion, TEXT(PVQUERYSTR), (LPVOID*)&pProductVersion, &pvLen);
             VerQueryValue(pszAppVersion, TEXT(LCQUERYSTR), (LPVOID*)&pLegalCopyright, &lcLen);

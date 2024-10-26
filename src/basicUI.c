@@ -20,11 +20,11 @@
 /*****************************************************************************\
  * basicUI.c
  *****************************************************************************
- * This file contains the basic drawing and some transform functions.
- * Drawing functions use Win32 APIs and draw directly on Device Context(DC)
- * without creating a DC-buffer.
- * 
- * NOTE: Almost all functions have NO arg check process, use with care.
+ * This file contains the basic drawing functions.
+ * Drawing functions use Win32 GDI and draw directly on Device Context (DC)
+ * without creating a DC buffer.
+ *
+ * NOTE: Almost all functions do NOT check arguments, use with care.
 \*****************************************************************************/
 
 
@@ -32,8 +32,8 @@
 #include "basicUI.h"
 
 
-/* this array stores InfoNum backgroud
- * 0 represent INCOL_BLANK, non-0 represent INCOL_SEGOFF
+/* This array stores InfoNum backgroud,
+ * 0 represent INCOL_BLANK, non-0 represent INCOL_SEGOFF.
  */
 const bool InfoNumBG[INFONUM_WIDTH][INFONUM_HEIGHT] =
 {
@@ -55,11 +55,13 @@ const bool InfoNumBG[INFONUM_WIDTH][INFONUM_HEIGHT] =
 };
 
 
-/* these static functions are used only in this file */
+/* These functions draw a concave or convex like region with different types
+ * of edges.
+ */
 
 //Draw a solid color background.
 static void drawsolidcolorbg(
-    _In_ HDC hdestdc,
+    _In_ HDC hdstdc,
     _In_ int left,
     _In_ int top,
     _In_ int width,
@@ -68,14 +70,14 @@ static void drawsolidcolorbg(
 )
 {
     RECT rect = { left, top, left + width, top + height };
-    SetDCBrushColor(hdestdc, surface);
-    FillRect(hdestdc, &rect, GetStockObject(DC_BRUSH));
+    SetDCBrushColor(hdstdc, surface);
+    FillRect(hdstdc, &rect, GetStockObject(DC_BRUSH));
 }
 
 //Draw 1 pixel half edge 2D like background,
 //draw left edge and top edge only.
 static void drawhalfedgebg(
-    _In_ HDC hdestdc,
+    _In_ HDC hdstdc,
     _In_ int left,
     _In_ int top,
     _In_ int width,
@@ -87,19 +89,19 @@ static void drawhalfedgebg(
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, edge);
+    SetDCBrushColor(hdstdc, edge);
     rect = (RECT){ left, top, left + width, top + height };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 
-    SetDCBrushColor(hdestdc, inner);
+    SetDCBrushColor(hdstdc, inner);
     rect = (RECT){ left + 1, top + 1, left + width, top + height };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 }
 
 //Draw 1 pixel edge concave background,
 //exchange 'bright' and 'dark' to draw a convex background.
 static void drawfulledgebg(
-    _In_ HDC hdestdc,
+    _In_ HDC hdstdc,
     _In_ int left,
     _In_ int top,
     _In_ int width,
@@ -112,25 +114,25 @@ static void drawfulledgebg(
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, dark);
+    SetDCBrushColor(hdstdc, dark);
     rect = (RECT){ left, top, left + width - 1, top + height - 1 };
-    FillRect(hdestdc, &rect, hdcbrush);
-    SetDCBrushColor(hdestdc, bright);
+    FillRect(hdstdc, &rect, hdcbrush);
+    SetDCBrushColor(hdstdc, bright);
     rect = (RECT){ left + 1, top + 1, left + width, top + height };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 
-    SetDCBrushColor(hdestdc, inner);
+    SetDCBrushColor(hdstdc, inner);
     rect = (RECT){ left + 1, top + 1, left + width - 1, top + height - 1 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 
-    SetPixelV(hdestdc, left + width - 1, top, inner);
-    SetPixelV(hdestdc, left, top + height - 1, inner);
+    SetPixelV(hdstdc, left + width - 1, top, inner);
+    SetPixelV(hdstdc, left, top + height - 1, inner);
 }
 
 //Draw 2 pixel edge concave background,
 //exchange 'bright' and 'dark' to draw a convex background.
 static void drawthickedgebg(
-    _In_ HDC hdestdc,
+    _In_ HDC hdstdc,
     _In_ int left,
     _In_ int top,
     _In_ int width,
@@ -140,14 +142,14 @@ static void drawthickedgebg(
     _In_ COLORREF dark
 )
 {
-    drawfulledgebg(hdestdc, left, top, width, height, inner, bright, dark);
-    drawfulledgebg(hdestdc, left + 1, top + 1, width - 2, height - 2, inner, bright, dark);
+    drawfulledgebg(hdstdc, left, top, width, height, inner, bright, dark);
+    drawfulledgebg(hdstdc, left + 1, top + 1, width - 2, height - 2, inner, bright, dark);
 }
 
 //Draw 2 pixel edge concave background with 2 layers of color,
 //exchange 'bright*' and 'dark*' to draw a convex background.
 static void drawdualedgebg(
-    _In_ HDC hdestdc,
+    _In_ HDC hdstdc,
     _In_ int left,
     _In_ int top,
     _In_ int width,
@@ -159,10 +161,12 @@ static void drawdualedgebg(
     _In_ COLORREF dark2
 )
 {
-    drawfulledgebg(hdestdc, left, top, width, height, inner, bright1, dark1);
-    drawfulledgebg(hdestdc, left + 1, top + 1, width - 2, height - 2, inner, bright2, dark2);
+    drawfulledgebg(hdstdc, left, top, width, height, inner, bright1, dark1);
+    drawfulledgebg(hdstdc, left + 1, top + 1, width - 2, height - 2, inner, bright2, dark2);
 }
 
+
+/* These functions draw a seven-segment like region for InfoNum. */
 
 /*    a
  *  +---+
@@ -173,12 +177,12 @@ static void drawdualedgebg(
  *    d
  */
 //Draw 7sd background.
-static inline void draw7sdbg(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static inline void draw7sdbg(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     for (int i = 0; i < INFONUM_WIDTH; i++) {
         for (int j = 0; j < INFONUM_HEIGHT; j++) {
-            if (InfoNumBG[i][j]) SetPixelV(hdestdc, left + i, top + j, INCOL_SEGOFF);
-            else SetPixelV(hdestdc, left + i, top + j, INCOL_BLANK);
+            COLORREF color = (InfoNumBG[i][j]) ? INCOL_SEGOFF : INCOL_BLANK;
+            SetPixelV(hdstdc, left + i, top + j, color);
         }
     }
 }
@@ -248,263 +252,266 @@ static inline void draw7sdg(_In_ HDC h7sddc, _In_ int left, _In_ int top)
     LineTo(h7sddc, left + 12, top + 14);
 }
 
+
+/* These functions draw different contents inside a MapUnit. */
+
 //Draw a mine icon.
-static void drawmuitemmine(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemmine(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_MINESF);
+    SetDCBrushColor(hdstdc, MUCOL_MINESF);
     rect = (RECT){ left + 6, top + 9, left + 19, top + 16 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 7, top + 7, left + 18, top + 18 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 9, top + 6, left + 16, top + 19 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 
     rect = (RECT){ left + 3, top + 12, left + 22, top + 13 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 12, top + 3, left + 13, top + 22 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 
-    SetDCBrushColor(hdestdc, MUCOL_MINEHL);
+    SetDCBrushColor(hdstdc, MUCOL_MINEHL);
     rect = (RECT){ left + 9, top + 9, left + 12, top + 12 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 
-    SetPixelV(hdestdc, left + 6, top + 6, MUCOL_MINESF);
-    SetPixelV(hdestdc, left + 6, top + 18, MUCOL_MINESF);
-    SetPixelV(hdestdc, left + 18, top + 6, MUCOL_MINESF);
-    SetPixelV(hdestdc, left + 18, top + 18, MUCOL_MINESF);
+    SetPixelV(hdstdc, left + 6, top + 6, MUCOL_MINESF);
+    SetPixelV(hdstdc, left + 6, top + 18, MUCOL_MINESF);
+    SetPixelV(hdstdc, left + 18, top + 6, MUCOL_MINESF);
+    SetPixelV(hdstdc, left + 18, top + 18, MUCOL_MINESF);
 }
 
 //Draw a question mark icon.
-static void drawmuitemmark(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ bool clicked)
+static void drawmuitemmark(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ bool clicked)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_MARK);
+    SetDCBrushColor(hdstdc, MUCOL_MARK);
     rect = (RECT){ left + clicked + 9, top + clicked + 4, left + clicked + 15, top + clicked + 5 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + clicked + 7, top + clicked + 5, left + clicked + 10, top + clicked + 9 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + clicked + 14, top + clicked + 5, left + clicked + 17, top + clicked + 10 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + clicked + 12, top + clicked + 10, left + clicked + 15, top + clicked + 12 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + clicked + 10, top + clicked + 12, left + clicked + 14, top + clicked + 15 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + clicked + 10, top + clicked + 17, left + clicked + 14, top + clicked + 20 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 }
 
 //Draw a flag icon.
-static void drawmuitemflag(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemflag(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_FLAGFLAG);
+    SetDCBrushColor(hdstdc, MUCOL_FLAGFLAG);
     rect = (RECT){ left + 6, top + 7, left + 7, top + 9 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 7, top + 6, left + 10, top + 10 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 10, top + 4, left + 13, top + 12 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 
-    SetDCBrushColor(hdestdc, MUCOL_FLAGBASE);
+    SetDCBrushColor(hdstdc, MUCOL_FLAGBASE);
     rect = (RECT){ left + 12, top + 12, left + 13, top + 15 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 9, top + 15, left + 15, top + 16 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 6, top + 16, left + 18, top + 19 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 }
 
 //Draw a cross icon.
-static void drawmuitemcross(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemcross(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HPEN hpcross = CreatePen(PS_SOLID, 2, MUCOL_CROSS);
-    HPEN hpold = SelectObject(hdestdc, hpcross);
+    HPEN hpold = SelectObject(hdstdc, hpcross);
 
-    MoveToEx(hdestdc, left + 4, top + 4, NULL);
-    LineTo(hdestdc, left + 20, top + 20);
-    MoveToEx(hdestdc, left + 4, top + 20, NULL);
-    LineTo(hdestdc, left + 20, top + 4);
+    MoveToEx(hdstdc, left + 4, top + 4, NULL);
+    LineTo(hdstdc, left + 20, top + 20);
+    MoveToEx(hdstdc, left + 4, top + 20, NULL);
+    LineTo(hdstdc, left + 20, top + 4);
 
-    SelectObject(hdestdc, hpold);
+    SelectObject(hdstdc, hpold);
     DeleteObject(hpcross);
 }
 
 //Draw a number 1 icon.
-static void drawmuitemnum1(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemnum1(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_NUMBER1);
+    SetDCBrushColor(hdstdc, MUCOL_NUMBER1);
     rect = (RECT){ left + 11, top + 5, left + 15, top + 6 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 9, top + 6, left + 15, top + 7 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 7, top + 7, left + 15, top + 8 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 8, left + 15, top + 10 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 10, top + 10, left + 15, top + 17 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 17, left + 20, top + 20 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 }
 
 //Draw a number 2 icon.
-static void drawmuitemnum2(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemnum2(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_NUMBER2);
+    SetDCBrushColor(hdstdc, MUCOL_NUMBER2);
     rect = (RECT){ left + 5, top + 7, left + 9, top + 10 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 7, top + 5, left + 18, top + 8 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 16, top + 7, left + 20, top + 11 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 
     rect = (RECT){ left + 15, top + 10, left + 19, top + 13 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 13, top + 11, left + 17, top + 14 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 11, top + 12, left + 15, top + 15 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 9, top + 13, left + 13, top + 16 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 7, top + 14, left + 11, top + 17 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 15, left + 9, top + 18 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 
     rect = (RECT){ left + 5, top + 17, left + 20, top + 20 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 
-    SetPixelV(hdestdc, left + 6, top + 6, MUCOL_NUMBER2);
-    SetPixelV(hdestdc, left + 18, top + 6, MUCOL_NUMBER2);
+    SetPixelV(hdstdc, left + 6, top + 6, MUCOL_NUMBER2);
+    SetPixelV(hdstdc, left + 18, top + 6, MUCOL_NUMBER2);
 }
 
 //Draw a number 3 icon.
-static void drawmuitemnum3(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemnum3(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_NUMBER3);
+    SetDCBrushColor(hdstdc, MUCOL_NUMBER3);
     rect = (RECT){ left + 5, top + 5, left + 19, top + 8 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 16, top + 7, left + 20, top + 11 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 10, top + 11, left + 19, top + 14 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 16, top + 14, left + 20, top + 19 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 17, left + 19, top + 20 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 }
 
 //Draw a number 4 icon.
-static void drawmuitemnum4(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemnum4(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_NUMBER4);
+    SetDCBrushColor(hdstdc, MUCOL_NUMBER4);
     rect = (RECT){ left + 8, top + 5, left + 13, top + 8 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 7, top + 8, left + 11, top + 11 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 11, left + 20, top + 14 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 14, top + 5, left + 19, top + 20 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 }
 
 //Draw a number 5 icon.
-static void drawmuitemnum5(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemnum5(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_NUMBER5);
+    SetDCBrushColor(hdstdc, MUCOL_NUMBER5);
     rect = (RECT){ left + 5, top + 5, left + 20, top + 8 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 8, left + 10, top + 11 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 11, left + 19, top + 14 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 16, top + 13, left + 20, top + 19 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 17, left + 19, top + 20 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 }
 
 //Draw a number 6 icon.
-static void drawmuitemnum6(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemnum6(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_NUMBER6);
+    SetDCBrushColor(hdstdc, MUCOL_NUMBER6);
     rect = (RECT){ left + 7, top + 5, left + 19, top + 8 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 7, left + 10, top + 19 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 10, top + 11, left + 19, top + 14 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 16, top + 13, left + 20, top + 19 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 7, top + 17, left + 19, top + 20 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 }
 
 //Draw a number 7 icon.
-static void drawmuitemnum7(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemnum7(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_NUMBER7);
+    SetDCBrushColor(hdstdc, MUCOL_NUMBER7);
     rect = (RECT){ left + 5, top + 5, left + 20, top + 8 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 16, top + 8, left + 20, top + 11 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 14, top + 11, left + 19, top + 14 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 13, top + 14, left + 17, top + 17 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 11, top + 17, left + 16, top + 20 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 }
 
 //Draw a number 8 icon.
-static void drawmuitemnum8(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+static void drawmuitemnum8(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
     HBRUSH hdcbrush = GetStockObject(DC_BRUSH);
     RECT rect;
 
-    SetDCBrushColor(hdestdc, MUCOL_NUMBER8);
+    SetDCBrushColor(hdstdc, MUCOL_NUMBER8);
     rect = (RECT){ left + 7, top + 5, left + 19, top + 8 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 7, left + 10, top + 11 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 16, top + 7, left + 20, top + 11 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 7, top + 11, left + 19, top + 14 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 5, top + 14, left + 10, top + 19 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 16, top + 14, left + 20, top + 19 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
     rect = (RECT){ left + 7, top + 17, left + 19, top + 20 };
-    FillRect(hdestdc, &rect, hdcbrush);
+    FillRect(hdstdc, &rect, hdcbrush);
 }
 
 //logical xor
@@ -514,7 +521,7 @@ static inline bool _xor(const bool A, const bool B)
 }
 
 
-/* following functions can be called by external functions */
+/* Transform between pixel position and unit position of MapUnit. */
 
 int px2x(int px)
 {
@@ -537,60 +544,68 @@ int y2py(int y)
 }
 
 
-void drawDCClientBg(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ int n_map_width, _In_ int n_map_height)
+/* These functions draw backgroung with edge for each SubArea
+ * using predefined color and size, check related macros.
+ */
+
+void drawDCClientBg(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ int n_map_width, _In_ int n_map_height)
 {
-    drawsolidcolorbg(hdestdc, left, top, CLIENT_WIDTH(n_map_width), CLIENT_HEIGHT(n_map_height), CLTCOL_SURFACE);
+    drawsolidcolorbg(hdstdc, left, top, CLIENT_WIDTH(n_map_width), CLIENT_HEIGHT(n_map_height), CLTCOL_SURFACE);
 }
 
-void drawDCHeadAreaBg(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ int n_map_width)
+void drawDCHeadAreaBg(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ int n_map_width)
 {
-    drawthickedgebg(hdestdc, left, top, HEADAREA_WIDTH(n_map_width), HEADAREA_HEIGHT, HACOL_SURFACE, HACOL_BRIGHT, HACOL_DARK);
+    drawthickedgebg(hdstdc, left, top, HEADAREA_WIDTH(n_map_width), HEADAREA_HEIGHT, HACOL_SURFACE, HACOL_BRIGHT, HACOL_DARK);
 }
 
-void drawDCMapAreaBg(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ int n_map_width, _In_ int n_map_height)
+void drawDCMapAreaBg(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ int n_map_width, _In_ int n_map_height)
 {
-    drawthickedgebg(hdestdc, left, top, MAPAREA_WIDTH(n_map_width), MAPAREA_HEIGHT(n_map_height), MACOL_SURFACE, MACOL_BRIGHT, MACOL_DARK);
+    drawthickedgebg(hdstdc, left, top, MAPAREA_WIDTH(n_map_width), MAPAREA_HEIGHT(n_map_height), MACOL_SURFACE, MACOL_BRIGHT, MACOL_DARK);
 }
 
-void drawDCInfoBg(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+void drawDCInfoBg(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
-    drawfulledgebg(hdestdc, left, top, INFO_WIDTH, INFO_HEIGHT, ICOL_SURFACE, ICOL_BRIGHT, ICOL_DARK);
+    drawfulledgebg(hdstdc, left, top, INFO_WIDTH, INFO_HEIGHT, ICOL_SURFACE, ICOL_BRIGHT, ICOL_DARK);
 }
 
 
-void drawDCInfoNumBg(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+/* These functions draw specfic numbers inside Info SubArea
+ * using predefined color and size, check related macros.
+ */
+
+void drawDCInfoNumBg(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
-    draw7sdbg(hdestdc, left, top);
+    draw7sdbg(hdstdc, left, top);
 }
 
-void drawDCInfoNumNumber(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ int num)
+void drawDCInfoNumNumber(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ int num)
 {
     /* assert INFONUM_MIN == 0 && INFONUM_MAX == 9 */
     bool valid = (num >= INFONUM_MIN && num <= INFONUM_MAX);
     num = min(max(num, INFONUM_MIN), INFONUM_MAX);  //limit possible states
-    bool A = num & 0x01, B = num & 0x02, C = num & 0x04, D = num & 0x08;
+    bool A = num & 0x1, B = num & 0x2, C = num & 0x4, D = num & 0x8;
 
-    HPEN hpold = SelectObject(hdestdc, GetStockObject(DC_PEN));
-    SetDCPenColor(hdestdc, INCOL_SEGON);
+    HPEN hpold = SelectObject(hdstdc, GetStockObject(DC_PEN));
+    SetDCPenColor(hdstdc, INCOL_SEGON);
 
-    if (valid && (B + D + !_xor(A, C))) draw7sda(hdestdc, left, top);
-    if (valid && (!C + D + !_xor(A, B))) draw7sdb(hdestdc, left, top);
-    if (valid && (A + !B + C + D)) draw7sdc(hdestdc, left, top);
-    if (valid && (D + B * !C + !_xor(A, !B * C))) draw7sdd(hdestdc, left, top);
-    if (valid && (!A * (B + !C))) draw7sde(hdestdc, left, top);
-    if (valid && (D + !A * !B + !A * C + !B * C)) draw7sdf(hdestdc, left, top);
-    if (!valid || (D + !A * B + _xor(B, C))) draw7sdg(hdestdc, left, top);
+    if (valid && (B + D + !_xor(A, C))) draw7sda(hdstdc, left, top);
+    if (valid && (!C + D + !_xor(A, B))) draw7sdb(hdstdc, left, top);
+    if (valid && (A + !B + C + D)) draw7sdc(hdstdc, left, top);
+    if (valid && (D + B * !C + !_xor(A, !B * C))) draw7sdd(hdstdc, left, top);
+    if (valid && (!A * (B + !C))) draw7sde(hdstdc, left, top);
+    if (valid && (D + !A * !B + !A * C + !B * C)) draw7sdf(hdstdc, left, top);
+    if (!valid || (D + !A * B + _xor(B, C))) draw7sdg(hdstdc, left, top);
 
-    SelectObject(hdestdc, hpold);
+    SelectObject(hdstdc, hpold);
 }
 
-void drawDCInfoNum(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ int num, _In_ bool hide)
+void drawDCInfoNum(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ int num, _In_ bool hide)
 {
-    drawDCInfoNumBg(hdestdc, left, top);
-    if (!hide) drawDCInfoNumNumber(hdestdc, left, top, num);
+    drawDCInfoNumBg(hdstdc, left, top);
+    if (!hide) drawDCInfoNumNumber(hdstdc, left, top, num);
 }
 
-void drawDCINums(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ int num, _In_ BYTE flag)
+void drawDCINums(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ int num, _In_ BYTE flag)
 {
     /* assert INUMS_MIN == -99 && INUMS_MAX == 999 */
     bool valid = (num >= INUMS_MIN && num <= INUMS_MAX);
@@ -599,85 +614,94 @@ void drawDCINums(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ int num, _I
     int c = abs(num) % 10 - (!valid * 10);
 
     if (!(flag & INUMSF_SKIPA))
-        drawDCInfoNum(hdestdc, left, top, a, (flag & INUMSF_HIDEA));
+        drawDCInfoNum(hdstdc, left, top, a, (flag & INUMSF_HIDEA));
     if (!(flag & INUMSF_SKIPB))
-        drawDCInfoNum(hdestdc, left + INFONUM_WIDTH, top, b, (flag & INUMSF_HIDEB));
+        drawDCInfoNum(hdstdc, left + INFONUM_WIDTH, top, b, (flag & INUMSF_HIDEB));
     if (!(flag & INUMSF_SKIPC))
-        drawDCInfoNum(hdestdc, left + INFONUM_WIDTH * 2, top, c, (flag & INUMSF_HIDEC));
+        drawDCInfoNum(hdstdc, left + INFONUM_WIDTH * 2, top, c, (flag & INUMSF_HIDEC));
 }
 
 
-void drawDCResetButtonBg(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ bool clicked)
+/* These functions draw a ResetButton inside HeadArea SubArea
+ * using predefined color and size, check related macros.
+ */
+
+void drawDCResetButtonBg(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ bool clicked)
 {
-    if (clicked) drawdualedgebg(hdestdc, left, top, RB_SIZE, RB_SIZE, RBCOL_SURFACE, RBCOL_BRIGHT1, RBCOL_BRIGHT2, RBCOL_DARK1, RBCOL_DARK2);
-    else drawdualedgebg(hdestdc, left, top, RB_SIZE, RB_SIZE, RBCOL_SURFACE, RBCOL_DARK1, RBCOL_DARK2, RBCOL_BRIGHT1, RBCOL_BRIGHT2);
+    if (clicked) drawdualedgebg(hdstdc, left, top, RB_SIZE, RB_SIZE, RBCOL_SURFACE, RBCOL_BRIGHT1, RBCOL_BRIGHT2, RBCOL_DARK1, RBCOL_DARK2);
+    else drawdualedgebg(hdstdc, left, top, RB_SIZE, RB_SIZE, RBCOL_SURFACE, RBCOL_DARK1, RBCOL_DARK2, RBCOL_BRIGHT1, RBCOL_BRIGHT2);
 }
 
-void drawDCResetButtonBmp(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ HBITMAP hbm, _In_ bool clicked)
+void drawDCResetButtonBmp(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ HBITMAP hbm, _In_ bool clicked)
 {
-    if (hbm == NULL) return;
-    HDC hdcbitmap = CreateCompatibleDC(hdestdc);
-    SelectObject(hdcbitmap, hbm);
-    BitBlt(hdestdc, left + clicked, top + clicked, BMP_SIZE - clicked, BMP_SIZE - clicked, hdcbitmap, 0, 0, SRCCOPY);
-    DeleteDC(hdcbitmap);
+    if (hbm) {
+        HDC hdcbitmap = CreateCompatibleDC(hdstdc);
+        SelectObject(hdcbitmap, hbm);
+        BitBlt(hdstdc, left + clicked, top + clicked, BMP_SIZE - clicked, BMP_SIZE - clicked, hdcbitmap, 0, 0, SRCCOPY);
+        DeleteDC(hdcbitmap);
+    }
 }
 
-void drawDCResetButton(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ HBITMAP hbm, _In_ bool clicked)
+void drawDCResetButton(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ HBITMAP hbm, _In_ bool clicked)
 {
-    drawDCResetButtonBg(hdestdc, left, top, clicked);
-    drawDCResetButtonBmp(hdestdc, left + 2, top + 2, hbm, clicked);
+    drawDCResetButtonBg(hdstdc, left, top, clicked);
+    drawDCResetButtonBmp(hdstdc, left + RB_BMPOFFSET, top + RB_BMPOFFSET, hbm, clicked);
 }
 
 
-void drawDCMUCover(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+/* These functions draw a MapUnit on MapArea SubArea
+ * using predefined color and size, check related macros.
+ */
+
+void drawDCMUCover(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
-    drawthickedgebg(hdestdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_COVERSF, MUCOL_COVERDK, MUCOL_COVERBT);
+    drawthickedgebg(hdstdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_COVERSF, MUCOL_COVERDK, MUCOL_COVERBT);
 }
 
-void drawDCMUUncov(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ bool bomb)
+void drawDCMUUncov(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ bool bomb)
 {
-    if (bomb) drawhalfedgebg(hdestdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_BOMBBG, MUCOL_UNCOVEG);
-    else drawhalfedgebg(hdestdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_UNCOVSF, MUCOL_UNCOVEG);
+    if (bomb) drawhalfedgebg(hdstdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_BOMBBG, MUCOL_UNCOVEG);
+    else drawhalfedgebg(hdstdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_UNCOVSF, MUCOL_UNCOVEG);
 }
 
-void drawDCMUFlag(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+void drawDCMUFlag(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
-    drawDCMUCover(hdestdc, left, top);
-    drawmuitemflag(hdestdc, left, top);
+    drawDCMUCover(hdstdc, left, top);
+    drawmuitemflag(hdstdc, left, top);
 }
 
-void drawDCMUMark(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ bool clicked)
+void drawDCMUMark(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ bool clicked)
 {
-    if (clicked) drawDCMUUncov(hdestdc, left, top, false);
-    else drawDCMUCover(hdestdc, left, top);
-    drawmuitemmark(hdestdc, left, top, clicked);
+    if (clicked) drawDCMUUncov(hdstdc, left, top, false);
+    else drawDCMUCover(hdstdc, left, top);
+    drawmuitemmark(hdstdc, left, top, clicked);
 }
 
-void drawDCMUMine(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ bool bomb)
+void drawDCMUMine(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ bool bomb)
 {
-    drawDCMUUncov(hdestdc, left, top, bomb);
-    drawmuitemmine(hdestdc, left, top);
+    drawDCMUUncov(hdstdc, left, top, bomb);
+    drawmuitemmine(hdstdc, left, top);
 }
 
-void drawDCMUWrong(_In_ HDC hdestdc, _In_ int left, _In_ int top)
+void drawDCMUWrong(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
-    drawDCMUUncov(hdestdc, left, top, false);
-    drawmuitemmine(hdestdc, left, top);
-    drawmuitemcross(hdestdc, left, top);
+    drawDCMUUncov(hdstdc, left, top, false);
+    drawmuitemmine(hdstdc, left, top);
+    drawmuitemcross(hdstdc, left, top);
 }
 
-void drawDCMUNum(_In_ HDC hdestdc, _In_ int left, _In_ int top, _In_ int num)
+void drawDCMUNum(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ int num)
 {
-    drawDCMUUncov(hdestdc, left, top, false);
+    drawDCMUUncov(hdstdc, left, top, false);
     switch (num) {
     case 0: break;
-    case 1: drawmuitemnum1(hdestdc, left, top); break;
-    case 2: drawmuitemnum2(hdestdc, left, top); break;
-    case 3: drawmuitemnum3(hdestdc, left, top); break;
-    case 4: drawmuitemnum4(hdestdc, left, top); break;
-    case 5: drawmuitemnum5(hdestdc, left, top); break;
-    case 6: drawmuitemnum6(hdestdc, left, top); break;
-    case 7: drawmuitemnum7(hdestdc, left, top); break;
-    case 8: drawmuitemnum8(hdestdc, left, top); break;
+    case 1: drawmuitemnum1(hdstdc, left, top); break;
+    case 2: drawmuitemnum2(hdstdc, left, top); break;
+    case 3: drawmuitemnum3(hdstdc, left, top); break;
+    case 4: drawmuitemnum4(hdstdc, left, top); break;
+    case 5: drawmuitemnum5(hdstdc, left, top); break;
+    case 6: drawmuitemnum6(hdstdc, left, top); break;
+    case 7: drawmuitemnum7(hdstdc, left, top); break;
+    case 8: drawmuitemnum8(hdstdc, left, top); break;
     }
 }
