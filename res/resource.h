@@ -4,8 +4,8 @@
 //
 #define IDB_RESET                       101
 #define IDB_CLICK                       102
-#define IDB_SUCCESS                     103
-#define IDB_FAIL                        104
+#define IDB_WIN                         103
+#define IDB_LOSS                        104
 #define IDI_APPICON                     105
 #define IDR_MAINMENU                    106
 #define IDD_CUSTOM                      107

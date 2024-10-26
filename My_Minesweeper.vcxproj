@@ -41,10 +41,10 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\Click.bmp" />
-    <Image Include="res\Fail.bmp" />
+    <Image Include="res\Loss.bmp" />
     <Image Include="res\Icon.ico" />
     <Image Include="res\ResetButton.bmp" />
-    <Image Include="res\Success.bmp" />
+    <Image Include="res\Win.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\Resource.rc" />

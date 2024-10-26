@@ -20,7 +20,7 @@
 /*****************************************************************************\
  * stdafx.h
  *****************************************************************************
- * This file is a precompile header, including common used std libs.
+ * This file is a precompiled header, including commonly used std libs.
 \*****************************************************************************/
 
 

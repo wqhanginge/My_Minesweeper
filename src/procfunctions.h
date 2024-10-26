@@ -21,110 +21,98 @@
  * procfunctions.h
  *****************************************************************************
  * This file contains definations for Window and Message Queue.
- * This file contains Win32 Window Proc Functions and Message Processing
+ * This file contains Win32 Window Procedure Functions and Message Processing
  * Functions.
- * 
- * NOTE: Most functions have NO arg check, use with care.
+ *
+ * NOTE: Most functions do NOT check arguments, use with care.
 \*****************************************************************************/
 
 
 #pragma once
 
+#include "stdafx.h"
 #include "encapsulations.h"
 
 
 
-/* Game's private window messages */
+/* private window messages for Game */
 
-#define WMAPP_GAMERESET     (WM_APP + 0)        //send when game needs reset
-#define WMAPP_GAMESUCCESS   (WM_APP + 1)        //send when game is succeed
-#define WMAPP_GAMEFAIL      (WM_APP + 2)        //send when game is failed
+#define WMAPP_GAMERESET         (WM_APP + 0)    /* wParam: not used, lPapam: not used */
+#define WMAPP_GAMEWIN           (WM_APP + 1)    /* wParam: not used, lPapam: not used */
+#define WMAPP_GAMELOSS          (WM_APP + 2)    /* wParam: not used, lPapam: not used */
+#define WMAPP_GAMEMODECHANGE    (WM_APP + 3)    /* wParam: GameMode, lPapam: GameMapInfo (optional if ISSTDMOD(GameMode)) */
 
-//send when game mode is changed,
-//use wparam as new GameMode,
-//use lparam as a combination of new width, height and mines
-//ignore lparam if new GameMode is a standard Mode(not CUSTOM)
-//call MAKECHGLAPRAM to create a lparam
-//call GETCHG*** family to unpack a lparam
-#define WMAPP_GAMEMODECHG   (WM_APP + 3)
+//GameMapInfo (or MapInfo) is a combination of the width, height and mines of GameMap.
+//Use the following macros to pack or unpack GameMapInfo to or from a lparam.
 
-//create a lparam by width, height and mines
-#define MAKECHGLPARAM(w, h, m)  ((LPARAM)((((DWORD)(w) & 0xFF) | (((DWORD)(h) & 0xFF) << 8)) | (((DWORD)(m) & 0xFFFF) << 16)))
-
-//unpack infomation from a lparam
-#define GETCHGWIDTH(l)          ((BYTE)((DWORD)(l) & 0xFF))
-#define GETCHGHEIGHT(l)         ((BYTE)(((DWORD)(l) >> 8) & 0xFF))
-#define GETCHGMINES(l)          ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))
-
-
-/* Dialog defines */
-
-//Record Dialog
-#define TIMEUNIT_EN     "Sec"
-//end Record Dialog
+#define MAKEMAPINFO(w, h, m)    ((LPARAM)((BYTE)(w) | ((WORD)((BYTE)(h)) << 8) | ((DWORD)((WORD)(m)) << 16)))
+#define GETMAPINFOWIDTH(l)      ((BYTE)(l))
+#define GETMAPINFOHEIGHT(l)     ((BYTE)((WORD)(l) >> 8))
+#define GETMAPINFOMINES(l)      ((WORD)((DWORD)(l) >> 16))
 
 
 /* miscellaneous defines */
 
 #define WNDCLS_NAME         "MYMINESWEEPER"
 #define WND_NAME            "My Minesweeper"
-#define GAME_TIMER_ID       1
-#define GAME_TIMER_ELAPSE   1000
+#define WND_TIMER_ID        1
+#define WND_TIMER_ELAPSE    1000
+#define DLG_TIMEUNIT_EN     "Sec"
 
 
 
-/* following arguments are private, they can not be seen external */
-/*
+/* private global variables
+/*****************************************************************************
 GameInfo Game;      //Game information
 GameScore Score;    //Record information
-RBHBM RBhbm;        //bitmap handles, point to bitmaps which will be drawn on ResetButton
+RBHBM RBhbm;        //bitmap handles for ResetButton
 
-bool last_dbclick;  //indicate if last mouse event was a double button click
-bool rb_capture;    //indicate if ResetButton get the capture
-*/
+bool last_sclick;   //if last mouse event was a simultaneous button click
+bool rb_capture;    //if ResetButton get the capture
+**/
 
 
 
-/* sub functions for specific use */
+/* commonly used functions */
 
-//Change GameMode checked in Menu, do nothing if GameMode is illegal.
-void setMenuChecked(HMENU hmenu, BYTE GameMode);
+//Change checked state of GameMode items in Menu, do nothing if GameMode is invalid.
+void setMenuChecked(HMENU hmenu, BYTE mode);
 
-//Check or uncheck QuestionMark in Menu.
-void setQMarkChecked(HMENU hmenu, bool Mark);
+//Check or uncheck QuestionMark item in Menu.
+void setQMarkChecked(HMENU hmenu, bool mark);
 
-//update the information on Record Dialog with current score data
+//Update the information on Record Dialog with current Score data.
 void updateRecordContent(HWND hrecord);
 
-//update the contents in Edits of Custom Dialog with specified data
-void updateCustomContent(HWND hcustom, LPARAM whm);
+//Update the contents of Edits in Custom Dialog with specified MapInfo.
+void updateCustomContent(HWND hcustom, LPARAM mapinfo);
 
-//get the contents in Edits of Custom Dialog
+//Get the contents of Edits in Custom Dialog.
 LPARAM getCustomContent(HWND hcustom);
 
 
-/* Window Porc Functions */
+/* Window Porcedure Functions */
 
-//About Dialog, show program description on child modal window
+//About Dialog, show program description.
 INT_PTR CALLBACK AboutProc(HWND habout, UINT msg, WPARAM wparam, LPARAM lparam);
 
-//License Dialog, show license content on child modal window
+//License Dialog, show license content.
 INT_PTR CALLBACK LicenseProc(HWND hlicense, UINT msg, WPARAM wparam, LPARAM lparam);
 
-//Record Dialog, show record on child modal window
+//Record Dialog, show records.
 INT_PTR CALLBACK RecordProc(HWND hrecord, UINT msg, WPARAM wparam, LPARAM lparam);
 
-//GetName Dialog, provide an edit box to get the player name after breaking Record
+//GetName Dialog, provide an Edit Box to acquire the player name after breaking a record.
 INT_PTR CALLBACK GetNameProc(HWND hgetname, UINT msg, WPARAM wparam, LPARAM lparam);
 
-//Custom Dialog, get customized GameMap information and return it through the EndDialog function
-//provide the dufault GameMap information through the DialogBoxParam function
+//Custom Dialog, show and acquire the MapInfo, then return the new customized MapInfo.
+//Pass the MapInfo through the DialogBoxParam() function.
 INT_PTR CALLBACK CustomProc(HWND hcustom, UINT msg, WPARAM wparam, LPARAM lparam);
 
 
-/* following functions are encapsulations of operations in WndProc */
+/* Message Processing Functions */
 
-//response menu message
+//Response menu message.
 LRESULT onMenu(HWND hwnd, UINT miid);
 
 //WM_CREATE
@@ -142,14 +130,14 @@ LRESULT onCommand(HWND hwnd, WPARAM wparam, LPARAM lparam);
 //WMAPP_GAMERESET
 LRESULT onGameReset(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
-//WMAPP_GAMEFAIL
-LRESULT onGameFail(HWND hwnd, WPARAM wparam, LPARAM lparam);
+//WMAPP_GAMEWIN
+LRESULT onGameWin(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
-//WMAPP_GAMESUCCESS
-LRESULT onGameSuccess(HWND hwnd, WPARAM wparam, LPARAM lparam);
+//WMAPP_GAMELOSS
+LRESULT onGameLoss(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
-//WMAPP_GAMEMODECHG
-LRESULT onGameModeChg(HWND hwnd, WPARAM wparam, LPARAM lparam);
+//WMAPP_GAMEMODECHANGE
+LRESULT onGameModeChange(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
 //WM_LBUTTONDOWN
 LRESULT onLButtonDwon(HWND hwnd, WPARAM wparam, LPARAM lparam);

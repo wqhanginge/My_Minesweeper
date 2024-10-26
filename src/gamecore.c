@@ -29,6 +29,8 @@
 #include "gamecore.h"
 
 
+/* GameMap position related functions */
+
 int index2x(PGameInfo pGame, int index)
 {
     return (index % pGame->width);
@@ -69,6 +71,9 @@ int getNeighbors(PGameInfo pGame, Neighbor neighbor, int x, int y)
     return RETVAL_NOERROR;
 }
 
+
+/* Game property related functions */
+
 void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines)
 {
     switch (mode) {
@@ -78,7 +83,7 @@ void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines
         pGame->height = JUNIOR_HEIGHT;
         pGame->size = JUNIOR_SIZE;
         pGame->mines = JUNIOR_MINES;
-        pGame->state = UNKNOW;
+        pGame->state = GS_UNKNOW;
         break;
     case MIDDLE:
         pGame->mode = MIDDLE;
@@ -86,7 +91,7 @@ void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines
         pGame->height = MIDDLE_HEIGHT;
         pGame->size = MIDDLE_SIZE;
         pGame->mines = MIDDLE_MINES;
-        pGame->state = UNKNOW;
+        pGame->state = GS_UNKNOW;
         break;
     case SENIOR:
         pGame->mode = SENIOR;
@@ -94,7 +99,7 @@ void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines
         pGame->height = SENIOR_HEIGHT;
         pGame->size = SENIOR_SIZE;
         pGame->mines = SENIOR_MINES;
-        pGame->state = UNKNOW;
+        pGame->state = GS_UNKNOW;
         break;
     case CUSTOM:
         pGame->mode = CUSTOM;
@@ -102,7 +107,7 @@ void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines
         pGame->height = min(max(height, MIN_HEIGHT), MAX_HEIGHT);
         pGame->size = pGame->width * pGame->height;
         pGame->mines = min(max(mines, MIN_MINES), MAX_MINES(pGame->size));
-        pGame->state = UNKNOW;
+        pGame->state = GS_UNKNOW;
         break;
     default:
         setGameMode(pGame, JUNIOR, 0, 0, 0);
@@ -115,19 +120,12 @@ void setMark(PGameInfo pGame, bool enable)
     pGame->mark = enable;
 }
 
-void setGameTime(PGameInfo pGame, WORD time)
-{
-    pGame->time = min(time, MAX_TIME);
-}
 
-void stepGameTime(PGameInfo pGame)
-{
-    pGame->time++;
-}
+/* Game runtime basic functions */
 
 void resetGame(PGameInfo pGame)
 {
-    pGame->state = INIT;
+    pGame->state = GS_INIT;
     pGame->mine_remains = (short)pGame->mines;
     pGame->uncov_units = 0;
     pGame->time = 0;
@@ -136,33 +134,33 @@ void resetGame(PGameInfo pGame)
 
 int createGameMap(PGameInfo pGame, int index)
 {
-    if (pGame->state != INIT) return RETVAL_BADGAMESTATE;
+    if (pGame->state != GS_INIT) return RETVAL_BADGAMESTATE;
     if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
 
     Neighbor safepos;
     getNeighbors(pGame, safepos, index2x(pGame, index), index2y(pGame, index));
 
-    //generate mines, 8 units around where clicked won't have mines
-    //use shuffle algorithm
-    memset(pGame->map, 0, sizeof(BYTE) * pGame->size);  //clear the whole map
-    memset(pGame->map, MUF_MINE, sizeof(BYTE) * pGame->mines);  //generate mines
-    DWORD neicount = 0;
+    //generate mines, 8 Units around where clicked will not have mines
+    //use shuffle algorithm, assume GameMap is already empty
+    memset(pGame->map, MUF_MINE | MUN_MINE, sizeof(BYTE) * pGame->mines);   //generate mines
+    int neicount = 0;
     for (int i = 0; i < NEI_TOTAL; i++) neicount += (safepos[i] != INV_INDEX);  //remember how many safe positions needed
-    for (DWORD k = 0; k < pGame->size - neicount; k++) {    //shuffle algorithm, ignore reserved tail
-        DWORD index = rand() % (pGame->size - neicount - k) + k;
+    for (int k = 0; k < pGame->size - neicount; k++) {  //shuffle algorithm, exclude reserved tail
+        int index = rand() % (pGame->size - neicount - k) + k;
         BYTE temp = pGame->map[index];
         pGame->map[index] = pGame->map[k];
         pGame->map[k] = temp;
     }
 
-    //shift the safe area center unit index to the middle of Neighbor list
+    //shift the index of safe area center Unit to the middle of Neighbor list
+    //this process is required to avoid overlapping issues between safe area and reserved area
     for (int i = 0; i < NEI_TOTAL / 2; i++) {
         int temp = safepos[i];
         safepos[i] = safepos[i + 1];
         safepos[i + 1] = temp;
     }
 
-    //move safe area to where it is
+    //move safe area to where it is, the order of Units matters
     for (int i = 0; i < NEI_TOTAL; i++) {
         if (safepos[i] != INV_INDEX) {
             BYTE temp = pGame->map[pGame->size - neicount];
@@ -172,39 +170,34 @@ int createGameMap(PGameInfo pGame, int index)
         }
     }
 
-    //calculate mines around each unit
-    for (DWORD i = 0; i < pGame->size; i++) {
+    //calculate mines around each Unit
+    for (int i = 0; i < pGame->size; i++) {
         if (ISMUMINE(pGame->map[i])) continue;
-        int m = 0;
+        int mcnt = 0;
         Neighbor neipos;
         getNeighbors(pGame, neipos, index2x(pGame, i), index2y(pGame, i));
         for (int j = 1; j < NEI_TOTAL; j++)
-            if (neipos[j] != INV_INDEX && ISMUMINE(pGame->map[neipos[j]])) m++;
-        SETMUNUMBER(m, pGame->map[i]);
+            mcnt += (neipos[j] != INV_INDEX && ISMUMINE(pGame->map[neipos[j]]));
+        SETMUNUMBER(pGame->map[i], mcnt);
     }
     return RETVAL_NOERROR;
 }
 
 int clickOne(PGameInfo pGame, int index)
 {
-    if (pGame->state != RUNNING) return RETVAL_BADGAMESTATE;
+    if (pGame->state != GS_RUNNING) return RETVAL_BADGAMESTATE;
     if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
     if (!ISMUCLICKABLE(pGame->map[index])) return RETVAL_BADMUSTATE;
 
+    BYTE mustate = (ISMUMINE(pGame->map[index])) ? MUS_BOMB : MUS_UNCOV;
     pGame->uncov_units++;
-    if (ISMUMINE(pGame->map[index])) {  //bomb
-        SETMUSTATE(MUS_BOMB, pGame->map[index]);
-        return RETVAL_GAMEFAIL;
-    }
-    else {  //safe
-        SETMUSTATE(MUS_UNCOV, pGame->map[index]);
-        return GETMUNUMBER(pGame->map[index]);
-    }
+    SETMUSTATE(pGame->map[index], mustate);
+    return GETMUNUMBER(pGame->map[index]);
 }
 
 int openBlanks(PGameInfo pGame, int index)
 {
-    if (pGame->state != RUNNING) return RETVAL_BADGAMESTATE;
+    if (pGame->state != GS_RUNNING) return RETVAL_BADGAMESTATE;
     if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
     if (GETMUSTATE(pGame->map[index]) != MUS_UNCOV) return RETVAL_BADMUSTATE;
     if (GETMUNUMBER(pGame->map[index]) != 0) return RETVAL_BADMUSTATE;
@@ -220,10 +213,10 @@ int openBlanks(PGameInfo pGame, int index)
 
 int flagOne(PGameInfo pGame, int index)
 {
-    if (!ISINPROGRESS(pGame->state)) return RETVAL_BADGAMESTATE;
+    if (!ISGAMEACTIVE(pGame->state)) return RETVAL_BADGAMESTATE;
     if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
 
-    //take effect only on covered units
+    //take effect only on covered Units
     BYTE new_mapunit_state;
     switch (GETMUSTATE(pGame->map[index])) {
     case MUS_COVER:
@@ -241,24 +234,34 @@ int flagOne(PGameInfo pGame, int index)
         return RETVAL_BADMUSTATE;
     }
 
-    SETMUSTATE(new_mapunit_state, pGame->map[index]);
+    SETMUSTATE(pGame->map[index], new_mapunit_state);
     return RETVAL_NOERROR;
 }
 
 int showAllMines(PGameInfo pGame)
 {
-    if (!ISGAMESET(pGame->state)) return RETVAL_BADGAMESTATE;
-    for (WORD i = 0; i < pGame->size; i++) {
+    if (!ISGAMEOVER(pGame->state)) return RETVAL_BADGAMESTATE;
+    for (int i = 0; i < pGame->size; i++) {
         BYTE mapunit = pGame->map[i];
         if (ISMUMINE(mapunit) && ISMUCLICKABLE(mapunit)) {
-            BYTE mustate = (pGame->state == SUCCESS) ? MUS_FLAG : MUS_UNCOV;
-            SETMUSTATE(mustate, pGame->map[i]);
+            BYTE mustate = (pGame->state == GS_WIN) ? MUS_FLAG : MUS_UNCOV;
+            SETMUSTATE(pGame->map[i], mustate);
         }
         else if (!ISMUMINE(mapunit) && GETMUSTATE(mapunit) == MUS_FLAG) {
-            SETMUSTATE(MUS_WRONG, pGame->map[i]);
+            SETMUSTATE(pGame->map[i], MUS_FALSE);
         }
     }
     return RETVAL_NOERROR;
+}
+
+void setGameTime(PGameInfo pGame, WORD time)
+{
+    pGame->time = min(time, MAX_TIME);
+}
+
+void stepGameTime(PGameInfo pGame)
+{
+    pGame->time++;
 }
 
 bool isMapFullyOpen(PGameInfo pGame)
@@ -268,70 +271,68 @@ bool isMapFullyOpen(PGameInfo pGame)
 
 bool isFirstClick(PGameInfo pGame, int index)
 {
-    return (pGame->state == INIT && ISMUCLICKABLE(pGame->map[index]));
+    return (pGame->state == GS_INIT && ISMUCLICKABLE(pGame->map[index]));
 }
+
+
+/* Game runtime high-level functions */
 
 int leftClick(PGameInfo pGame, int index)
 {
     if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
 
-    //first click
+    //first click, create new Map
     if (isFirstClick(pGame, index)) {
-        //create map and init game infomation
         createGameMap(pGame, index);
-        pGame->state = RUNNING;
-        pGame->mine_remains = pGame->mines;
-        pGame->uncov_units = 0;
-        pGame->time = 0;
+        pGame->state = GS_RUNNING;
     }
 
     //normal click
     int ret = clickOne(pGame, index);
     if (ret == 0) openBlanks(pGame, index);
 
-    //after click
-    if (ret == RETVAL_GAMEFAIL || isMapFullyOpen(pGame)) {
-        ret = (ret == RETVAL_GAMEFAIL) ? RETVAL_GAMEFAIL : RETVAL_GAMESUCCESS;
-        pGame->state = (ret == RETVAL_GAMEFAIL) ? FAIL : SUCCESS;
-        //show all mines' positions when game set
+    //after click, show positions of all mines when GameOver
+    if (ret == MUN_MINE || isMapFullyOpen(pGame)) {
+        bool loss = (ret == MUN_MINE);
+        pGame->state = (loss) ? GS_LOSS : GS_WIN;
         pGame->mine_remains = 0;
         showAllMines(pGame);
+        ret = (loss) ? RETVAL_GAMELOSS : RETVAL_GAMEWIN;
     }
     return ret;
 }
 
-int clickAround(PGameInfo pGame, int index)
+int simulClick(PGameInfo pGame, int index)
 {
-    if (pGame->state != RUNNING) return RETVAL_BADGAMESTATE;
+    if (pGame->state != GS_RUNNING) return RETVAL_BADGAMESTATE;
     if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
     if (GETMUSTATE(pGame->map[index]) != MUS_UNCOV) return RETVAL_BADMUSTATE;
 
     Neighbor pos;
     getNeighbors(pGame, pos, index2x(pGame, index), index2y(pGame, index));
 
-    //you can open neighbors only when flags EQ mines around neighbors
+    //you can open neighbors only when flags EQ mines
     int flags = 0;
     for (int i = 1; i < NEI_TOTAL; i++)
-        if (pos[i] != INV_INDEX && GETMUSTATE(pGame->map[pos[i]]) == MUS_FLAG) flags++;
+        flags += (pos[i] != INV_INDEX && GETMUSTATE(pGame->map[pos[i]]) == MUS_FLAG);
     if (GETMUNUMBER(pGame->map[pos[0]]) != flags) return RETVAL_BADFLAGNUM;
 
-    flags = RETVAL_NOERROR; //WARNING:the meaning of flags has been changed
     //open neighbors
+    bool hasbomb = false;
     for (int i = 1; i < NEI_TOTAL; i++) {
         int ret = clickOne(pGame, pos[i]);
         if (ret == 0) openBlanks(pGame, pos[i]);
-        if (ret == RETVAL_GAMEFAIL) flags = RETVAL_GAMEFAIL;    //if bombed
+        hasbomb |= (ret == MUN_MINE);
     }
 
-    //after open
-    if (flags == RETVAL_GAMEFAIL || isMapFullyOpen(pGame)) {
-        flags = (flags == RETVAL_GAMEFAIL) ? RETVAL_GAMEFAIL : RETVAL_GAMESUCCESS;
-        pGame->state = (flags == RETVAL_GAMEFAIL) ? FAIL : SUCCESS;
-        //show all mines' positions when game set
+    //after open, show positions of all mines when GameOver
+    if (hasbomb || isMapFullyOpen(pGame)) {
+        pGame->state = (hasbomb) ? GS_LOSS : GS_WIN;
         pGame->mine_remains = 0;
         showAllMines(pGame);
+        return (hasbomb) ? RETVAL_GAMELOSS : RETVAL_GAMEWIN;
     }
-    return flags;
+    return RETVAL_NOERROR;
 }
 
 int rightClick(PGameInfo pGame, int index)
@@ -339,14 +340,17 @@ int rightClick(PGameInfo pGame, int index)
     return flagOne(pGame, index);
 }
 
+
+/* GameScore related functions */
+
 void resetRecord(PGameScore pScore)
 {
     *pScore = (GameScore){ MAX_TIME, MAX_TIME, MAX_TIME, _T(DEF_SCORE_NAME_EN), _T(DEF_SCORE_NAME_EN), _T(DEF_SCORE_NAME_EN) };
 }
 
-WORD getRecordTime(PGameScore pScore, BYTE gamemode)
+WORD getRecordTime(PGameScore pScore, BYTE mode)
 {
-    switch (gamemode) {
+    switch (mode) {
     case JUNIOR: return pScore->junior_time;
     case MIDDLE: return pScore->middle_time;
     case SENIOR: return pScore->senior_time;
@@ -354,9 +358,9 @@ WORD getRecordTime(PGameScore pScore, BYTE gamemode)
     return INV_TIME;
 }
 
-LPTSTR getpRecordName(PGameScore pScore, BYTE gamemode)
+LPTSTR getpRecordName(PGameScore pScore, BYTE mode)
 {
-    switch (gamemode) {
+    switch (mode) {
     case JUNIOR: return pScore->junior_name;
     case MIDDLE: return pScore->middle_name;
     case SENIOR: return pScore->senior_name;
@@ -364,18 +368,18 @@ LPTSTR getpRecordName(PGameScore pScore, BYTE gamemode)
     return NULL;
 }
 
-int setRecordTime(PGameScore pScore, BYTE gamemode, WORD besttime)
+int setRecordTime(PGameScore pScore, BYTE mode, WORD time)
 {
-    WORD btime = min(besttime, MAX_TIME);
-    switch (gamemode) {
+    time = min(time, MAX_TIME);
+    switch (mode) {
     case JUNIOR:
-        pScore->junior_time = btime;
+        pScore->junior_time = time;
         return RETVAL_NOERROR;
     case MIDDLE:
-        pScore->middle_time = btime;
+        pScore->middle_time = time;
         return RETVAL_NOERROR;
     case SENIOR:
-        pScore->senior_time = btime;
+        pScore->senior_time = time;
         return RETVAL_NOERROR;
     }
     return RETVAL_BADGAMEMODE;
@@ -383,5 +387,5 @@ int setRecordTime(PGameScore pScore, BYTE gamemode, WORD besttime)
 
 bool isNewRecord(PGameInfo pGame, PGameScore pScore)
 {
-    return (ISSTDMOD(pGame->mode) && pGame->state == SUCCESS && pGame->time < getRecordTime(pScore, pGame->mode));
+    return (ISSTDMOD(pGame->mode) && pGame->state == GS_WIN && pGame->time < getRecordTime(pScore, pGame->mode));
 }

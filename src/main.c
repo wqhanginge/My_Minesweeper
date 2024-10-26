@@ -20,9 +20,7 @@
 /*****************************************************************************\
  * main.c
  *****************************************************************************
- * This file is the program entry and contains main Window Procedure.
- * This file contains the program instance and window handles as global
- * variables.
+ * This file is the program entry and contains the main Window Procedure.
 \*****************************************************************************/
 
 
@@ -42,12 +40,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         return onCommand(hwnd, wparam, lparam);
     case WMAPP_GAMERESET:
         return onGameReset(hwnd, wparam, lparam);
-    case WMAPP_GAMEFAIL:
-        return onGameFail(hwnd, wparam, lparam);
-    case WMAPP_GAMESUCCESS:
-        return onGameSuccess(hwnd, wparam, lparam);
-    case WMAPP_GAMEMODECHG:
-        return onGameModeChg(hwnd, wparam, lparam);
+    case WMAPP_GAMEWIN:
+        return onGameWin(hwnd, wparam, lparam);
+    case WMAPP_GAMELOSS:
+        return onGameLoss(hwnd, wparam, lparam);
+    case WMAPP_GAMEMODECHANGE:
+        return onGameModeChange(hwnd, wparam, lparam);
     case WM_LBUTTONDOWN:
         return onLButtonDwon(hwnd, wparam, lparam);
     case WM_LBUTTONUP:
@@ -64,7 +62,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR lpCmdLine, int nCmdShow) {
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow) {
     WNDCLASSEX wndc = { sizeof(WNDCLASSEX) };
     wndc.cbClsExtra = 0;
     wndc.cbWndExtra = 0;
