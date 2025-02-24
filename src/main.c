@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2024 Gee Wang
+ *  Copyright (C) 2020 Gee Wang
  *
  *  This file is part of My Minesweeper.
  *

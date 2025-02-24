@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2024 Gee Wang
+ *  Copyright (C) 2020 Gee Wang
  *
  *  This file is part of My Minesweeper.
  *
@@ -225,14 +225,14 @@ INT_PTR CALLBACK GetNameProc(HWND hgetname, UINT msg, WPARAM wparam, LPARAM lpar
     case WM_INITDIALOG: {
         //get Edit Control handle and init default presentation
         HWND hedit = GetDlgItem(hgetname, IDC_EDITNAME);
-        SetWindowText(hedit, getpRecordName(&Score, Game.mode));
+        SetWindowText(hedit, getRecordName(&Score, Game.mode));
         SendMessage(hedit, EM_LIMITTEXT, SCORE_NAME_LEN - 1, 0);
         return TRUE;
     }
     case WM_DESTROY: {
         //get what in the Edit Control when exit Dialog
         HWND hedit = GetDlgItem(hgetname, IDC_EDITNAME);
-        GetWindowText(hedit, getpRecordName(&Score, Game.mode), SCORE_NAME_LEN);
+        GetWindowText(hedit, getRecordName(&Score, Game.mode), SCORE_NAME_LEN);
         return TRUE;
     }
     case WM_COMMAND: {
@@ -385,7 +385,7 @@ LRESULT onPaint(HWND hwnd, WPARAM wparam, LPARAM lparam)
     drawDCMapAreaBg(hdcbuffer, MAPAREA_LEFT, MAPAREA_TOP, Game.width, Game.height);
     drawDCInfoBg(hdcbuffer, MINE_LEFT, MINE_TOP);
     drawDCInfoBg(hdcbuffer, TIME_LEFT(Game.width), TIME_TOP);
-    drawDCINums(hdcbuffer, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains, INUMSF_SHOWALL);
+    drawDCINums(hdcbuffer, MNUMS_LEFT, MNUMS_TOP, (int)Game.mines - Game.flags, INUMSF_SHOWALL);
     drawDCINums(hdcbuffer, TNUMS_LEFT(Game.width), TNUMS_TOP, Game.time, INUMSF_SHOWALL);
     drawDCResetButton(hdcbuffer, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
     paintDCMap(hdcbuffer, MAP_LEFT, MAP_TOP, &Game, NULL);
@@ -421,7 +421,7 @@ LRESULT onGameWin(HWND hwnd, WPARAM wparam, LPARAM lparam)
     KillTimer(hwnd, WND_TIMER_ID);
     setCurrBitmap(&RBhbm, RBhbm.win);
     paintResetButton(hdc, RB_LEFT(Game.width), RB_TOP, RBhbm.current, false);
-    paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, 0);
+    paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, (int)Game.mines - Game.flags);   //update the Mine SubArea
 
     //if break record
     if (isNewRecord(&Game, &Score)) {
@@ -508,26 +508,22 @@ LRESULT onLButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if (wparam & MK_RBUTTON) {  //with right button down
                 last_sclick = true;
                 int ret = simulClick(&Game, index);
-                if (ret == RETVAL_GAMELOSS) {
-                    PostMessage(hwnd, WMAPP_GAMELOSS, 0, 0);
-                }
-                else if (ret == RETVAL_GAMEWIN) {
-                    PostMessage(hwnd, WMAPP_GAMEWIN, 0, 0);
+                switch (ret) {
+                case RETVAL_GAMEWIN: PostMessage(hwnd, WMAPP_GAMEWIN, 0, 0); break;
+                case RETVAL_GAMELOSS: PostMessage(hwnd, WMAPP_GAMELOSS, 0, 0); break;
                 }
                 paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
             }
             else if (!last_sclick) {    //single button and last was not simultaneous button click
                 last_sclick = false;
-                if (isFirstClick(&Game, index)) {   //first click, should be done before calling leftClick()
-                    SetTimer(hwnd, WND_TIMER_ID, WND_TIMER_ELAPSE, NULL);
-                    paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, Game.mines); //reset the Mine SubArea
-                }
                 int ret = leftClick(&Game, index);  //click, then test result
-                if (ret == RETVAL_GAMELOSS) {
-                    PostMessage(hwnd, WMAPP_GAMELOSS, 0, 0);
-                }
-                else if (ret == RETVAL_GAMEWIN) {
-                    PostMessage(hwnd, WMAPP_GAMEWIN, 0, 0);
+                switch (ret) {
+                case RETVAL_GAMESTART:  //first click
+                    SetTimer(hwnd, WND_TIMER_ID, WND_TIMER_ELAPSE, NULL);
+                    paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, (int)Game.mines - Game.flags);   //reset the Mine SubArea
+                    break;
+                case RETVAL_GAMEWIN: PostMessage(hwnd, WMAPP_GAMEWIN, 0, 0); break;
+                case RETVAL_GAMELOSS: PostMessage(hwnd, WMAPP_GAMELOSS, 0, 0); break;
                 }
                 paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
             }
@@ -555,7 +551,7 @@ LRESULT onRButtonDown(HWND hwnd, WPARAM wparam, LPARAM lparam)
             int ret = rightClick(&Game, index);
             if (ret == RETVAL_NOERROR) {    //if the state of MapUnit is changed
                 paintMapUnit(hdc, MAP_LEFT + index2px(&Game, index), MAP_TOP + index2py(&Game, index), Game.map[index]);
-                paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, Game.mine_remains);
+                paintINums(hdc, MNUMS_LEFT, MNUMS_TOP, (int)Game.mines - Game.flags);
             }
         }
     }
@@ -576,11 +572,9 @@ LRESULT onRButtonUp(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if (wparam & MK_LBUTTON) {  //with left button down
                 last_sclick = true;
                 int ret = simulClick(&Game, index);
-                if (ret == RETVAL_GAMELOSS) {
-                    PostMessage(hwnd, WMAPP_GAMELOSS, 0, 0);
-                }
-                else if (ret == RETVAL_GAMEWIN) {
-                    PostMessage(hwnd, WMAPP_GAMEWIN, 0, 0);
+                switch (ret) {
+                case RETVAL_GAMEWIN: PostMessage(hwnd, WMAPP_GAMEWIN, 0, 0); break;
+                case RETVAL_GAMELOSS: PostMessage(hwnd, WMAPP_GAMELOSS, 0, 0); break;
                 }
                 paintMap(hdc, MAP_LEFT, MAP_TOP, &Game);
             }
