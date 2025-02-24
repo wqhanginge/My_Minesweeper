@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2024 Gee Wang
+ *  Copyright (C) 2020 Gee Wang
  *
  *  This file is part of My Minesweeper.
  *
@@ -137,7 +137,7 @@ void paintDCMapUnit(HDC hdstdc, int left, int top, BYTE mapunit)
     case MUS_MARK:
         drawDCMUMark(hdstdc, left, top, false);
         break;
-    case MUS_UNCOV:
+    case MUS_BARE:
         if (ISMUMINE(mapunit)) drawDCMUMine(hdstdc, left, top, false);
         else drawDCMUNum(hdstdc, left, top, GETMUNUMBER(mapunit));
         break;
@@ -145,7 +145,7 @@ void paintDCMapUnit(HDC hdstdc, int left, int top, BYTE mapunit)
         drawDCMUMine(hdstdc, left, top, true);
         break;
     case MUS_FALSE:
-        drawDCMUWrong(hdstdc, left, top);
+        drawDCMUFalse(hdstdc, left, top);
         break;
     default:
         drawDCMUCover(hdstdc, left, top);
@@ -221,7 +221,7 @@ void showSelectedMapUnit(HDC hdstdc, int mapleft, int maptop, PGameInfo pGame, i
         if (idx == INV_INDEX) continue;
         BYTE mapunit_state = GETMUSTATE(pGame->map[idx]);
         if (mapunit_state == MUS_COVER)
-            drawDCMUUncov(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx), false);
+            drawDCMUBare(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx), false);
         else if (mapunit_state == MUS_MARK)
             drawDCMUMark(hdcbuffer, index2px(pGame, idx), index2py(pGame, idx), true);
     }

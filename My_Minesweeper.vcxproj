@@ -49,6 +49,9 @@
   <ItemGroup>
     <ResourceCompile Include="res\Resource.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="res\license.txt.dat" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

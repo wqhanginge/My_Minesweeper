@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2024 Gee Wang
+ *  Copyright (C) 2020 Gee Wang
  *
  *  This file is part of My Minesweeper.
  *
@@ -247,8 +247,8 @@
 #define MUCOL_COVERSF   UICOL_CONVEX
 #define MUCOL_COVERBT   UICOL_WHITE
 #define MUCOL_COVERDK   UICOL_GRAY
-#define MUCOL_UNCOVSF   UICOL_CLTAREA
-#define MUCOL_UNCOVEG   UICOL_GRAY
+#define MUCOL_BARESF    UICOL_CLTAREA
+#define MUCOL_BAREEG    UICOL_GRAY
 #define MUCOL_BOMBBG    RGB(237,28,36)
 #define MUCOL_MINESF    RGB(0,0,0)
 #define MUCOL_MINEHL    RGB(255,255,255)
@@ -607,7 +607,7 @@ void drawDCMUCover(
 );
 
 //w:MUP_SIZE, h:MUP_SIZE
-void drawDCMUUncov(
+void drawDCMUBare(
     _In_ HDC hdstdc,
     _In_ int left,
     _In_ int top,
@@ -638,7 +638,7 @@ void drawDCMUMine(
 );
 
 //w:MUP_SIZE, h:MUP_SIZE
-void drawDCMUWrong(
+void drawDCMUFalse(
     _In_ HDC hdstdc,
     _In_ int left,
     _In_ int top

@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2024 Gee Wang
+ *  Copyright (C) 2020 Gee Wang
  *
  *  This file is part of My Minesweeper.
  *
@@ -86,9 +86,9 @@
  * |F|  S  |   N   |
  * +-+-+-+-+-+-+-+-+
  *     map_unit
- * F:   Set this bit if this Unit is a mine.
- * S:   State of this Unit:[covered, marked, flagged, uncovered, false-flagged, bombed].
- * N:   The number of mines in its neighbors, from 0x0 to 0x8. Set to MUN_MINE if this Unit is a mine.
+ * F: Set this bit if this Unit is a mine.
+ * S: State of this Unit:[covered, marked, flagged, uncovered, bombed, false-flagged].
+ * N: The number of mines in its neighbors, from 0x0 to 0x8. Set to MUN_MINE if this Unit is a mine.
  */
 
 #define MUF_MINE        0x80
@@ -96,9 +96,9 @@
 #define MUS_COVER       0x00
 #define MUS_MARK        0x10
 #define MUS_FLAG        0x20
-#define MUS_UNCOV       0x30
-#define MUS_FALSE       0x40
-#define MUS_BOMB        0x50
+#define MUS_BARE        0x30
+#define MUS_BOMB        0x40
+#define MUS_FALSE       0x50
 #define GETMUNUMBER(unit)       ((BYTE)((BYTE)(unit) & 0x0F))
 #define GETMUSTATE(unit)        ((BYTE)((BYTE)(unit) & 0x70))
 #define SETMUNUMBER(unit, n)    (unit = ((BYTE)((BYTE)((BYTE)(unit) & 0xF0) | (BYTE)((BYTE)(n) & 0x0F))))
@@ -127,8 +127,9 @@
 #define RETVAL_BADGAMESTATE     (-3)
 #define RETVAL_BADMUSTATE       (-4)
 #define RETVAL_BADFLAGNUM       (-5)
-#define RETVAL_GAMEWIN          (-6)
-#define RETVAL_GAMELOSS         (-7)
+#define RETVAL_GAMESTART        (-6)
+#define RETVAL_GAMEWIN          (-7)
+#define RETVAL_GAMELOSS         (-8)
 //end Function Returns
 
 
@@ -154,8 +155,8 @@ typedef struct _GameInfo {
     WORD mines;         //counts of mines in GameMap
     bool mark;          //if the QuestionMark is enabled
     BYTE state;         //GameState:[init, running, win, loss]
-    short mine_remains; //counts of mines that have not been flagged
-    WORD uncov_units;   //counts of MapUnits that have been uncovered
+    WORD flags;         //counts of MapUnits that have been flagged
+    WORD bare_units;    //counts of MapUnits that have been uncovered
     WORD time;          //GameTime
     BYTE map[MAX_SIZE]; //GameMap data, avaliable area depends on GameMode
 } GameInfo, * PGameInfo;
@@ -207,8 +208,8 @@ int getNeighbors(PGameInfo pGame, Neighbor neighbor, int x, int y);
 //If 'mode' is an undefined value, set GameMode to JUNIOR by default.
 //If 'mode' is a standard GameMode(not CUSTOM), 'width', 'height' and 'mines' will be ignored.
 //CUSTOM is limited by MAX_WIDTH, MAX_HEIGHT, MAX_MINES and MIN***.
-//This function sets the GameState to GS_UNKNOW.
-//Make sure to call resetGame() right after calling this function to init Game properly.
+//This function sets the Game to an uninit state,
+//make sure to call resetGame() right after calling this function to init Game properly.
 void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines);
 
 //Enable or disable QuestionMark function.
@@ -217,27 +218,30 @@ void setMark(PGameInfo pGame, bool enable);
 
 /* Game runtime basic functions */
 
-//Erase the GameMap and reset Game to GS_INIT without changing the GameMode.
+//Erase the GameMap and reset Game to the init state without changing the GameMode.
 void resetGame(PGameInfo pGame);
+
+//Switch the Game to the running state and reset the MapUnit counters.
+void startGame(PGameInfo pGame);
+
+//Stop the Game and set it to win or loss.
+void finishGame(PGameInfo pGame, bool win);
+
 
 //Create a new GameMap with a safe area at the given position.
 //Return RETVAL_NOERROR if the call succeeded,
-//or RETVAL_INDEXOOR if the index is out of range,
-//or RETVAL_BADGAMESTATE if the GameState is not GS_INIT.
+//or RETVAL_INDEXOOR if the index is out of range.
 int createGameMap(PGameInfo pGame, int index);
-
 
 //Click a Unit in GameMap.
 //Return the number of mines in its neighbors, where MUN_MINE means this Unit is a mine,
 //or RETVAL_INDEXOOR if the index is out of range,
-//or RETVAL_BADGAMESTATE if the GameState is not GS_RUNNING,
 //or RETVAL_BADMUSTATE if this Unit cannot be clicked.
 int clickOne(PGameInfo pGame, int index);
 
 //Open all neighbors around an uncovered Unit which has no mine in its neighbors.
 //Return RETVAL_NOERROR if the call succeeded,
 //or RETVAL_INDEXOOR if the index is out of range,
-//or RETVAL_BADGAMESTATE if the GameState is not GS_RUNNING,
 //or RETVAL_BADMUSTATE if this Unit does not satisfied with requirements.
 int openBlanks(PGameInfo pGame, int index);
 
@@ -246,15 +250,12 @@ int openBlanks(PGameInfo pGame, int index);
 //if the QuestionMark is enabled, the cycle will be:[covered -> flagged -> marked -> covered].
 //Return RETVAL_NOERROR if the call succeeded,
 //or RETVAL_INDEXOOR if the index is out of range,
-//or RETVAL_BADGAMESTATE if the Game is already finished,
 //or RETVAL_BADMUSTATE if the MapUnitState is not one of the three states mentioned above.
 int flagOne(PGameInfo pGame, int index);
 
 
-//Show positions of all mines after GameOver.
-//Return RETVAL_NOERROR if the call succeeded,
-//or RETVAL_BADGAMESTATE if the Game is not finished.
-int showAllMines(PGameInfo pGame);
+//Show positions of all mines.
+void showMines(PGameInfo pGame);
 
 //Set GameTime with specified time.
 //The time value will be truncated to MAX_TIME automatically.
@@ -263,12 +264,6 @@ void setGameTime(PGameInfo pGame, WORD time);
 //Increment GameTime by one.
 void stepGameTime(PGameInfo pGame);
 
-//Check if all the non-mine Units are open.
-bool isMapFullyOpen(PGameInfo pGame);
-
-//Check if it is the first click of a Game.
-bool isFirstClick(PGameInfo pGame, int index);
-
 
 /* Game runtime high-level functions */
 
@@ -276,10 +271,11 @@ bool isFirstClick(PGameInfo pGame, int index);
 //or open the given Unit only if it is not blank.
 //This function will start a new Game then click if it is the first click.
 //Return the number of mines in neighbors around the given Unit,
+//or RETVAL_GAMESTART if a new Game starts,
 //or RETVAL_GAMEWIN if all blanks are already open,
 //or RETVAL_GAMELOSS if this Unit is a mine,
 //or RETVAL_INDEXOOR if the index is out of range,
-//or RETVAL_BADGAMESTATE if the GameState is not GS_RUNNING,
+//or RETVAL_BADGAMESTATE if the Game is already finished,
 //or RETVAL_BADMUSTATE if this Unit cannot be clicked.
 int leftClick(PGameInfo pGame, int index);
 
@@ -290,7 +286,7 @@ int leftClick(PGameInfo pGame, int index);
 //or RETVAL_GAMEWIN if all blanks are already open,
 //or RETVAL_GAMELOSS if a mine is open,
 //or RETVAL_INDEXOOR if the index is out of range,
-//or RETVAL_BADGAMESTATE if the GameState is not GS_RUNNING,
+//or RETVAL_BADGAMESTATE if the Game is not running,
 //or RETVAL_BADMUSTATE if this Unit is not uncovered,
 //or RETVAL_BADFLAGNUM if the number of flags around this Unit does not match the value stored in it.
 int simulClick(PGameInfo pGame, int index);
@@ -318,7 +314,7 @@ WORD getRecordTime(PGameScore pScore, BYTE mode);
 //You can directly edit Record content using this pointer,
 //but you must be careful with array bound.
 //Return NULL if the given GameMode is not valid.
-LPTSTR getpRecordName(PGameScore pScore, BYTE mode);
+LPTSTR getRecordName(PGameScore pScore, BYTE mode);
 
 //Update the time record under given GameMode.
 //The time value will be truncated to MAX_TIME automatically.

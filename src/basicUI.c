@@ -1,6 +1,6 @@
 /*****************************************************************************\
  *  My Minesweepper -- a classic minesweeper game
- *  Copyright (C) 2020-2024 Gee Wang
+ *  Copyright (C) 2020 Gee Wang
  *
  *  This file is part of My Minesweeper.
  *
@@ -658,10 +658,10 @@ void drawDCMUCover(_In_ HDC hdstdc, _In_ int left, _In_ int top)
     drawthickedgebg(hdstdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_COVERSF, MUCOL_COVERDK, MUCOL_COVERBT);
 }
 
-void drawDCMUUncov(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ bool bomb)
+void drawDCMUBare(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ bool bomb)
 {
-    if (bomb) drawhalfedgebg(hdstdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_BOMBBG, MUCOL_UNCOVEG);
-    else drawhalfedgebg(hdstdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_UNCOVSF, MUCOL_UNCOVEG);
+    if (bomb) drawhalfedgebg(hdstdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_BOMBBG, MUCOL_BAREEG);
+    else drawhalfedgebg(hdstdc, left, top, MUP_SIZE, MUP_SIZE, MUCOL_BARESF, MUCOL_BAREEG);
 }
 
 void drawDCMUFlag(_In_ HDC hdstdc, _In_ int left, _In_ int top)
@@ -672,27 +672,27 @@ void drawDCMUFlag(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 
 void drawDCMUMark(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ bool clicked)
 {
-    if (clicked) drawDCMUUncov(hdstdc, left, top, false);
+    if (clicked) drawDCMUBare(hdstdc, left, top, false);
     else drawDCMUCover(hdstdc, left, top);
     drawmuitemmark(hdstdc, left, top, clicked);
 }
 
 void drawDCMUMine(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ bool bomb)
 {
-    drawDCMUUncov(hdstdc, left, top, bomb);
+    drawDCMUBare(hdstdc, left, top, bomb);
     drawmuitemmine(hdstdc, left, top);
 }
 
-void drawDCMUWrong(_In_ HDC hdstdc, _In_ int left, _In_ int top)
+void drawDCMUFalse(_In_ HDC hdstdc, _In_ int left, _In_ int top)
 {
-    drawDCMUUncov(hdstdc, left, top, false);
+    drawDCMUBare(hdstdc, left, top, false);
     drawmuitemmine(hdstdc, left, top);
     drawmuitemcross(hdstdc, left, top);
 }
 
 void drawDCMUNum(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ int num)
 {
-    drawDCMUUncov(hdstdc, left, top, false);
+    drawDCMUBare(hdstdc, left, top, false);
     switch (num) {
     case 0: break;
     case 1: drawmuitemnum1(hdstdc, left, top); break;
