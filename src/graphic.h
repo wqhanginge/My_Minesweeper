@@ -18,7 +18,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \*****************************************************************************/
 /*****************************************************************************\
- * basicUI.h
+ * graphic.h
  *****************************************************************************
  * This file contains the Game UI design and basic drawing functions.
  * Drawing functions use Win32 GDI and draw directly on Device Context (DC)
@@ -34,7 +34,26 @@
 
 
 
-/*         Main Client Area
+/*       LEFT           RIGHT
+ *         v              v            LEFT      RIGHT
+ * TOP---->+--------------+              v         v
+ *         | +----------+ |      TOP---->+---------+
+ * Edge----->|  Content | |              |         |
+ *         | |          | |              | Content |
+ *         | +----------+ |              |         |
+ * BOTTOM->+--------------+      BOTTOM->+---------+
+ *              Region                      Object
+ *
+ * Region and Object are the basic UI Components.
+ * Region may contain Objects and other Regions inside its Content, and usually
+ * have edges. Object is atomic and usually do not have edges.
+ * Region that is inside another Region is called child Region, relevantly,
+ * the outer Region is called parent Region.
+ *
+ * NOTE: The child Region may not fill up the Content of parent Region entirely.
+ */
+
+/*           Client Area
  * +-----------------------------+---
  * |                             | |
  * |           HeadArea          |HeadArea_height
@@ -48,33 +67,14 @@
  * +-----------------------------+---
  * |------------width------------|
  *
- * The Main Client Area is composed of HeadArea SubArea and MapArea SubArea.
+ * The Client Area is composed of HeadArea Region and MapArea Region.
  *
- * NOTE: These two SubAreas have edges of their own.
- * NOTE: There are frames around and between these two SubAreas, which means
- *       that they do not fill up the Main Client Area entirely.
+ * NOTE: These two Regions have edges of their own.
+ * NOTE: There are frames around and between these two Regions, which means
+ *       that they do not fill up the Client Area entirely.
  *
  * 'HeadArea_height' is constant.
  * 'MapArea_height' and 'width' are flexible.
- */
-
-/*       LEFT           RIGHT
- *         v              v            LEFT      RIGHT
- * TOP---->+--------------+              v         v
- *         | +----------+ |      TOP---->+---------+
- * Edge----->|  Content | |              |         |
- *         | |          | |              | Content |
- *         | +----------+ |              |         |
- * BOTTOM->+--------------+      BOTTOM->+---------+
- *             SubArea                      Object
- *
- * Object is the basic UI Component and usually has NO edge.
- * SubArea usually have edges, and can have Object or another SubArea inside
- * its Content.
- * SubArea that is inside another SubArea is called child SubArea, relevantly,
- * the outer SubArea is called parent SubArea.
- *
- * NOTE: The child SubArea may not fill up the Content of parent SubArea entirely.
  */
 
 /*                  HeadArea
@@ -89,26 +89,26 @@
  * A:left_dist  B:info_width    C:mid_dist  D:reset_button_size
  * E:mid_dist   F:info_width    G:right_dist
  *
- * The HeadArea SubArea contains Mine SubArea, Time SubArea and ResetButton.
+ * The HeadArea Region contains Mine Region, Time Region and ResetButton.
  *
  * constant: top_dist, bottom_dist, info_height, left_dist, right_dist,
  *           info_width, reset_button_size
  * flexible: mid_dist
  *
- * NOTE: ResetButton is NOT a "BUTTON" Control.
- * NOTE: ResetButton is a Square, Mine SubArea and Time SubArea are Rectangles.
- * NOTE: ResetButton does NOT use 'top_dist' and 'bottom_dist', they are only
- *       for Mine SubArea and Time SubArea.
- * NOTE: ResetButton does NOT have edges, but Mine SubArea and Time SubArea have
+ * NOTE: ResetButton is not a "BUTTON" Control.
+ * NOTE: ResetButton is a square, Mine Region and Time Region are rectangles.
+ * NOTE: ResetButton does not use 'top_dist' and 'bottom_dist', they are only
+ *       for Mine Region and Time Region.
+ * NOTE: ResetButton does not have edges, but Mine Region and Time Region have
  *       edges of their own.
  *
- * Mine SubArea, Time SubArea and ResetButton have constant size, and ResetButton
- * is always center aligned while Mine/Time SubArea is always close to the edge,
- * but HeadArea SubArea has flexible width, so that it is necessary to recalculate
+ * Mine Region, Time Region and ResetButton have constant size, and ResetButton
+ * is always center aligned while Mine/Time Region is always close to the edge,
+ * but HeadArea Region has flexible width, so it is necessary to recalculate
  * the position when GameMode changes.
  *
- * PS: Although we say that ResetButton has NO edge, we still regard it as a
- *     edge+inner structure because it also has a 3D outlook (button like).
+ * PS: Although we say that ResetButton does not have edges, we still regard it
+ *     as an edge+inner structure since it also has a 3D outlook (button like).
  */
 
 /*     Mine            Time
@@ -121,16 +121,16 @@
  *
  * N: A one-digit number from 0 to 9.
  *
- * The Mine SubArea and Time SubArea are both called Info SubArea, which means
- * they have the same UI structure, further more, each Info SubArea contains
+ * The Mine Region and Time Region are both called Info Region, which means
+ * they have the same UI structure. Further more, each Info Region contains
  * three same Objects, which is called InfoNum.
  *
  * For convenience, we call the combination of three InfoNum Objects as INums;
- * and relevantly, we call the INums in Mine SubArea and Time SubArea as MNums
+ * and relevantly, we call the INums in Mine Region and Time Region as MNums
  * and TNums, respectively.
  *
  * NOTE: InfoNum has constant size so that INums has constant size.
- * NOTE: Info SubArea is composed of INums and edges.
+ * NOTE: Info Region is composed of INums and edges.
  */
 
 /*                MapArea
@@ -144,13 +144,13 @@
  *
  * U: MapUnit
  *
- * The MapArea SubArea contains the GameMap, which is called Map for simplicity.
- * The Map is composed of MxN MapUnits in M rows and N columns, where M and N are
- * decided by current GameMode, which means that the size of MapArea SubArea
- * varies while the GameMode varies.
+ * The MapArea Region contains the GameMap, which is called Map for simplicity.
+ * The Map is composed of MxN MapUnits in M rows and N columns, where M and N
+ * are decided by current GameMode, which means that the size of MapArea Region
+ * varies while GameMode varies.
  *
  * NOTE: MapUnit has a fixed size.
- * NOTE: MapUnit also has a 3D outlook (button like) but it has NO edge.
+ * NOTE: MapUnit also has a 3D outlook (button like) with no edges.
  */
 
 /*         px
@@ -168,13 +168,13 @@
  * 'x' and 'y' are positions in unit on GameMap.
  * px = x * w, py = y * h, ppos = (px, py)
  *
- * NOTE: (px, py) indicates the coordinates of the top-left pixel of a MapUnit.
+ * NOTE: (px, py) indicates the position of the top-left pixel of a MapUnit.
  */
 
 
 #define AREA_FRAME      6
-#define SUBAREA_FEDGE   1
-#define SUBAREA_TEDGE   2
+#define REGION_FEDGE    1
+#define REGION_TEDGE    2
 #define UICOL_CLTAREA   RGB(240,240,240)
 #define UICOL_CONVEX    RGB(192,192,192)
 #define UICOL_WHITE     RGB(255,255,255)
@@ -183,9 +183,10 @@
 #define UICOL_DARK      RGB(160,160,160)
 
 
-//Mine SubArea, Time SubArea
+//Mine Region, Time Region
 #define INFONUM_MIN     0
 #define INFONUM_MAX     9
+#define INFONUM_DASH    10
 #define INUMS_MIN       (-99)
 #define INUMS_MAX       999
 
@@ -194,17 +195,13 @@
 #define INUMSF_HIDEB    0x02
 #define INUMSF_HIDEC    0x04
 #define INUMSF_HIDEALL  0x07
-#define INUMSF_SKIPA    0x08
-#define INUMSF_SKIPB    0x10
-#define INUMSF_SKIPC    0x20
-#define INUMSF_SKIPALL  0x38
 
 #define INFONUM_WIDTH   15
 #define INFONUM_HEIGHT  27
 #define INUMS_WIDTH     (INFONUM_WIDTH * 3)
 #define INUMS_HEIGHT    INFONUM_HEIGHT
 
-#define INFO_EDGE       SUBAREA_FEDGE
+#define INFO_EDGE       REGION_FEDGE
 #define INFO_WIDTH      (INFO_EDGE + INUMS_WIDTH + INFO_EDGE)
 #define INFO_HEIGHT     (INFO_EDGE + INUMS_HEIGHT + INFO_EDGE)
 
@@ -224,7 +221,7 @@
 #define TNUMS_HEIGHT    INUMS_HEIGHT
 #define TIME_WIDTH      INFO_WIDTH
 #define TIME_HEIGHT     INFO_HEIGHT
-//end Mine SubArea, Time SubArea
+//end Mine Region, Time Region
 
 //ResetButton
 #define RB_SIZE         32
@@ -266,25 +263,25 @@
 #define MUCOL_NUMBER8   RGB(128,128,128)
 //end Map
 
-//HeadArea SubArea
-#define HEADAREA_EDGE       SUBAREA_TEDGE
+//HeadArea Region
+#define HEADAREA_EDGE       REGION_TEDGE
 #define HEADAREA_WIDTH(nw)  (HEADAREA_EDGE + MAP_WIDTH(nw) + HEADAREA_EDGE)
 #define HEADAREA_HEIGHT     (HEADAREA_EDGE + 36 + HEADAREA_EDGE)
 
 #define HACOL_SURFACE       UICOL_CLTAREA
 #define HACOL_BRIGHT        UICOL_WHITE
 #define HACOL_DARK          UICOL_GRAY
-//end HeadArea SubArea
+//end HeadArea Region
 
-//MapArea SubArea
-#define MAPAREA_EDGE        SUBAREA_TEDGE
+//MapArea Region
+#define MAPAREA_EDGE        REGION_TEDGE
 #define MAPAREA_WIDTH(nw)   (MAPAREA_EDGE + MAP_WIDTH(nw) + MAPAREA_EDGE)
 #define MAPAREA_HEIGHT(nh)  (MAPAREA_EDGE + MAP_HEIGHT(nh) + MAPAREA_EDGE)
 
 #define MACOL_SURFACE       UICOL_CLTAREA
 #define MACOL_BRIGHT        UICOL_WHITE
 #define MACOL_DARK          UICOL_GRAY
-//end MapArea SubArea
+//end MapArea Region
 
 //Client Area
 #define CLIENT_WIDTH(nw)    (AREA_FRAME + HEADAREA_WIDTH(nw) + AREA_FRAME)
@@ -328,135 +325,7 @@
 
 
 
-/* This array stores InfoNum backgroud, it is private.
-/*
-const bool InfoNumBG[INFONUM_WIDTH][INFONUM_HEIGHT];
-**/
-
-
-
-/* Following function implementations are private,
- * they are invisible outside.
- */
-
-/* These functions draw a concave or convex like region with different types
-/* of edges.
-/*****************************************************************************
-//Draw a solid color background.
-static void drawsolidcolorbg(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ int width,
-    _In_ int height,
-    _In_ COLORREF surface
-);
-//Draw 1 pixel half edge 2D like background,
-//draw left edge and top edge only.
-static void drawhalfedgebg(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ int width,
-    _In_ int height,
-    _In_ COLORREF inner,
-    _In_ COLORREF edge
-);
-//Draw 1 pixel edge concave background,
-//exchange 'bright' and 'dark' to draw a convex background.
-static void drawfulledgebg(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ int width,
-    _In_ int height,
-    _In_ COLORREF inner,
-    _In_ COLORREF bright,
-    _In_ COLORREF dark
-);
-//Draw 2 pixel edge concave background,
-//exchange 'bright' and 'dark' to draw a convex background.
-static void drawthickedgebg(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ int width,
-    _In_ int height,
-    _In_ COLORREF inner,
-    _In_ COLORREF bright,
-    _In_ COLORREF dark
-);
-//Draw 2 pixel edge concave background with 2 layers of color,
-//exchange 'bright*' and 'dark*' to draw a convex background.
-static void drawdualedgebg(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ int width,
-    _In_ int height,
-    _In_ COLORREF inner,
-    _In_ COLORREF bright1,
-    _In_ COLORREF bright2,
-    _In_ COLORREF dark1,
-    _In_ COLORREF dark2
-);
-**/
-
-/* These functions draw a seven-segment like region for InfoNum.
-/*****************************************************************************
-// appearance and defination of a 7sd
-//    a
-//  +---+
-// f| g |b
-//  +---+
-// e|   |c
-//  +---+
-//    d
-
-//Draw 7sd background.
-static inline void draw7sdbg(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-
-//Draw specific segment on 7sd, MUST select pen before calling.
-static inline void draw7sda(_In_ HDC h7sddc, _In_ int left, _In_ int top);
-static inline void draw7sdb(_In_ HDC h7sddc, _In_ int left, _In_ int top);
-static inline void draw7sdc(_In_ HDC h7sddc, _In_ int left, _In_ int top);
-static inline void draw7sdd(_In_ HDC h7sddc, _In_ int left, _In_ int top);
-static inline void draw7sde(_In_ HDC h7sddc, _In_ int left, _In_ int top);
-static inline void draw7sdf(_In_ HDC h7sddc, _In_ int left, _In_ int top);
-static inline void draw7sdg(_In_ HDC h7sddc, _In_ int left, _In_ int top);
-**/
-
-/* These functions draw different contents inside a MapUnit.
-/*****************************************************************************
-//Draw a mine icon.
-static void drawmuitemmine(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-
-//Draw a question mark icon.
-static void drawmuitemmark(_In_ HDC hdstdc, _In_ int left, _In_ int top, _In_ bool clicked);
-
-//Draw a flag icon.
-static void drawmuitemflag(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-
-//Draw a cross icon.
-static void drawmuitemcross(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-
-//Following draw a number inside MapUnit.
-static void drawmuitemnum1(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-static void drawmuitemnum2(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-static void drawmuitemnum3(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-static void drawmuitemnum4(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-static void drawmuitemnum5(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-static void drawmuitemnum6(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-static void drawmuitemnum7(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-static void drawmuitemnum8(_In_ HDC hdstdc, _In_ int left, _In_ int top);
-**/
-
-/* logical xor
-static inline bool _xor(const bool A, const bool B);
-**/
-
-
-/* Following functions are public. */
+/* position related functions */
 
 //Transform between pixel position and unit position of MapUnit.
 //Assume the top-left of the whole Map is position (0, 0).
@@ -467,186 +336,138 @@ int x2px(int x);
 int y2py(int y);
 
 
-/* These functions draw backgroung with edge for each SubArea
- * using predefined color and size, check related macros.
+/* These functions draw surface of each Region using
+ * predefined color and size, check related macros.
  */
 
 //w:CLIENT_WIDTH, h:CLIENT_HEIGHT
-void drawDCClientBg(
-    _In_ HDC hdstdc,
+void drawClient(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top,
-    _In_ int n_map_width,
-    _In_ int n_map_height
+    _In_ int n_mapw,
+    _In_ int n_maph
 );
 
 //w:HEADAREA_WIDTH, h:HEADAREA_HEIGHT
-void drawDCHeadAreaBg(
-    _In_ HDC hdstdc,
+void drawHeadArea(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top,
-    _In_ int n_map_width
+    _In_ int n_mapw
 );
 
 //w:MAPAREA_WIDTH, h:MAPAREA_HEIGHT
-void drawDCMapAreaBg(
-    _In_ HDC hdstdc,
+void drawMapArea(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top,
-    _In_ int n_map_width,
-    _In_ int n_map_height
+    _In_ int n_mapw,
+    _In_ int n_maph
 );
 
 //w:INFO_WIDTH, h:INFO_HEIGHT
-void drawDCInfoBg(
-    _In_ HDC hdstdc,
+void drawInfo(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top
 );
 
 
-/* These functions draw specfic numbers inside Info SubArea
- * using predefined color and size, check related macros.
+/* These functions draw contents of each Object using
+ * predefined color and size, check related macros.
  */
 
-//Draw the InfoNum background directly on DC,
-//which means that all segments are off.
+//Draw a single InfoNum by number.
+//Accept numbers within [INFONUM_MIN, INFONUM_MAX] and INFONUM_DASH
+//as symbol '-', otherwise, draws a blank 7-segment display.
 //w:INFONUM_WIDTH, h:INFONUM_HEIGHT
-void drawDCInfoNumBg(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top
-);
-
-//Draw a number on InfoNum background directly.
-//If 'num' is within [INFONUM_MIN, INFONUM_MAX], it draws the number;
-//otherwise, it draws a symbol '-'.
-//w:INFONUM_WIDTH, h:INFONUM_HEIGHT
-void drawDCInfoNumNumber(
-    _In_ HDC hdstdc,
+void drawInfoNum(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top,
     _In_ int num
 );
 
-//Draw a single InfoNum directly on DC.
-//If 'num' is within [INFONUM_MIN, INFONUM_MAX], it draws the number;
-//otherwise, it draws a symbol '-'.
-//All segments will be off when 'hide' is true.
-//w:INFONUM_WIDTH, h:INFONUM_HEIGHT
-void drawDCInfoNum(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ int num,
-    _In_ bool hide
-);
-
-//Draw INums directly on DC.
-//Available range:[INUMS_MIN, INUMS_MAX],
-//otherwise, it draws symbol '---'.
+//Draw INums by number.
+//Available range:[INUMS_MIN, INUMS_MAX], otherwise, draws '---'.
 //The drawing behavior is controlled by 'flag',
-//which can be a combination of INUMSF* flags.
-//INUMSF_HIDE* controls whether a InfoNum turns off all segments,
-//INUMSF_SKIP* skips drawing a specific InfoNum in INums.
+//which is a combination of INUMSF* flags that controls whether
+//a InfoNum turns off.
 //w:INUMS_WIDTH, h:INUMS_HEIGHT
-void drawDCINums(
-    _In_ HDC hdstdc,
+void drawINums(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top,
     _In_ int num,
     _In_ BYTE flag
 );
 
-
-/* These functions draw a ResetButton inside HeadArea SubArea
- * using predefined color and size, check related macros.
- */
-
-//Draw ResetButton background directly on DC.
-//w:RB_SIZE, h:RB_SIZE
-void drawDCResetButtonBg(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ bool clicked
-);
-
-//Draw a bitmap on ResetButton directly,
-//or do nothing if the 'hbm' is NULL.
-//w:BMP_SIZE, h:BMP_SIZE
-void drawDCResetButtonBmp(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ HBITMAP hbm,
-    _In_ bool clicked
-);
-
 //Draw a ResetButton with specified bitmap.
 //Use NULL if no bitmap to be drawn.
 //w:RB_SIZE, h:RB_SIZE
-void drawDCResetButton(
-    _In_ HDC hdstdc,
+void drawResetButton(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top,
-    _In_ HBITMAP hbm,
+    _In_ HBITMAP hbmp,
     _In_ bool clicked
 );
 
-
-/* These functions draw a MapUnit on MapArea SubArea
- * using predefined color and size, check related macros.
- */
-
+//Draw a covered MapUnit.
 //w:MUP_SIZE, h:MUP_SIZE
-void drawDCMUCover(
-    _In_ HDC hdstdc,
+void drawMapUnitCover(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top
 );
 
+//Draw a flagged MapUnit.
 //w:MUP_SIZE, h:MUP_SIZE
-void drawDCMUBare(
-    _In_ HDC hdstdc,
+void drawMapUnitFlag(
+    _In_ HDC hdc,
+    _In_ int left,
+    _In_ int top
+);
+
+//Draw an uncovered MapUnit.
+//w:MUP_SIZE, h:MUP_SIZE
+void drawMapUnitBare(
+    _In_ HDC hdc,
+    _In_ int left,
+    _In_ int top
+);
+
+//Draw a MapUnit with mine.
+//w:MUP_SIZE, h:MUP_SIZE
+void drawMapUnitMine(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top,
     _In_ bool bomb
 );
 
+//Draw a marked MapUnit.
 //w:MUP_SIZE, h:MUP_SIZE
-void drawDCMUFlag(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top
-);
-
-//w:MUP_SIZE, h:MUP_SIZE
-void drawDCMUMark(
-    _In_ HDC hdstdc,
+void drawMapUnitMark(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top,
     _In_ bool clicked
 );
 
+//Draw a MapUnit with flag and cross.
 //w:MUP_SIZE, h:MUP_SIZE
-void drawDCMUMine(
-    _In_ HDC hdstdc,
-    _In_ int left,
-    _In_ int top,
-    _In_ bool bomb
-);
-
-//w:MUP_SIZE, h:MUP_SIZE
-void drawDCMUFalse(
-    _In_ HDC hdstdc,
+void drawMapUnitFalse(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top
 );
 
+//Draw a MapUnit with number.
 //w:MUP_SIZE, h:MUP_SIZE
-void drawDCMUNum(
-    _In_ HDC hdstdc,
+void drawMapUnitNumber(
+    _In_ HDC hdc,
     _In_ int left,
     _In_ int top,
     _In_ int num

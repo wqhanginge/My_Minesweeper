@@ -25,7 +25,7 @@
 
 
 #include "stdafx.h"
-#include "procfunctions.h"
+#include "procfunc.h"
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -40,10 +40,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         return onCommand(hwnd, wparam, lparam);
     case WMAPP_GAMERESET:
         return onGameReset(hwnd, wparam, lparam);
-    case WMAPP_GAMEWIN:
-        return onGameWin(hwnd, wparam, lparam);
-    case WMAPP_GAMELOSS:
-        return onGameLoss(hwnd, wparam, lparam);
+    case WMAPP_GAMEOVER:
+        return onGameOver(hwnd, wparam, lparam);
     case WMAPP_GAMEMODECHANGE:
         return onGameModeChange(hwnd, wparam, lparam);
     case WM_LBUTTONDOWN:
@@ -72,7 +70,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
     wndc.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPICON));
     wndc.hbrBackground = NULL;
     wndc.lpfnWndProc = WndProc;
-    wndc.lpszClassName = TEXT(WNDCLS_NAME);
+    wndc.lpszClassName = TEXT(WND_CLSNAME);
     wndc.lpszMenuName = NULL;
     wndc.style = CS_VREDRAW | CS_HREDRAW;
 
@@ -80,7 +78,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
     HWND hwnd = CreateWindow(
         wndc.lpszClassName,
-        TEXT(WND_NAME),
+        TEXT(WND_WNDNAME),
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT,
         CW_USEDEFAULT, CW_USEDEFAULT,

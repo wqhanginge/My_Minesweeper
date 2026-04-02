@@ -53,7 +53,7 @@ bool isxyinmap(PGameInfo pGame, int x, int y)
 
 bool isidxinmap(PGameInfo pGame, int index)
 {
-    return (index >= 0 && index < pGame->size);
+    return (index >= 0 && index < pGame->width * pGame->height);
 }
 
 int getNeighbors(PGameInfo pGame, Neighbor neighbor, int x, int y)
@@ -77,47 +77,38 @@ int getNeighbors(PGameInfo pGame, Neighbor neighbor, int x, int y)
 void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines)
 {
     switch (mode) {
-    case JUNIOR:
-        pGame->mode = JUNIOR;
+    case GM_JUNIOR:
+        pGame->mode = GM_JUNIOR;
+        pGame->state = GS_UNKNOW;
         pGame->width = JUNIOR_WIDTH;
         pGame->height = JUNIOR_HEIGHT;
-        pGame->size = JUNIOR_SIZE;
         pGame->mines = JUNIOR_MINES;
-        pGame->state = GS_UNKNOW;
         break;
-    case MIDDLE:
-        pGame->mode = MIDDLE;
+    case GM_MIDDLE:
+        pGame->mode = GM_MIDDLE;
+        pGame->state = GS_UNKNOW;
         pGame->width = MIDDLE_WIDTH;
         pGame->height = MIDDLE_HEIGHT;
-        pGame->size = MIDDLE_SIZE;
         pGame->mines = MIDDLE_MINES;
-        pGame->state = GS_UNKNOW;
         break;
-    case SENIOR:
-        pGame->mode = SENIOR;
+    case GM_SENIOR:
+        pGame->mode = GM_SENIOR;
+        pGame->state = GS_UNKNOW;
         pGame->width = SENIOR_WIDTH;
         pGame->height = SENIOR_HEIGHT;
-        pGame->size = SENIOR_SIZE;
         pGame->mines = SENIOR_MINES;
-        pGame->state = GS_UNKNOW;
         break;
-    case CUSTOM:
-        pGame->mode = CUSTOM;
+    case GM_CUSTOM:
+        pGame->mode = GM_CUSTOM;
+        pGame->state = GS_UNKNOW;
         pGame->width = min(max(width, MIN_WIDTH), MAX_WIDTH);
         pGame->height = min(max(height, MIN_HEIGHT), MAX_HEIGHT);
-        pGame->size = pGame->width * pGame->height;
-        pGame->mines = min(max(mines, MIN_MINES), MAX_MINES(pGame->size));
-        pGame->state = GS_UNKNOW;
+        pGame->mines = min(max(mines, MIN_MINES), MAX_MINES(pGame->width * pGame->height));
         break;
     default:
-        setGameMode(pGame, JUNIOR, 0, 0, 0);
+        setGameMode(pGame, GM_JUNIOR, 0, 0, 0);
         break;
     }
-}
-
-void setMark(PGameInfo pGame, bool enable)
-{
-    pGame->mark = enable;
 }
 
 
@@ -127,23 +118,23 @@ void resetGame(PGameInfo pGame)
 {
     pGame->state = GS_INIT;
     pGame->flags = 0;
-    pGame->bare_units = 0;
+    pGame->secrets = pGame->width * pGame->height;
     pGame->time = 0;
-    memset(pGame->map, 0, sizeof(BYTE) * pGame->size);
+    memset(pGame->map, 0, sizeof(BYTE) * pGame->width * pGame->height);
 }
 
 void startGame(PGameInfo pGame)
 {
     pGame->state = GS_RUNNING;
     pGame->flags = 0;
-    pGame->bare_units = 0;
+    pGame->secrets = pGame->width * pGame->height;
 }
 
 void finishGame(PGameInfo pGame, bool win)
 {
     pGame->state = (win) ? GS_WIN : GS_LOSS;
     pGame->flags = (win) ? pGame->mines : pGame->flags;
-    pGame->bare_units = pGame->size;
+    pGame->secrets = 0;
 }
 
 int createGameMap(PGameInfo pGame, int index)
@@ -155,12 +146,12 @@ int createGameMap(PGameInfo pGame, int index)
 
     //generate mines, 8 Units around where clicked will not have mines
     //use shuffle algorithm
-    memset(pGame->map, MUS_COVER, sizeof(BYTE) * pGame->size);  //init MapUnits
-    memset(pGame->map, MUF_MINE | MUN_MINE, sizeof(BYTE) * pGame->mines);   //generate mines
-    int neicount = 0;
+    int neicount = 0, mapsize = pGame->width * pGame->height;
+    memset(pGame->map, MUS_COVER, sizeof(BYTE) * mapsize);  //init MapUnits
+    memset(pGame->map, MUN_MINE, sizeof(BYTE) * pGame->mines);  //generate mines
     for (int i = 0; i < NEI_TOTAL; i++) neicount += (safepos[i] != INV_INDEX);  //remember how many safe positions needed
-    for (int k = 0; k < pGame->size - neicount; k++) {  //shuffle algorithm, exclude reserved tail
-        int index = rand() % (pGame->size - neicount - k) + k;
+    for (int k = 0; k < mapsize - neicount; k++) {  //shuffle algorithm, exclude reserved tail
+        int index = rand() % (mapsize - neicount - k) + k;
         BYTE temp = pGame->map[index];
         pGame->map[index] = pGame->map[k];
         pGame->map[k] = temp;
@@ -177,15 +168,15 @@ int createGameMap(PGameInfo pGame, int index)
     //move safe area to where it is, the order of Units matters
     for (int i = 0; i < NEI_TOTAL; i++) {
         if (safepos[i] != INV_INDEX) {
-            BYTE temp = pGame->map[pGame->size - neicount];
-            pGame->map[pGame->size - neicount] = pGame->map[safepos[i]];
+            BYTE temp = pGame->map[mapsize - neicount];
+            pGame->map[mapsize - neicount] = pGame->map[safepos[i]];
             pGame->map[safepos[i]] = temp;
             neicount--;
         }
     }
 
     //calculate mines around each Unit
-    for (int i = 0; i < pGame->size; i++) {
+    for (int i = 0; i < mapsize; i++) {
         if (ISMUMINE(pGame->map[i])) continue;
         int mcnt = 0;
         Neighbor neipos;
@@ -203,7 +194,7 @@ int clickOne(PGameInfo pGame, int index)
     if (!ISMUCLICKABLE(pGame->map[index])) return RETVAL_BADMUSTATE;
 
     BYTE mustate = (ISMUMINE(pGame->map[index])) ? MUS_BOMB : MUS_BARE;
-    pGame->bare_units++;
+    pGame->secrets--;
     SETMUSTATE(pGame->map[index], mustate);
     return GETMUNUMBER(pGame->map[index]);
 }
@@ -223,7 +214,7 @@ int openBlanks(PGameInfo pGame, int index)
     return RETVAL_NOERROR;
 }
 
-int flagOne(PGameInfo pGame, int index)
+int flagOne(PGameInfo pGame, int index, bool qmark)
 {
     if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
 
@@ -235,7 +226,7 @@ int flagOne(PGameInfo pGame, int index)
         pGame->flags++;
         break;
     case MUS_FLAG:
-        new_mapunit_state = (pGame->mark) ? MUS_MARK : MUS_COVER;
+        new_mapunit_state = (qmark) ? MUS_MARK : MUS_COVER;
         pGame->flags--;
         break;
     case MUS_MARK:
@@ -249,9 +240,19 @@ int flagOne(PGameInfo pGame, int index)
     return RETVAL_NOERROR;
 }
 
+int selectOne(PGameInfo pGame, int index, bool select)
+{
+    if (!isidxinmap(pGame, index)) return RETVAL_INDEXOOR;
+    if (!ISMUCLICKABLE(pGame->map[index])) return RETVAL_BADMUSTATE;
+
+    BYTE mapunit = pGame->map[index];
+    pGame->map[index] = (select) ? mapunit | MUF_SELECT : mapunit & ~MUF_SELECT;
+    return RETVAL_NOERROR;
+}
+
 void showMines(PGameInfo pGame)
 {
-    for (int i = 0; i < pGame->size; i++) {
+    for (int i = 0; i < pGame->width * pGame->height; i++) {
         BYTE mapunit = pGame->map[i];
         if (ISMUMINE(mapunit) && ISMUCLICKABLE(mapunit)) {
             BYTE mustate = (pGame->state == GS_WIN) ? MUS_FLAG : MUS_BARE;
@@ -297,7 +298,7 @@ int leftClick(PGameInfo pGame, int index)
     //after click, show positions of all mines when GameOver,
     //or return a Game start message if is first click
     if (isfirst) ret = RETVAL_GAMESTART;
-    if (isbomb || pGame->bare_units == pGame->size - pGame->mines) {
+    if (isbomb || pGame->secrets == pGame->mines) {
         finishGame(pGame, !isbomb);
         showMines(pGame);
         ret = (isbomb) ? RETVAL_GAMELOSS : RETVAL_GAMEWIN;
@@ -329,7 +330,7 @@ int simulClick(PGameInfo pGame, int index)
     }
 
     //after open, show positions of all mines when GameOver
-    if (isbomb || pGame->bare_units == pGame->size - pGame->mines) {
+    if (isbomb || pGame->secrets == pGame->mines) {
         finishGame(pGame, !isbomb);
         showMines(pGame);
         return (isbomb) ? RETVAL_GAMELOSS : RETVAL_GAMEWIN;
@@ -337,9 +338,9 @@ int simulClick(PGameInfo pGame, int index)
     return RETVAL_NOERROR;
 }
 
-int rightClick(PGameInfo pGame, int index)
+int rightClick(PGameInfo pGame, int index, bool qmark)
 {
-    return (ISGAMEACTIVE(pGame->state)) ? flagOne(pGame, index) : RETVAL_BADGAMESTATE;
+    return (ISGAMEACTIVE(pGame->state)) ? flagOne(pGame, index, qmark) : RETVAL_BADGAMESTATE;
 }
 
 
@@ -347,15 +348,15 @@ int rightClick(PGameInfo pGame, int index)
 
 void resetRecord(PGameScore pScore)
 {
-    *pScore = (GameScore){ MAX_TIME, MAX_TIME, MAX_TIME, _T(DEF_SCORE_NAME_EN), _T(DEF_SCORE_NAME_EN), _T(DEF_SCORE_NAME_EN) };
+    *pScore = (GameScore){ MAX_TIME, MAX_TIME, MAX_TIME, _T(SCORE_NAME_DEFT), _T(SCORE_NAME_DEFT), _T(SCORE_NAME_DEFT) };
 }
 
 WORD getRecordTime(PGameScore pScore, BYTE mode)
 {
     switch (mode) {
-    case JUNIOR: return pScore->junior_time;
-    case MIDDLE: return pScore->middle_time;
-    case SENIOR: return pScore->senior_time;
+    case GM_JUNIOR: return pScore->junior_time;
+    case GM_MIDDLE: return pScore->middle_time;
+    case GM_SENIOR: return pScore->senior_time;
     }
     return INV_TIME;
 }
@@ -363,9 +364,9 @@ WORD getRecordTime(PGameScore pScore, BYTE mode)
 LPTSTR getRecordName(PGameScore pScore, BYTE mode)
 {
     switch (mode) {
-    case JUNIOR: return pScore->junior_name;
-    case MIDDLE: return pScore->middle_name;
-    case SENIOR: return pScore->senior_name;
+    case GM_JUNIOR: return pScore->junior_name;
+    case GM_MIDDLE: return pScore->middle_name;
+    case GM_SENIOR: return pScore->senior_name;
     }
     return NULL;
 }
@@ -374,13 +375,13 @@ int setRecordTime(PGameScore pScore, BYTE mode, WORD time)
 {
     time = min(time, MAX_TIME);
     switch (mode) {
-    case JUNIOR:
+    case GM_JUNIOR:
         pScore->junior_time = time;
         return RETVAL_NOERROR;
-    case MIDDLE:
+    case GM_MIDDLE:
         pScore->middle_time = time;
         return RETVAL_NOERROR;
-    case SENIOR:
+    case GM_SENIOR:
         pScore->senior_time = time;
         return RETVAL_NOERROR;
     }

@@ -36,37 +36,32 @@
 
 
 //Game Modes
-#define JUNIOR          0
-#define MIDDLE          1
-#define SENIOR          2
-#define CUSTOM          3
-#define CRUSH           4
-#define ISSTDMOD(mode)  ((BYTE)(mode) < CUSTOM)
-#define ISCRUSH(mode)   ((BYTE)(mode) >= CRUSH)
+#define GM_JUNIOR       0
+#define GM_MIDDLE       1
+#define GM_SENIOR       2
+#define GM_CUSTOM       3
+#define GM_CRUSH        4
+#define ISSTDMOD(mode)  ((BYTE)(mode) < GM_CUSTOM)
+#define ISCRUSH(mode)   ((BYTE)(mode) >= GM_CRUSH)
 
 #define JUNIOR_WIDTH    9
 #define JUNIOR_HEIGHT   9
-#define JUNIOR_SIZE     (JUNIOR_WIDTH * JUNIOR_HEIGHT)
 #define JUNIOR_MINES    10
 
 #define MIDDLE_WIDTH    16
 #define MIDDLE_HEIGHT   16
-#define MIDDLE_SIZE     (MIDDLE_WIDTH * MIDDLE_HEIGHT)
 #define MIDDLE_MINES    40
 
 #define SENIOR_WIDTH    30
 #define SENIOR_HEIGHT   16
-#define SENIOR_SIZE     (SENIOR_WIDTH * SENIOR_HEIGHT)
 #define SENIOR_MINES    99
 
-#define MAX_WIDTH       30
-#define MAX_HEIGHT      24
-#define MAX_SIZE        (MAX_WIDTH * MAX_HEIGHT)
 #define MIN_WIDTH       9
 #define MIN_HEIGHT      9
-#define MIN_SIZE        (MIN_WIDTH * MIN_HEIGHT)
-#define MAX_MINES(size) ((WORD)((WORD)(size) * 9 / 10))
 #define MIN_MINES       10
+#define MAX_WIDTH       30
+#define MAX_HEIGHT      24
+#define MAX_MINES(size) ((WORD)((size) * 9 / 10))
 //end Game Modes
 
 //Game States
@@ -85,13 +80,13 @@
  * +-+-+-+-+-+-+-+-+
  * |F|  S  |   N   |
  * +-+-+-+-+-+-+-+-+
- *     map_unit
- * F: Set this bit if this Unit is a mine.
+ *      MapUnit
+ * F: Set this bit if this Unit is currently selected.
  * S: State of this Unit:[covered, marked, flagged, uncovered, bombed, false-flagged].
  * N: The number of mines in its neighbors, from 0x0 to 0x8. Set to MUN_MINE if this Unit is a mine.
  */
 
-#define MUF_MINE        0x80
+#define MUF_SELECT      0x80
 #define MUN_MINE        0x0F
 #define MUS_COVER       0x00
 #define MUS_MARK        0x10
@@ -99,22 +94,24 @@
 #define MUS_BARE        0x30
 #define MUS_BOMB        0x40
 #define MUS_FALSE       0x50
-#define GETMUNUMBER(unit)       ((BYTE)((BYTE)(unit) & 0x0F))
-#define GETMUSTATE(unit)        ((BYTE)((BYTE)(unit) & 0x70))
-#define SETMUNUMBER(unit, n)    (unit = ((BYTE)((BYTE)((BYTE)(unit) & 0xF0) | (BYTE)((BYTE)(n) & 0x0F))))
-#define SETMUSTATE(unit, s)     (unit = ((BYTE)((BYTE)((BYTE)(unit) & 0x8F) | (BYTE)((BYTE)(s) & 0x70))))
-#define ISMUMINE(unit)          ((BYTE)(unit) & MUF_MINE)
+#define GETMUNUMBER(unit)       ((BYTE)((unit) & 0x0F))
+#define GETMUSTATE(unit)        ((BYTE)((unit) & 0x70))
+#define SETMUNUMBER(unit, n)    (unit = (BYTE)(((unit) & 0xF0) | ((n) & 0x0F)))
+#define SETMUSTATE(unit, s)     (unit = (BYTE)(((unit) & 0x8F) | ((s) & 0x70)))
+#define ISMUSELECTED(unit)      ((unit) & MUF_SELECT)
+#define ISMUMINE(unit)          (GETMUNUMBER(unit) == MUN_MINE)
 #define ISMUCLICKABLE(unit)     (GETMUSTATE(unit) <= MUS_MARK)
 //end Game Map Unit
 
 //Game Map Index
 #define INV_INDEX   (-1)
 #define NEI_TOTAL   9
+#define MAX_SIZE    (MAX_WIDTH * MAX_HEIGHT)
 //end Game Map Index
 
 //Game Score
 #define SCORE_NAME_LEN      20
-#define DEF_SCORE_NAME_EN   "anonymous"
+#define SCORE_NAME_DEFT     "anonymous"
 
 #define INV_TIME    ((WORD)-1)
 #define MAX_TIME    999
@@ -149,14 +146,12 @@ typedef int Neighbor[NEI_TOTAL];
 
 typedef struct _GameInfo {
     BYTE mode;          //GameMode:[junior, middle, senior, custom]
-    BYTE width;         //GameMap width: map_units per line
-    BYTE height;        //GameMap height: map_units per column
-    WORD size;          //GameMap size: width x height
-    WORD mines;         //counts of mines in GameMap
-    bool mark;          //if the QuestionMark is enabled
     BYTE state;         //GameState:[init, running, win, loss]
+    BYTE width;         //GameMap width: MapUnits per line
+    BYTE height;        //GameMap height: MapUnits per column
+    WORD mines;         //counts of mines in GameMap
     WORD flags;         //counts of MapUnits that have been flagged
-    WORD bare_units;    //counts of MapUnits that have been uncovered
+    WORD secrets;       //counts of MapUnits that are still covered
     WORD time;          //GameTime
     BYTE map[MAX_SIZE]; //GameMap data, avaliable area depends on GameMode
 } GameInfo, * PGameInfo;
@@ -205,15 +200,12 @@ int getNeighbors(PGameInfo pGame, Neighbor neighbor, int x, int y);
 /* Game property related functions */
 
 //Set GameMode with specified value.
-//If 'mode' is an undefined value, set GameMode to JUNIOR by default.
-//If 'mode' is a standard GameMode(not CUSTOM), 'width', 'height' and 'mines' will be ignored.
-//CUSTOM is limited by MAX_WIDTH, MAX_HEIGHT, MAX_MINES and MIN***.
+//If 'mode' is an undefined value, set GameMode to Junior by default.
+//If 'mode' is a standard GameMode(not Custom), 'width', 'height' and 'mines' will be ignored.
+//Custom is limited by MAX_WIDTH, MAX_HEIGHT, MAX_MINES and MIN***.
 //This function sets the Game to an uninit state,
 //make sure to call resetGame() right after calling this function to init Game properly.
 void setGameMode(PGameInfo pGame, BYTE mode, BYTE width, BYTE height, WORD mines);
-
-//Enable or disable QuestionMark function.
-void setMark(PGameInfo pGame, bool enable);
 
 
 /* Game runtime basic functions */
@@ -247,11 +239,17 @@ int openBlanks(PGameInfo pGame, int index);
 
 //Set or remove the flag on a coverd Unit in GameMap.
 //This function changes the state of given Unit in cycle:[covered -> flagged -> covered],
-//if the QuestionMark is enabled, the cycle will be:[covered -> flagged -> marked -> covered].
+//if Mark feature is enabled, the cycle will become:[covered -> flagged -> marked -> covered].
 //Return RETVAL_NOERROR if the call succeeded,
 //or RETVAL_INDEXOOR if the index is out of range,
 //or RETVAL_BADMUSTATE if the MapUnitState is not one of the three states mentioned above.
-int flagOne(PGameInfo pGame, int index);
+int flagOne(PGameInfo pGame, int index, bool qmark);
+
+//Set a Unit to selected state, or reset it to normal.
+//Return RETVAL_NOERROR if the call succeeded,
+//or RETVAL_INDEXOOR if the index is out of range,
+//or RETVAL_BADMUSTATE if this Unit cannot be selected (aka clicked).
+int selectOne(PGameInfo pGame, int index, bool select);
 
 
 //Show positions of all mines.
@@ -297,7 +295,7 @@ int simulClick(PGameInfo pGame, int index);
 //or RETVAL_INDEXOOR if the index is out of range,
 //or RETVAL_BADGAMESTATE if the Game is already finished,
 //or RETVAL_BADMUSTATE if this Unit cannot be flagged.
-int rightClick(PGameInfo pGame, int index);
+int rightClick(PGameInfo pGame, int index, bool qmark);
 
 
 /* GameScore related functions */

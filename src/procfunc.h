@@ -18,7 +18,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 \*****************************************************************************/
 /*****************************************************************************\
- * procfunctions.h
+ * procfunc.h
  *****************************************************************************
  * This file contains definations for Window and Message Queue.
  * This file contains Win32 Window Procedure Functions and Message Processing
@@ -31,16 +31,15 @@
 #pragma once
 
 #include "stdafx.h"
-#include "encapsulations.h"
+#include "interface.h"
 
 
 
 /* private window messages for Game */
 
 #define WMAPP_GAMERESET         (WM_APP + 0)    /* wParam: not used, lPapam: not used */
-#define WMAPP_GAMEWIN           (WM_APP + 1)    /* wParam: not used, lPapam: not used */
-#define WMAPP_GAMELOSS          (WM_APP + 2)    /* wParam: not used, lPapam: not used */
-#define WMAPP_GAMEMODECHANGE    (WM_APP + 3)    /* wParam: GameMode, lPapam: GameMapInfo (optional if ISSTDMOD(GameMode)) */
+#define WMAPP_GAMEOVER          (WM_APP + 1)    /* wParam: TRUE if win or FALSE if loss, lPapam: not used */
+#define WMAPP_GAMEMODECHANGE    (WM_APP + 2)    /* wParam: GameMode, lPapam: GameMapInfo (optional if ISSTDMOD(GameMode)) */
 
 //GameMapInfo (or MapInfo) is a combination of the width, height and mines of GameMap.
 //Use the following macros to pack or unpack GameMapInfo to or from a lparam.
@@ -53,33 +52,37 @@
 
 /* miscellaneous defines */
 
-#define WNDCLS_NAME         "MYMINESWEEPER"
-#define WND_NAME            "My Minesweeper"
+#define WND_CLSNAME         "MYMINESWEEPER"
+#define WND_WNDNAME         "My Minesweeper"
 #define WND_TIMER_ID        1
 #define WND_TIMER_ELAPSE    1000
-#define DLG_TIMEUNIT_EN     "Sec"
+#define DLG_TIMEUNIT        "Sec"
 
 
 
-/* private global variables
+/* private global variables (hint)
 /*****************************************************************************
 GameInfo Game;      //Game information
 GameScore Score;    //Record information
-RBHBM RBhbm;        //bitmap handles for ResetButton
-
-bool last_sclick;   //if last mouse event was a simultaneous button click
-bool rb_capture;    //if ResetButton get the capture
+RBHB Bitmap;        //bitmap handles for ResetButton
+UIRT Runtime;       //UI runtime status
 **/
 
 
 
 /* commonly used functions */
 
-//Change checked state of GameMode items in Menu, do nothing if GameMode is invalid.
-void setMenuChecked(HMENU hmenu, BYTE mode);
+//Test if a rectangle is visiable in device context clip region.
+BOOL isRectVisible(HDC hdc, int left, int top, int width, int height);
+
+//Add a rectangle into update region.
+BOOL addInvalidRect(HWND hwnd, int left, int top, int width, int height);
+
+//Change checked state of GameMode items in Menu, fail if GameMode is invalid.
+BOOL checkGameMode(HMENU hmenu, BYTE mode);
 
 //Check or uncheck QuestionMark item in Menu.
-void setQMarkChecked(HMENU hmenu, bool mark);
+BOOL checkQuestionMark(HMENU hmenu, bool qmark);
 
 //Update the information on Record Dialog with current Score data.
 void updateRecordContent(HWND hrecord);
@@ -130,11 +133,8 @@ LRESULT onCommand(HWND hwnd, WPARAM wparam, LPARAM lparam);
 //WMAPP_GAMERESET
 LRESULT onGameReset(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
-//WMAPP_GAMEWIN
-LRESULT onGameWin(HWND hwnd, WPARAM wparam, LPARAM lparam);
-
-//WMAPP_GAMELOSS
-LRESULT onGameLoss(HWND hwnd, WPARAM wparam, LPARAM lparam);
+//WMAPP_GAMEOVER
+LRESULT onGameOver(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
 //WMAPP_GAMEMODECHANGE
 LRESULT onGameModeChange(HWND hwnd, WPARAM wparam, LPARAM lparam);

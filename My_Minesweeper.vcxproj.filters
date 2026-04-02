@@ -15,16 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\basicUI.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\encapsulations.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="src\gamecore.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\procfunctions.h">
+    <ClInclude Include="src\graphic.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\interface.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\procfunc.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="res\resource.h">
@@ -35,19 +35,19 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\basicUI.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\encapsulations.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\gamecore.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphic.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\interface.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\main.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\procfunctions.c">
+    <ClCompile Include="src\procfunc.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\stdafx.c">
@@ -77,7 +77,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\license.txt.dat">
+    <None Include="res\License.txt.dat">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

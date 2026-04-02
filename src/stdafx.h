@@ -26,27 +26,17 @@
 
 #pragma once
 
-//Use unicode in program.
-#ifndef UNICODE
-#define UNICODE
-#endif
-//Disable uncommonly used APIs to reduce program size.
-#ifndef WIN32_LEAN_AND_MEAN
+//Disable uncommonly used Windows APIs.
 #define WIN32_LEAN_AND_MEAN
-#endif
-//Allow only character count functions.
-#ifndef STRSAFE_NO_CB_FUNCTIONS
+//Disable byte-count-based string functions.
 #define STRSAFE_NO_CB_FUNCTIONS
-#endif
-//This is needed to workaround C preprocessor errors when using legacy versions of the Windows SDK. (dmex)
-#ifndef MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS
+//This is needed to workaround C preprocessor errors when using legacy versions of the Windows SDK.
 #define MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS 0
-#endif
 
 #include <Windows.h>
 #include <stdlib.h>
-#include <tchar.h>
 #include <stdbool.h>
+#include <tchar.h>
 #include <strsafe.h>
 #include "../res/resource.h"
 #pragma comment(lib, "Version.lib")
