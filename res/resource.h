@@ -9,7 +9,7 @@
 #define IDI_APPICON                     105
 #define IDR_MAINMENU                    106
 #define IDD_CUSTOM                      107
-#define IDD_GETNAME                     108
+#define IDD_PROMPT                      108
 #define IDD_RECORD                      109
 #define IDD_ABOUT                       110
 #define IDD_LICENSE                     111
